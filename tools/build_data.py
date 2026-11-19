@@ -11,6 +11,10 @@ for v in d['videos']:
     v['mins'] = round(v['mins'], 1)
     v['done'] = v.pop('passes')
     v.pop('date', None)
+# Runtimes checked against the Marrow app where the sheet was off.
+RUNTIME_FIX = {'wor-ophtha-03': 65, 'wor-pathol-13': 67}
+for v in d['videos']:
+    if v.get('id') in RUNTIME_FIX: v['mins'] = float(RUNTIME_FIX[v['id']])
 d['source'] = 'Marrow WOR'
 d['sheetDoneDate'] = '2026-11-19'
 with open(sys.argv[2], 'w') as f:
