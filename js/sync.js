@@ -7,7 +7,7 @@ import { SYNC } from './config.js';
 import { startHistory } from './history.js';
 
 const AUTH_KEY = 'pg27.auth';
-const conf = () => ({ url: (S.settings.syncUrl || SYNC.url || '').replace(/\/$/, ''), key: S.settings.syncKey || SYNC.anonKey || '' });
+const conf = () => ({ url: (S.settings.syncUrl || SYNC.url || '').trim().replace(/\/+(rest|auth)\/v1\/?$/, '').replace(/\/$/, ''), key: S.settings.syncKey || SYNC.anonKey || '' });
 export const configured = () => !!(conf().url && conf().key);
 let auth = null;
 try { auth = JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { auth = null; }
