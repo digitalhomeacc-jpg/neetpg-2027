@@ -22,6 +22,7 @@ import * as revisionsV from './views/revisions.js';
 import * as backlogV from './views/backlog.js';
 import * as ankiV from './views/anki.js';
 import * as ankiLibV from './views/ankilib.js';
+import * as helloV from './views/hello.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
@@ -217,7 +218,10 @@ if (S.ui.watchOpen && !S.watch) S.ui.watchOpen = false;
 historyV.setGoalLabels(Object.fromEntries(phases().flatMap(p => p.goals)));
 healthS.ingestFromUrl();
 historyV.startHistory();
+// Every launch starts on Today with a short welcome (not mid-way through some other screen).
+const fresh = !welcomeV.needed() && !/[?&]health=/.test(location.search) && helloV.startScreen();
 render({ top: true, enter: true });
+if (fresh) helloV.showHello();
 startSync();
 document.addEventListener('pg27:sync', () => { if (S.ui.tab === 'settings') render(); });
 

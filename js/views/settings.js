@@ -2,6 +2,7 @@ import { S, VIDS, D, DOW, DOW_LONG, SPEEDS, save, today, h, hrs, sp, mergeState,
 import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
 import * as sync from '../sync.js';
+import { APP_VERSION } from '../version.js';
 import { healthSettings } from './health.js';
 
 function syncCard() {
@@ -73,7 +74,9 @@ export function view() {
     html: `
   ${sectionH('Plan')}
   <section class="card">
-    <div class="field" style="margin-top:0"><label for="s-start">Started on</label><input id="s-start" type="date" data-set="start" value="${st.start}">
+    <div class="field" style="margin-top:0"><label for="s-name">Your name</label><input id="s-name" class="inp" data-set="name" value="${h(st.name || '')}" placeholder="For the welcome screen, e.g. Dr. Sanket" autocomplete="off">
+      <p class="hint">Shown when the app opens. Leave it empty for a plain greeting.</p></div>
+    <div class="field"><label for="s-start">Started on</label><input id="s-start" type="date" data-set="start" value="${st.start}">
       <p class="hint">"Behind/ahead" is measured from this date. Set it to today for a fresh start.</p></div>
     <div class="field"><label for="s-target">Finish WOR first watch by</label><input id="s-target" type="date" data-set="target" value="${st.target}"></div>
     <div class="field"><label for="s-exam">Exam date</label><input id="s-exam" type="date" data-set="exam" value="${st.exam}">
@@ -127,7 +130,8 @@ export function view() {
     <button class="btn ghost danger" data-act="reset">Reset all progress</button>
   </section>
 
-  <p class="small faint center">${VIDS.length} ${h(D.source)} videos · ${hrs(VIDS.reduce((a, v) => a + v.mins, 0))} runtime · from your EXAM_PREP sheet</p>`,
+  <p class="small faint center">${VIDS.length} ${h(D.source)} videos · ${hrs(VIDS.reduce((a, v) => a + v.mins, 0))} runtime · from your EXAM_PREP sheet</p>
+  <p class="small faint center version-stamp">PG 2027 · version ${APP_VERSION.v} · updated ${new Date(APP_VERSION.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>`,
   };
 }
 
@@ -229,6 +233,7 @@ export function onInput(e) {
 
 export function onChange(e) {
   const el = e.target;
+  if (el.dataset.set === 'name') { S.settings.name = el.value.trim(); save(); return true; }
   if (el.dataset.set && el.value) {
     if (!['start', 'target', 'exam'].includes(el.dataset.set)) { S.settings[el.dataset.set] = el.value.trim(); save(); return true; }
     const next = { ...S.settings, [el.dataset.set]: el.value };

@@ -20,6 +20,41 @@ function dayRows(m, n) {
   return out;
 }
 
+// This week: what your plan (and any extra you choose) does to the backlog and to later days.
+// Extra time goes to overdue revisions first, then to new videos; new-video time beyond the
+// daily target lowers the target for every study day after this week.
+function weekData(m, overdueMins) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(m.t, i)).filter(d => !isRest(d) && d <= S.settings.target);
+  const planned = days.map(d => {
+    const ids = (S.plan[d] || []).filter(id => BY[id] && !prog(id).fr);
+    return ids.length ? ids.reduce((a, id) => a + BY[id].mins / m.planSpeed, 0) : null;
+  });
+  const plannedDays = planned.filter(x => x != null).length;
+  const weekPlan = planned.reduce((a, x) => a + (x ?? m.target), 0);
+  const base = m.target * days.length;
+  const behind = Math.max(0, m.behind) / m.planSpeed;
+  return { days, plannedDays, weekPlan, base, planExtra: weekPlan - base, behind, overdueMins, backlog: behind + overdueMins,
+    remReal: m.remaining / m.planSpeed, left: m.daysLeft, T: m.target };
+}
+function pullOut(w, x) {
+  const n = w.days.length, extraWeek = x * n;
+  const toRev = Math.min(w.overdueMins, extraWeek), toNew = extraWeek - toRev;
+  const cleared = Math.min(w.backlog, extraWeek), frac = w.backlog ? cleared / w.backlog : 1;
+  const daysAfter = Math.max(0, w.left - n);
+  const newLeft = Math.max(0, w.remReal - w.T * n - toNew);
+  const tAfter = daysAfter ? newLeft / daysAfter : 0;
+  const saved = w.T - tAfter;
+  return `<div class="pull-res">
+      <div class="pull-big num">${w.backlog > 1 ? pct(frac) : '—'}<span>of your backlog pulled back</span></div>
+      <div class="bar-line" style="margin:8px 0 12px"><i style="width:${Math.round(frac * 100)}%"></i></div>
+      <ul class="conseq">
+        <li>${x ? `<b>+${mins(x)}</b> a day for ${n} study day${n > 1 ? 's' : ''} is <b>${hrs(extraWeek)}</b> extra this week.` : 'No extra this week: the backlog stays where it is.'}</li>
+        ${toRev ? `<li>${mins(toRev)} of it clears ${toRev >= w.overdueMins ? 'all' : 'some'} overdue revisions first, so recall stops slipping.</li>` : ''}
+        ${daysAfter && toNew > 0 ? `<li>${toRev ? 'The rest' : 'It'} finishes ${hrs(toNew)} of new videos early, so every later study day needs <b>${mins(tAfter)}</b> instead of ${mins(w.T)}: <b class="good-t">${mins(saved)} less a day</b> for ${daysAfter} days.</li>` : ''}
+        ${frac >= 1 && w.backlog > 1 ? '<li class="good-t"><b>Backlog cleared by the end of this week.</b></li>' : w.backlog > 1 && x ? `<li>${hrs(w.backlog - cleared)} would still be left after this week.</li>` : ''}
+      </ul></div>`;
+}
+
 export function view() {
   const m = metrics(), st = S.settings, t = m.t;
   const T = m.target, remReal = m.remaining / m.planSpeed;
@@ -124,6 +159,23 @@ export function view() {
     </div>` : ''}
   </section>
 
+  ${(() => {
+    const w = weekData(m, overdueMins);
+    if (!w.days.length) return '';
+    const max = 180, def = Math.max(0, Math.min(max, Math.round(Math.max(0, w.planExtra) / w.days.length / 5) * 5));
+    const x = S.ui.pullX ?? def;
+    return `${sectionH('Pull it back this week')}
+  <section class="card pull">
+    <p class="small" style="margin:0 0 10px">${w.plannedDays ? `You've planned ${w.plannedDays} of this week's ${w.days.length} study days: <b>${hrs(w.weekPlan)}</b> of new videos against <b>${hrs(w.base)}</b> needed.
+      ${w.planExtra > 5 ? ` <span class="good-t">Finish this plan and you pull back <b>${hrs(Math.min(w.backlog, w.planExtra))}</b>${w.backlog > 1 ? ` (${pct(Math.min(1, w.planExtra / w.backlog))} of your backlog)` : ''}.</span>` : w.planExtra < -5 ? ` <span class="warn-t">The plan is ${hrs(-w.planExtra)} short of what the week needs, so the backlog would grow.</span>` : ' It covers what the week needs.'}`
+      : `Nothing planned for this week yet. Each study day needs ${mins(w.T)} of new videos.`}</p>
+    <label class="lbl" for="pull-x">Extra each study day this week: <b class="num" id="pull-v">+${mins(x)}</b></label>
+    <input id="pull-x" type="range" min="0" max="${max}" step="5" value="${x}" class="pull-range">
+    <div id="pull-out">${pullOut(w, x)}</div>
+    <div class="btns" style="margin-top:10px"><button class="btn primary" data-act="plan-week">Plan this week</button></div>
+  </section>`;
+  })()}
+
   ${sectionH('Self-improvement', 'from your own data')}
   <section class="card">
     <ul class="conseq">
@@ -150,6 +202,17 @@ export function backlogCard(m) {
   return `<button class="card tomorrow" data-act="backlog"><span class="rbadge" style="--h:10">⚠️</span>
     <span class="grow"><span class="t">Backlog: ${behind >= 60 ? `${hrs(behind)} behind` : ''}${behind >= 60 && overdue.length ? ' · ' : ''}${overdue.length ? `${overdue.length} overdue revisions` : ''}</span>
     <span class="s">See what it costs and the quickest way back</span></span><span class="faint">›</span></button>`;
+}
+
+// The slider updates its results only, so dragging stays smooth.
+export function onInput(e) {
+  if (e.target.id !== 'pull-x') return false;
+  const x = +e.target.value; S.ui.pullX = x;
+  const m = metrics(), due = m.due.filter(d => d.r.overdue > 0);
+  const w = weekData(m, due.reduce((a, d) => a + d.r.budget, 0));
+  document.getElementById('pull-v').textContent = `+${mins(x)}`;
+  document.getElementById('pull-out').innerHTML = pullOut(w, x);
+  return true;
 }
 
 export const actions = {
