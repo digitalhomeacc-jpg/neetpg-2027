@@ -411,7 +411,10 @@ export function pgTag(v) {
 }
 const pgPrefix = v => pgTag(v).replace(/::(\d+)_[^:]*$/, '::$1_*');
 export const usePg = () => !!(ANKI && S.settings.ankiTagged);
-export const vTags = v => usePg() ? [pgPrefix(v)] : v.tags;
+// Without the PG27 tags in Anki, searches use your own tags that hold this video's cards
+// (from the export), falling back to the sheet's draft tags.
+export const vTags = v => usePg() ? [pgPrefix(v)] : (ANKI?.videos[v.id]?.top?.map(t => t[0]) || []).slice(0, 8).concat([]).filter(Boolean).length
+  ? ANKI.videos[v.id].top.slice(0, 8).map(t => t[0]) : v.tags;
 export const ankiOf = v => ANKI?.videos[v.id] || null;
 export const ankiQuery = (tags, onlySuspended) => {
   tags = tags.flatMap(t => typeof t === 'string' ? [t] : vTags(t));
