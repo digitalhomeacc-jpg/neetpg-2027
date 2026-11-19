@@ -92,9 +92,9 @@ export function openRevise(id) {
 export const actions = {
   'revise': el => openRevise(el.dataset.id),
   'rv-reveal': () => { ctx.dump = document.getElementById('rv-dump')?.value.trim() || ''; ctx.step = 'rate'; },
-  'rv-rate': el => { ctx.q = +el.dataset.v; ctx.step = 'timer'; ctx.startedAt = Date.now(); ctx.running = true; },
+  'rv-rate': el => { ctx.q = +el.dataset.v; ctx.step = 'timer'; ctx.startedAt = Date.now(); ctx.first = Date.now(); ctx.breaks = 0; ctx.running = true; },
   'rv-toggle': () => {
-    if (ctx.running) { ctx.elapsed = elapsed(); ctx.running = false; }
+    if (ctx.running) { ctx.elapsed = elapsed(); ctx.running = false; ctx.breaks = (ctx.breaks || 0) + 1; }
     else { ctx.startedAt = Date.now(); ctx.running = true; }
   },
   'rv-finish': () => {
@@ -108,7 +108,8 @@ export const actions = {
   'rv-save': () => {
     const v = BY[ctx.id], r = revInfo(v);
     const spent = Math.max(1, Math.round(+document.getElementById('rv-min').value || ctx.spent));
-    (S.progress[v.id] ||= {})[r.k] = { d: today(), t: new Date().toISOString(), m: spent, q: ctx.q ?? 3 };
+    const span = ctx.first ? Math.round((Date.now() - ctx.first) / 60000) : null;
+    (S.progress[v.id] ||= {})[r.k] = { d: today(), t: new Date().toISOString(), m: spent, q: ctx.q ?? 3, ...(ctx.breaks && span ? { span, breaks: ctx.breaks } : {}) };
     save(); clearInterval(timer); closeSheet();
     const nx = revInfo(v);
     toast(nx?.k ? `${r.k.toUpperCase()} done in ${mins(spent)}. ${nx.k.toUpperCase()} due ${fmtDay(nx.due)}` : `All 5 revisions done for ${v.title}`,

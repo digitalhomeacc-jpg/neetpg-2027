@@ -4,6 +4,7 @@ import {
 } from '../core.js';
 import { ring, sectionH } from '../ui.js';
 import { sleepCard } from './health.js';
+import { bestHours } from './report.js';
 
 function paceChart(m) {
   const st = S.settings;
@@ -102,6 +103,7 @@ export function view() {
     </div>
   </section>
 
+  <div class="btns"><button class="btn" data-act="report">📊 Weekly report</button><button class="btn" data-act="share-card">Share card</button></div>
   <button class="card tomorrow" data-act="times">
     <span class="rbadge" style="--h:30">⏱️</span>
     <span class="grow"><span class="t">Revision times</span><span class="s">How long your first watch and R1–R5 took for every topic</span></span>
@@ -117,6 +119,9 @@ export function view() {
 
   ${sectionH('Pace', `${fmtDay(S.settings.start)} – ${fmtDay(S.settings.target)}`)}
   <section class="card">${paceChart(m)}</section>
+
+  ${sectionH('Your best hours', 'when you study and recall best')}
+  ${bestHours()}
 
   ${sectionH('Sleep and study', 'last 14 days')}
   ${sleepCard(m)}

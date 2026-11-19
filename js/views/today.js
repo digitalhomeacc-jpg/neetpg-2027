@@ -6,6 +6,7 @@ import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
 import { focusPill } from './focus.js';
 import { watchPill } from './watch.js';
 import { checkinCard } from './health.js';
+import { rehearsalCard, finalCard } from './extras.js';
 import { account } from '../sync.js';
 import { finishDate, studyDays, dayDiff } from '../core.js';
 
@@ -119,6 +120,9 @@ export function view() {
     meta: fmtDayLong(m.t),
     html: `
   ${quoteStrip()}
+  ${finalCard(m)}
+  ${m.examDays <= 42 && m.examDays > 7 ? `<section class="card note-card"><b>Final sprint:</b> every revision now gets 30% less time. Revise only what you got wrong in recall.</section>` : ''}
+  ${rehearsalCard()}
   ${watchPill()}
   ${focusPill()}
   <section class="card hero-card">
@@ -151,6 +155,7 @@ export function view() {
   ${catchUp(m, st)}
   ${checkinCard()}
   ${backupNudge()}
+  ${new Date().getDay() === 0 ? `<button class="card tomorrow" data-act="report"><span class="rbadge" style="--h:250">📊</span><span class="grow"><span class="t">Your week in review</span><span class="s">Two minutes: what went well, what didn't, one change</span></span><span class="faint">›</span></button>` : ''}
 
   ${sectionH('Revise today', nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span>` : '')}
   ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {

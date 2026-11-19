@@ -61,9 +61,9 @@ export function merge(mine, theirs, theirsNewer) {
     for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) p[k] = a[k] && b[k] ? later(a[k], b[k]) : a[k] || b[k];
     out.progress[id] = p;
   }
-  for (const k of ['tests', 'mistakes', 'sessions', 'pins']) out[k] = byId(older[k], newer[k]);
+  for (const k of ['tests', 'mistakes', 'sessions', 'pins', 'pairs', 'rehearsals']) out[k] = byId(older[k], newer[k]);
   out.history = byId(older.history, newer.history).sort((x, y) => y.at.localeCompare(x.at)).slice(0, 5000);
-  for (const k of ['plan', 'notes', 'health', 'days', 'goals', 'badges']) out[k] = { ...(older[k] || {}), ...(newer[k] || {}) };
+  for (const k of ['plan', 'notes', 'health', 'days', 'goals', 'badges', 'reflect']) out[k] = { ...(older[k] || {}), ...(newer[k] || {}) };
   out.settings = { ...older.settings, ...newer.settings };
   return out;
 }

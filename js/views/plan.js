@@ -104,7 +104,8 @@ export function view() {
   </section>
 
   ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
-  <button class="btn block" style="margin:0 0 8px" data-act="ics">📅 Add the next 14 days to Calendar</button>
+  <div class="btns" style="margin:0 0 8px"><button class="btn primary" data-act="plan-week">🗓️ Plan the week</button><button class="btn" data-act="ics">📅 To Calendar</button></div>
+  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="rehearsals">🎯 GT rehearsals</button><button class="btn" data-act="final-preview">🏁 Final 7 days</button></div>
   <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.target)} a day.</p>
   <ul class="card flush list daylist">${dayHtml}</ul>
 

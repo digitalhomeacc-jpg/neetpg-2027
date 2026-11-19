@@ -17,6 +17,13 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 - **Notes and pins:** your own notes per video (searchable, shown in recall), and pinned facts collected into a high-yield sheet.
 - **Calendar:** the next 14 days as all-day events with a 7 am alert.
 - **Revision smoothing:** no day goes over your revision cap. Some R2–R5 move to nearby lighter days.
+- **Week planner:** see the whole week against what each day needs, and fill empty days in sheet order or as one heavy + one light subject per day.
+- **GT rehearsals:** schedule grand tests at exam hours, with a night-before reminder and a checklist for the day.
+- **Final sprint and final 7 days:** revision limits shrink 30% in the last six weeks. The last week gets an hour-by-hour plan built on your weakest subjects, pins and lookalikes.
+- **Weekly report:** the week against the one before, three reflection questions, and a shareable progress image.
+- **Best hours:** when you study most and recall best, from the timers.
+- **Lookalikes:** pairs of things you mix up, side by side, made from mistakes too.
+- **Breaks:** timers count only studied time, but record start-to-finish time and breaks too.
 - **Revision times:** how long the first watch and each of R1–R5 really took, for every video and subject, against each revision's limit. Subjects whose revisions run over get flagged. Each revision ends by confirming its time (from the timer, or edited), and any logged time can be corrected from the video's panel.
 - **Plan:** a timeline of the four phases up to the exam, with goals to tick off. Also a "what if" slider (hours a day → finish date), the revision load for the next 8 weeks, and a day-by-day schedule of revisions and new videos.
 - **Tests:** log grand tests, subject tests and PYQ sets (+4/−1). Shows a score trend against the rank <1,500 zone (~620/800, from unofficial 2025 tables). The mistakes diary sorts errors by cause, and a mistake tied to a video pulls that video's next revision forward.

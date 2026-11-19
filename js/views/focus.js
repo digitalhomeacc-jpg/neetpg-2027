@@ -86,7 +86,7 @@ export const actions = {
   },
   'focus-finish': () => {
     const m = Math.round(elapsed() / 60);
-    if (m >= 1) { S.sessions.push({ id: uid(), d: S.focus.d || today(), m, kind: S.focus.kind }); toast(`Logged ${mins(m)} of ${KIND[S.focus.kind]}`); }
+    if (m >= 1) { S.sessions.push({ id: uid(), d: S.focus.d || today(), t: new Date().toISOString(), m, kind: S.focus.kind }); toast(`Logged ${mins(m)} of ${KIND[S.focus.kind]}`); }
     else toast('Under a minute, so nothing was logged');
     S.focus = null; save(); closeFocus();
   },

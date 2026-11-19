@@ -54,7 +54,7 @@ function tick() {
   const bar = document.getElementById('w-bar'); if (bar) bar.style.strokeDashoffset = 2 * Math.PI * 48 * (1 - Math.min(1, e / expect));
   const pill = document.getElementById('watch-pill-time'); if (pill) pill.textContent = w.phase === 'ready' ? '' : clock(e);
 }
-function start() { Object.assign(S.watch, { phase: 'run', startedAt: now(), elapsed: 0, running: true }); save(); }
+function start() { Object.assign(S.watch, { phase: 'run', startedAt: now(), first: now(), breaks: 0, elapsed: 0, running: true }); save(); }
 function render() { if (S.ui.watchOpen && S.watch) { el().innerHTML = html(); document.body.classList.add('locked'); } }
 function close() { S.ui.watchOpen = false; el().innerHTML = ''; document.body.classList.remove('locked'); }
 export const renderWatch = render;
@@ -75,13 +75,15 @@ export const actions = {
   'watch-open': () => { S.ui.watchOpen = true; },
   'watch-min': () => close(),
   'watch-go': () => start(),
-  'watch-toggle': () => { const w = S.watch; if (w.running) { w.elapsed = elapsed(); w.running = false; } else { w.startedAt = now(); w.running = true; } save(); },
+  'watch-toggle': () => { const w = S.watch; if (w.running) { w.elapsed = elapsed(); w.running = false; w.breaks = (w.breaks || 0) + 1; } else { w.startedAt = now(); w.running = true; } save(); },
   'watch-cancel': () => { if (S.watch.phase === 'run' && elapsed() > 60 && !confirm('Stop without marking it watched?')) return; S.watch = null; save(); close(); },
   'watch-done': () => {
     const w = S.watch, v = BY[w.id], m = Math.max(1, Math.round(elapsed() / 60));
     // The speed you effectively watched at: runtime over real time, kept to 1×–3×.
     const s = Math.min(3, Math.max(1, Math.round((v.mins / m) * 4) / 4));
-    (S.progress[v.id] ||= {}).fr = { d: w.d || today(), t: new Date().toISOString(), s, m };
+    // Only studied time counts; the start-to-finish span and breaks are kept for the record.
+    const span = Math.round((now() - (w.first || now())) / 60000);
+    (S.progress[v.id] ||= {}).fr = { d: w.d || today(), t: new Date().toISOString(), s, m, ...(w.breaks ? { span, breaks: w.breaks } : {}) };
     S.watch = null; save(); close();
     setTimeout(confetti, 100);
     toast(`Watched: ${v.title} in ${mins(m)}`, () => { delete S.progress[v.id].fr; if (!Object.keys(S.progress[v.id]).length) delete S.progress[v.id]; save(); });

@@ -83,6 +83,9 @@ function defaults() {
     notes: {},     // video id -> your own notes
     pins: [],      // pinned facts: {id, video, text, d, done}
     health: {},    // date -> {sleep, hrv, rhr, steps, energy, src}
+    reflect: {},   // week start -> {went, hard, change}
+    pairs: [],     // lookalike concepts: {id, a, b, how, subject, d}
+    rehearsals: [], // GT rehearsals: {id, date, checks}
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
   };
@@ -96,7 +99,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {},
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [],
   };
 }
 function load() {
@@ -160,7 +163,9 @@ function rawRev(v, t) {
   const m = S.mistakes.filter(x => x.video === v.id && !x.done && x.date >= prev.d).map(x => addDays(x.date, 2)).sort()[0];
   const pulled = m && m < due;
   if (pulled) due = m;
-  return { k, due, pulled, gap, prev: prev.d, budget: Math.max(2, Math.round(v.mins * REV[k].budget)), overdue: dayDiff(due, t) };
+  // Final six weeks: every revision gets 30% less time.
+  const tight = dayDiff(t, S.settings.exam) <= 42 ? 0.7 : 1;
+  return { k, due, pulled, gap, prev: prev.d, tight: tight < 1, budget: Math.max(2, Math.round(v.mins * REV[k].budget * tight)), overdue: dayDiff(due, t) };
 }
 
 // Smoothing: when too many revisions land on one day, move some R2–R5 up to a quarter

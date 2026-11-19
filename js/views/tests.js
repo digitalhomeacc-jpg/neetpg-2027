@@ -92,6 +92,7 @@ export function view() {
     ${tests.length >= 2 ? `<div class="spacer"></div>${trend(tests)}` : ''}
     <div class="spacer"></div>
     <button class="btn primary block" data-act="new-test">${ICON.plus}Log a test</button>
+    <div class="btns" style="margin-top:8px"><button class="btn" data-act="rehearsals">🎯 Schedule a GT rehearsal</button><button class="btn" data-act="pairs">🔀 Lookalikes${S.pairs.length ? ` (${S.pairs.length})` : ''}</button></div>
     <p class="small faint" style="margin:10px 0 0">Zone = about 620/800, which was roughly rank 1,500 in 2025 (third-party estimates, not official). It's an unofficial yardstick, not a rank prediction.</p>
   </section>
 
@@ -181,6 +182,7 @@ function mistakeBody() {
     <div class="field"><label for="m-video">WOR video (optional)</label><select id="m-video" class="inp"><option value="">Not sure</option>${vids.map(v => `<option value="${v.id}"${v.id === x.video ? ' selected' : ''}>${h(v.title)}</option>`).join('')}</select></div>
     ${tests.length ? `<div class="field"><label for="m-test">From test (optional)</label><select id="m-test" class="inp"><option value="">None</option>${tests.map(t => `<option value="${t.id}"${t.id === x.test ? ' selected' : ''}>${h(t.name)} · ${fmtDay(t.date)}</option>`).join('')}</select></div>` : ''}
     <button class="btn primary block" data-act="save-mistake">${x.id ? 'Save' : 'Add to diary'}</button>
+    ${['unknown', 'misread'].includes(x.reason) ? `<button class="btn ghost block" data-act="mistake-pair" style="margin-top:6px">🔀 Mixed two things up? Make a lookalike pair</button>` : ''}
     ${x.id ? `<div class="btns" style="margin-top:8px"><button class="btn" data-act="mistake-toggle">${x.done ? 'Mark as open again' : 'Mark revisited'}</button><button class="btn danger" data-act="del-mistake">Delete</button></div>` : ''}`;
 }
 function readMistake() {

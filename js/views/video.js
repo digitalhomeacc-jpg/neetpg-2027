@@ -11,7 +11,7 @@ function body() {
   const speeds = seg('vs-speed', SPEEDS.map(s => [s, sp(s)]), ctx.speed);
   const head = `<h3>${h(v.title)}</h3>
     <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Block ${v.block} · ${mins(v.mins)} runtime</div>
-    ${p.fr ? `<div class="stamp-big">✓ Watched on ${fmtDayLong(p.fr.d)}${p.fr.t ? ` at ${clockTime(p.fr.t)}` : ''} · ${sp(p.fr.s)}</div>` : plannedOn(v.id) ? `<div class="stamp-big plan">Planned for ${fmtDayLong(plannedOn(v.id))}</div>` : ''}`;
+    ${p.fr ? `<div class="stamp-big">✓ Watched on ${fmtDayLong(p.fr.d)}${p.fr.t ? ` at ${clockTime(p.fr.t)}` : ''} · ${p.fr.m ? `${mins(p.fr.m)} studied` : sp(p.fr.s)}${p.fr.breaks ? `<span class="span-note">across ${mins(p.fr.span)} with ${p.fr.breaks} break${p.fr.breaks > 1 ? 's' : ''}</span>` : ''}</div>` : plannedOn(v.id) ? `<div class="stamp-big plan">Planned for ${fmtDayLong(plannedOn(v.id))}</div>` : ''}`;
   if (ctx.kind === 'mark') {
     return `${head}
       <div class="field"><span class="lbl">Watched at</span>${speeds}</div>
@@ -29,7 +29,7 @@ function body() {
         ? `<span class="row" style="gap:8px"><input id="vs-min" class="inp num" type="number" inputmode="numeric" min="1" value="${Math.round(took)}" style="max-width:84px;min-height:38px;padding:6px 10px"> min
             <button class="btn ghost" data-act="vs-time-save" data-k="${k}">Save</button></span>`
         : `<span class="stamp">✓ ${fmtDow(x.d)}${x.t ? ` · ${clockTime(x.t)}` : ''}</span>
-           <button class="time-chip${over ? ' over' : ''}" data-act="vs-time" data-k="${k}" aria-label="Edit time">${mins(took)}${lim ? ` / ${mins(lim)}` : ''}</button>${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}`;
+           <button class="time-chip${over ? ' over' : ''}" data-act="vs-time" data-k="${k}" aria-label="Edit time">${mins(took)}${lim ? ` / ${mins(lim)}` : ''}</button>${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}${x.breaks ? ` · <span class="faint">over ${mins(x.span)}, ${x.breaks} break${x.breaks > 1 ? 's' : ''}</span>` : ''}`;
       const latest = PASSES.filter(kk => p[kk]).pop() === k;
       btn = latest ? `<button class="btn ghost danger" data-act="vs-unpass" data-k="${k}">Undo</button>` : '';
     } else if (k === 'fr') {
