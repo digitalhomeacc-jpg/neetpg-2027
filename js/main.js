@@ -18,13 +18,15 @@ import * as pinsV from './views/pins.js';
 import * as weekS from './views/week.js';
 import * as reportV from './views/report.js';
 import * as extrasV from './views/extras.js';
+import * as revisionsV from './views/revisions.js';
+import * as backlogV from './views/backlog.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
-const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView } };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV];
+const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV };
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -33,6 +35,8 @@ function quickActions() {
       <li class="item"><span class="rbadge" style="--h:215">${ICON.test}</span><button class="open" data-act="qa-test"><div class="t">Log a test</div><div class="s">Grand test, subject test or PYQ set</div></button></li>
       <li class="item"><span class="rbadge" style="--h:0">${ICON.bug}</span><button class="open" data-act="qa-mistake"><div class="t">Log a mistake</div><div class="s">Pulls that video's next revision forward</div></button></li>
       <li class="item"><span class="rbadge" style="--h:45">📌</span><button class="open" data-act="qa-pins"><div class="t">High-yield sheet</div><div class="s">Facts you've pinned, by subject</div></button></li>
+      <li class="item"><span class="rbadge" style="--h:160">🔁</span><button class="open" data-act="revisions" data-v="r1"><div class="t">Revisions</div><div class="s">R1–R5 with dates, limits and time taken</div></button></li>
+      <li class="item"><span class="rbadge" style="--h:10">⚠️</span><button class="open" data-act="backlog"><div class="t">Backlogs and self-improvement</div><div class="s">What skipping costs, and how to get back</div></button></li>
       <li class="item"><span class="rbadge" style="--h:300">🔀</span><button class="open" data-act="pairs"><div class="t">Lookalikes</div><div class="s">Things you mix up, side by side</div></button></li>
       <li class="item"><span class="rbadge" style="--h:250">📊</span><button class="open" data-act="qa-report"><div class="t">Weekly report</div><div class="s">Your week, three questions, a card to share</div></button></li>
       <li class="item"><span class="rbadge" style="--h:30">🕘</span><button class="open" data-act="qa-history"><div class="t">Change history</div><div class="s">Every change, with what it was before</div></button></li>
@@ -48,6 +52,8 @@ const ACTIONS = Object.assign({
   back: () => {
     if (S.ui.tab === 'times') { S.ui.tab = S.ui.timesBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'pins') { S.ui.tab = S.ui.pinsBack || 'videos'; return 'enter'; }
+    if (S.ui.tab === 'revisions') { S.ui.tab = S.ui.revBack || 'today'; return 'enter'; }
+    if (S.ui.tab === 'backlog') { S.ui.tab = S.ui.backlogBack || 'today'; return 'enter'; }
     if (S.ui.tab === 'report') { S.ui.tab = S.ui.reportBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'pairs') { S.ui.tab = S.ui.pairsBack || 'tests'; return 'enter'; }
     if (S.ui.tab === 'history') {
@@ -90,7 +96,7 @@ function render({ top = false, enter = false } = {}) {
   const tab = VIEWS[S.ui.tab] ? S.ui.tab : 'today';
   const { title, meta, html } = VIEWS[tab].view();
   document.getElementById('nav-title').textContent = title;
-  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs'].includes(tab)
+  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog'].includes(tab)
     ? `<button class="icon-btn" data-act="back" aria-label="Back">${ICON.back}</button>`
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;

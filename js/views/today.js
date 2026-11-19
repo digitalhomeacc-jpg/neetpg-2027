@@ -7,6 +7,7 @@ import { focusPill } from './focus.js';
 import { watchPill } from './watch.js';
 import { checkinCard } from './health.js';
 import { rehearsalCard, finalCard } from './extras.js';
+import { backlogCard } from './backlog.js';
 import { account } from '../sync.js';
 import { finishDate, studyDays, dayDiff } from '../core.js';
 
@@ -155,7 +156,8 @@ export function view() {
   ${backupNudge()}
   ${new Date().getDay() === 0 ? `<button class="card tomorrow" data-act="report"><span class="rbadge" style="--h:250">📊</span><span class="grow"><span class="t">Your week in review</span><span class="s">Two minutes: what went well, what didn't, one change</span></span><span class="faint">›</span></button>` : ''}
 
-  ${sectionH('Revise today', nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span>` : '')}
+  ${backlogCard(m)}
+  ${sectionH('Revise today', `${nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span> · ` : ''}<button class="link" data-act="revisions" data-v="r1">All revisions</button>`)}
   ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {
     const extra = false; // every due revision is part of today's target
     return `<li class="item rev${extra ? ' extra' : ''}"><span class="rbadge" style="--h:${subjHue(v.subject)}">${r.k.toUpperCase()}</span>
@@ -175,7 +177,8 @@ export function view() {
     <span class="grow"><span class="t">${tmrIds.length ? `Tomorrow: ${tmrIds.length} lecture${tmrIds.length > 1 ? 's' : ''} · ${mins(tmrMins)}` : 'Plan tomorrow'}</span>
       <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.target)} it needs`}</span></span>
     <span class="faint">${ICON.chev}</span>
-  </button>` : ''}
+  </button>
+  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => BY[id].tags))], true))}">${ICON.copy}Copy tomorrow's Anki cards (suspended)</button>` : ''}` : ''}
 
   ${openMistakes.length ? `
   ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}

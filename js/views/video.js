@@ -63,7 +63,11 @@ function body() {
       <div class="note"><b>Draft mapping.</b> This gets replaced with your checked tags once your Anki tag list is in.</div>
     </div>
 
-    <p class="hint">Tap a time to correct it.</p>
+    <p class="hint">Tap a time to correct it, including when a revision ran over its limit.</p>
+    ${(() => { const hs = (S.history || []).filter(e => e.key === `video:${v.id}`).slice(0, 5);
+      return hs.length ? `<div class="field"><span class="lbl">Recent history</span><ul class="list mini-list vh">${hs.map(e => `<li class="item"><span class="pill ${e.action === 'undone' ? 'bad' : e.action === 'edit' ? 'warn' : 'good'}">${{ done: 'Done', undone: 'Undone', edit: 'Changed', create: 'Added', delete: 'Deleted' }[e.action] || e.action}</span>
+        <span class="grow small">${h(Object.entries(e.after || e.before || {}).filter(([, val]) => val).map(([kk]) => kk).slice(-1)[0] || '')}</span><span class="small faint num">${new Date(e.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span></li>`).join('')}</ul></div>`
+        : `<div class="field"><span class="lbl">Recent history</span><p class="small faint" style="margin:0">Nothing recorded yet. Every tick, revision and time change will show here.</p></div>`; })()}
     <div class="btns" style="margin-top:14px"><button class="btn" data-act="times" data-v="${h(v.subject)}">Revision times</button><button class="btn" data-act="hist-open" data-v="video:${v.id}">History</button></div>
 
     <div class="field"><div class="row"><span class="lbl grow" style="margin:0">Mistakes on this video · ${ms.length}</span>

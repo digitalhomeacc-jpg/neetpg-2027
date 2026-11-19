@@ -718,3 +718,63 @@ code { font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; background: var(-
 .fd-h { font-weight: 800; font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
 .fd-r { display: grid; grid-template-columns: 86px 1fr; gap: 8px; font-size: 14px; padding: 3px 0; }
 .fd-r .num { color: var(--muted); font-weight: 600; }
+
+/* Revisions table ---------------------------------------------------- */
+.rv-tabs { margin: 4px 0 6px; }
+.rtable { margin-top: 8px; }
+.rt-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px 54px 62px; gap: 8px; align-items: center; padding: 11px 14px; border-top: .5px solid var(--line-2); font-size: 14px; }
+.rt-head { border-top: 0; font-size: 11.5px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; padding-top: 12px; padding-bottom: 8px; }
+.rt-foot { font-weight: 800; background: var(--surface-2); }
+.rt-topic { display: flex; align-items: center; gap: 2px; text-align: left; min-width: 0; font-weight: 600; }
+.rt-topic span { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.rt-date { font-size: 12.5px; }
+.rt-lim, .rt-took, .rt-foot .num { text-align: right; }
+.rt-took { font-weight: 800; padding: 4px 6px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); justify-self: end; }
+.rt-took.over { background: var(--warn-soft); color: var(--warn); }
+.rt-go { justify-self: end; font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.rt-row.later, .rt-row.unwatched { opacity: .55; }
+
+/* Backlogs ------------------------------------------------------------ */
+.skip { border-color: color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.conseq { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 9px; font-size: 14.5px; line-height: 1.45; }
+.conseq li::marker { color: var(--warn); }
+.sc-table { border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+.sc-row { display: grid; grid-template-columns: 1.1fr 1fr .9fr 1.1fr; gap: 6px; padding: 10px 12px; font-size: 14px; border-top: .5px solid var(--line-2); }
+.sc-head { border-top: 0; font-size: 11.5px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
+.sc-row.good span:nth-child(3) { color: var(--accent); font-weight: 700; }
+.sc-row.warn span:nth-child(3) { color: var(--warn); font-weight: 700; }
+.sc-row.bad span:nth-child(3) { color: var(--bad); font-weight: 700; }
+.recover { margin-top: 14px; padding: 12px; border-radius: 14px; background: var(--surface-2); }
+.rc-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.rc { display: flex; flex-direction: column; }
+.rc b { font-family: var(--round); font-size: 18px; color: var(--accent); }
+.rc span { font-size: 12px; color: var(--muted); }
+.tips { display: grid; gap: 8px; margin-top: 14px; }
+.tip { font-size: 14px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); color: var(--muted); }
+.tip b { color: var(--text); }
+.vh .item { padding: 7px 0; }
+
+/* Taps: bigger targets everywhere ------------------------------------ */
+.link { padding: 6px 2px; margin: -6px -2px; }
+.item .open { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+.day-v { min-height: 40px; }
+
+/* Responsive: tablets and wide screens ---------------------------------- */
+@media (min-width: 760px) {
+  .view, .nav-inner { max-width: 920px; }
+  .view { padding-left: 28px; padding-right: 28px; }
+  .subjects { grid-template-columns: repeat(4, 1fr); }
+  .tabs { width: min(calc(100% - 48px), 620px); }
+  .sheet { max-width: 640px; border-radius: 28px; bottom: 16px; }
+  .large-title h1 { font-size: 40px; }
+  .stats.five { gap: 12px; }
+  .badges { grid-template-columns: repeat(6, 1fr); }
+  .mz-tiles button { width: 18px; height: 18px; }
+  .rt-row { grid-template-columns: minmax(0, 1fr) 140px 80px 90px; }
+}
+@media (min-width: 1100px) {
+  .view, .nav-inner { max-width: 1080px; }
+  .subjects { grid-template-columns: repeat(5, 1fr); }
+}
+.anki-day { margin: 12px 0 4px; padding: 12px; border-radius: 14px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 8px; }
+.anki-tmr { margin-top: 8px; height: 44px; font-size: 14.5px; }

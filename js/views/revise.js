@@ -63,9 +63,9 @@ function body() {
 
   if (ctx.step === 'log') {
     return `${head}
-      <div class="field"><label for="rv-min">How long did this revision take?</label>
+      <div class="field"><label for="rv-min">How long did this revision really take? Over the limit is fine, enter the real time.</label>
         <div class="row"><input id="rv-min" class="inp num" type="number" inputmode="numeric" min="1" value="${ctx.spent}" style="max-width:120px"><span class="muted">minutes · limit ${mins(r.budget)}</span></div>
-        <div class="chips" style="margin-top:10px">${[-5, -1, 1, 5, 10].map(d => `<button class="chip" data-act="rv-time" data-v="${d}">${d > 0 ? '+' : '−'}${Math.abs(d)}</button>`).join('')}</div>
+        <div class="chips" style="margin-top:10px">${[-5, -1, 1, 5, 10, 15, 30].map(d => `<button class="chip" data-act="rv-time" data-v="${d}">${d > 0 ? '+' : '−'}${Math.abs(d)}</button>`).join('')}</div>
         <p class="hint">${ctx.elapsed >= 45 ? `From the timer: ${mins(ctx.elapsed / 60)}.` : 'The timer wasn’t used, so this starts at the limit. Change it to what it really took.'}</p></div>
       <button class="btn primary block" data-act="rv-save">Save ${r.k.toUpperCase()}</button>`;
   }
@@ -104,7 +104,7 @@ export const actions = {
     ctx.spent = ctx.elapsed >= 45 ? Math.round(ctx.elapsed / 60) : r.budget;
     ctx.step = 'log';
   },
-  'rv-time': el => { const i = document.getElementById('rv-min'); i.value = Math.max(1, (+i.value || 0) + +el.dataset.v); },
+  'rv-time': el => { const i = document.getElementById('rv-min'); ctx.spent = Math.max(1, (+i.value || 0) + +el.dataset.v); },
   'rv-save': () => {
     const v = BY[ctx.id], r = revInfo(v);
     const spent = Math.max(1, Math.round(+document.getElementById('rv-min').value || ctx.spent));

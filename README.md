@@ -24,6 +24,9 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 - **Best hours:** when you study most and recall best, from the timers.
 - **Lookalikes:** pairs of things you mix up, side by side, made from mistakes too.
 - **Breaks:** timers count only studied time, but record start-to-finish time and breaks too.
+- **Revisions screen:** R1–R5 tabs, each video with its due or done date, time limit and time taken, plus total time limit and total time taken. Tap a time to enter the real one, including over the limit.
+- **Backlogs and self-improvement:** what skipping today does to the target, revisions and recall; what skipping 1–3 days a week does to the finish date and later phases; the current backlog with a recovery plan; and patterns from your own data.
+- **Anki for planned days:** copy the Anki search for a planned day (e.g. tomorrow) to unsuspend its cards ahead of time.
 - **Revision times:** how long the first watch and each of R1–R5 really took, for every video and subject, against each revision's limit. Subjects whose revisions run over get flagged. Each revision ends by confirming its time (from the timer, or edited), and any logged time can be corrected from the video's panel.
 - **Plan:** a timeline of the four phases up to the exam, with goals to tick off. Also a "what if" slider (hours a day → finish date), the revision load for the next 8 weeks, and a day-by-day schedule of revisions and new videos.
 - **Tests:** log grand tests, subject tests and PYQ sets (+4/−1). Shows a score trend against the rank <1,500 zone (~620/800, from unofficial 2025 tables). The mistakes diary sorts errors by cause, and a mistake tied to a video pulls that video's next revision forward.

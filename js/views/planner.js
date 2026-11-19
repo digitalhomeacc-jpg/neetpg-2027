@@ -1,7 +1,7 @@
 // Plan a day: pick the lectures you'll watch, against the time that day needs.
 import {
   S, VIDS, BY, SUBJECTS, prog, save, metrics, today, addDays, isRest, revInfo, plannedOn,
-  h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, subjHue,
+  h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, subjHue, ankiQuery,
 } from '../core.js';
 import { openSheet, closeSheet, toast, ICON } from '../ui.js';
 
@@ -59,6 +59,10 @@ function body() {
         <button class="icon-mini danger" data-act="pl-remove" data-id="${id}" aria-label="Remove">${ICON.x}</button></li>`;
     }).join('')}</ul>` : `<div class="card empty small" style="margin:12px 0"><div class="e1">Nothing planned yet</div>Add lectures below, or let the app fill the day for you.</div>`}
 
+    ${ids.length ? (() => { const tags = [...new Set(ids.flatMap(id => BY[id].tags))]; return tags.length ? `<div class="anki-day">
+      <div class="small muted">Get these cards ready in Anki: paste in the Browse search, select all, unsuspend.</div>
+      <div class="btns"><button class="btn primary" data-act="copy" data-q="${h(ankiQuery(tags, true))}">Copy Anki search · suspended</button>
+      <button class="btn" data-act="copy" data-q="${h(ankiQuery(tags, false))}">All cards</button></div></div>` : ''; })() : ''}
     <div class="btns" style="margin:10px 0 4px">
       <button class="btn" data-act="pl-fill">${ICON.plus}Fill to ${mins(target || 60)}</button>
       ${ids.length ? `<button class="btn danger" data-act="pl-clear">Clear day</button>` : ''}
