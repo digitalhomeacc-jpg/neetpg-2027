@@ -14,17 +14,15 @@
     const news = list(d.news, d.newN);
     if (kind === 'evening') {
       const real = s.today === t ? ((s.real && s.real[t]) || 0) : 0;
-      if (d.min && real >= d.min) {
-        return { title: `Minimum done: ${mins(real)} today`, body: real >= d.goal ? 'Full day done too. Rest well.' : `${mins(d.goal - real)} more would make it a full day.` };
-      }
+      if (d.goal && real >= d.goal) return { title: `Target done: ${mins(real)} today`, body: 'Rest well.' };
       return {
-        title: real ? `${mins(d.min - real)} short of today's minimum` : `Not started today. Minimum is ${mins(d.min)}`,
+        title: real ? `${mins(d.goal - real)} short of today's target` : `Not started today. Target is ${mins(d.goal)}`,
         body: d.revN ? `Revisions still due: ${revs}` : (news ? `Next up: ${news}` : 'Even 30 minutes keeps the streak going.'),
       };
     }
-    if (!d.min && !d.revN) return { title: 'Rest day', body: 'Nothing is due today.' };
+    if (!d.goal && !d.revN) return { title: 'Rest day', body: 'Nothing is due today.' };
     return {
-      title: `Today: at least ${mins(d.min)}`,
+      title: `Today: ${mins(d.goal)}`,
       body: [d.revN ? `Revise: ${revs}` : '', d.newN ? `New: ${news}` : ''].filter(Boolean).join('\n') || `Full day ${mins(d.goal)}.`,
     };
   }

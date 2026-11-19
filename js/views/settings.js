@@ -77,9 +77,7 @@ export function view() {
 
   ${sectionH('Daily targets')}
   <section class="card">
-    <div class="field" style="margin-top:0"><span class="lbl">Bare minimum counts</span>${seg('minpct', [[0.5, '50%'], [0.75, '75%'], [1, '100%']], st.minPct ?? 0.5)}
-      <p class="hint">Minimum = revisions due today (up to 2 hours) + this share of the day's new videos. Full day = all revisions due + all new videos. Anki and Q-bank focus time is counted separately.</p></div>
-    <div class="field"><span class="lbl">Most revision per day</span>${seg('revcap', [[60, '1h'], [90, '1.5h'], [120, '2h'], [180, '3h'], [0, 'No cap']], st.revCap ?? 120)}
+    <div class="field" style="margin-top:0"><span class="lbl">Most revision per day</span>${seg('revcap', [[60, '1h'], [90, '1.5h'], [120, '2h'], [180, '3h'], [0, 'No cap']], st.revCap ?? 120)}
       <p class="hint">When more revisions than this fall on one day, some R2–R5 move a few days earlier so they don't pile up.</p></div>
     <div class="field"><span class="lbl">Get-ready time before Study now</span>${seg('breath', [[0, 'None'], [60, '1 min'], [120, '2 min'], [180, '3 min']], st.breath ?? 120)}</div>
     <div class="field" style="margin-bottom:0"><label for="s-marrow">“Open Marrow” link</label><input id="s-marrow" class="inp" data-set="marrowUrl" value="${h(st.marrowUrl || 'https://www.marrow.com/')}" autocomplete="off">

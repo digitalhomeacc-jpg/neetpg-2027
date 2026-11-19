@@ -75,5 +75,5 @@ export async function testNotification(kind = 'morning') {
 
 export function summaryLine() {
   const s = buildSummary().days[today()];
-  return `${mins(s.min)} minimum · ${s.revN} revisions · ${s.newN} new videos`;
+  return `${mins(s.goal)} target · ${s.revN} revisions · ${s.newN} new videos`;
 }

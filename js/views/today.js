@@ -89,10 +89,9 @@ export function view() {
   const nDue = m.due.length;
   if (m.remaining <= 0 && !nDue) { status = 'All caught up'; line = 'WOR is watched and no revisions are due today.'; }
   else if (m.restToday && !nDue) { status = 'Rest day'; line = real ? `You still put in ${mins(real)}.` : 'Nothing due today. Enjoy it.'; }
-  else if (real >= goal) { status = 'Full day done'; line = `${mins(real)} today. Anything extra lowers the days ahead.`; }
-  else if (real >= min) { status = 'Minimum done'; line = `${mins(goal - real)} more for the full day.`; }
-  else if (real > 0) { status = `${mins(min - real)} to your minimum`; line = `Full day is ${mins(goal)}.`; }
-  else { status = `Minimum ${mins(min)}`; line = `Full day ${mins(goal)}: ${nDue ? `${nDue} revision${nDue > 1 ? 's' : ''} + ` : ''}${mins(m.target)} of new videos.`; }
+  else if (real >= goal) { status = 'Target done'; line = `${mins(real)} today. Anything extra lowers the days ahead.`; }
+  else if (real > 0) { status = `${mins(goal - real)} to go`; line = `${mins(real)} of today's ${mins(goal)} done.`; }
+  else { status = `${mins(goal)} today`; line = `${nDue ? `${nDue} revision${nDue > 1 ? 's' : ''} + ` : ''}${mins(m.target)} of new videos, to finish WOR by ${fmtDay(st.target)}.`; }
 
   const behindCls = m.behind > 60 ? 'bad' : m.behind > 0 ? 'warn' : 'good';
   const behindTxt = m.behind > 0 ? `${hrs(m.behind)}` : `+${hrs(-m.behind)}`;
@@ -131,11 +130,10 @@ export function view() {
       ${phase ? `<button class="pill accent" data-act="tab" data-v="plan">${h(phase.name)} · until ${fmtDay(phase.end)}</button>` : ''}
     </div>
     <div class="hero">
-      ${ring(frac, goal ? pct(Math.min(frac, 9.99)) : mins(real), goal ? `of ${mins(goal)}` : 'today', 124, goal ? min / goal : 0)}
+      ${ring(frac, goal ? pct(Math.min(frac, 9.99)) : mins(real), goal ? `of ${mins(goal)}` : 'today', 124)}
       <div class="hero-text grow">
         <p class="status">${status}</p>
         <p>${line}</p>
-        ${goal ? `<p class="split num">Minimum = ${mins(Math.min(120, m.mustMins + m.revDoneToday))} revisions + ${mins(m.restToday ? 0 : m.target * (st.minPct ?? 0.5))} new</p>` : ''}
       </div>
     </div>
     <div class="hero-cta">
@@ -159,7 +157,7 @@ export function view() {
 
   ${sectionH('Revise today', nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span>` : '')}
   ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {
-    const extra = i >= m.must.length;
+    const extra = false; // every due revision is part of today's target
     return `<li class="item rev${extra ? ' extra' : ''}"><span class="rbadge" style="--h:${subjHue(v.subject)}">${r.k.toUpperCase()}</span>
       <button class="open" data-act="revise" data-id="${v.id}"><div class="t">${h(v.title)}</div>
       <div class="s num">${subjDot(v.subject)}${mins(r.budget)} limit · ${r.overdue > 0 ? `<span class="bad-t">${r.overdue}d overdue</span>` : 'due today'}${r.pulled ? ' · from a mistake' : ''}${extra ? ' · if you have time' : ''}</div></button>
