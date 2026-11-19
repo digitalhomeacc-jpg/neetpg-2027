@@ -5,6 +5,7 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 ## What it does now
 
 - **Today:** your bare minimum and full-day goal. The goal is revisions that are due plus new WOR videos. Below it: revisions due (most overdue first), a week strip, the next new videos, open mistakes, what's done today, and Anki searches for today's videos.
+- **Daily quote:** a scrolling strip on Today with a quote from a physician or surgeon (Osler, Hippocrates, Sushruta, Charaka, Paré, Virchow, Peabody, Gawande, Kalanithi…). Each is tied to the work it comes from, and translations are marked. Tap for another. The list is in `js/quotes.js`.
 - **Day planner:** pick the lectures for today, tomorrow or any day in the next week against the time that day needs (a bar fills as you add). Days you plan keep exactly your lectures in your order. Unplanned days are filled with suggestions in sheet order. Planned lectures you didn't watch carry over to the next day.
 - **Date stamps:** every watched video shows when you watched it ("✓ Watched Thu 19 Nov · 7:01 pm"), and so does every revision.
 - **Spaced revisions with active recall:** every video gets five revisions after the first watch, each with less time than the last (50%, 35%, 25%, 15% and 10% of the runtime). They fall due after growing gaps (3, 10, 30, 60 and 90 days), squeezed to fit before the exam. Each session goes: recall from memory → check against the video's topics and your mistakes → rate yourself (which moves the next revision sooner or later) → revise against a countdown.

@@ -4,6 +4,20 @@ import {
 } from '../core.js';
 import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
 import { focusPill } from './focus.js';
+import { QUOTES, quoteIndex, nextQuote } from '../quotes.js';
+import { save } from '../core.js';
+
+function quoteStrip() {
+  const x = QUOTES[quoteIndex(S.ui)];
+  const text = `“${h(x.q)}” — ${h(x.who)}`;
+  const dur = Math.max(14, Math.round(x.q.length * 0.2));
+  return `<button class="quote" data-act="quote-next" aria-label="Quote: ${h(x.q)} by ${h(x.who)}. Tap for another">
+    <div class="qm"><div class="qtrack" style="--dur:${dur}s"><span>${text}</span><span aria-hidden="true">${text}</span></div></div>
+    <div class="qsrc"><b>${h(x.who)}</b> · ${h(x.src)}<span class="qtap">Tap for another</span></div>
+  </button>`;
+}
+
+export const actions = { 'quote-next': () => { nextQuote(S.ui); save(); } };
 
 function greeting() {
   const hr = new Date().getHours();
@@ -67,6 +81,7 @@ export function view() {
     title: 'Today',
     meta: fmtDayLong(m.t),
     html: `
+  ${quoteStrip()}
   ${focusPill()}
   <section class="card hero-card">
     <div class="hero-top">
