@@ -35,6 +35,7 @@ export async function signUp(email, password) {
   if (!d.access_token) return 'confirm'; // the project asks new accounts to confirm their email first
   keep(d); S.sync = { lastPulled: null, dirty: true }; save(); await syncNow(); return 'ok';
 }
+export const resetPassword = email => call('/auth/v1/recover', { method: 'POST', body: { email } });
 export function signOut() { saveAuth(null); S.sync = null; save(); }
 
 async function token() {
@@ -109,7 +110,9 @@ export async function syncNow() {
     status.state = 'ok'; status.at = new Date();
   } catch (e) {
     status.state = 'error';
-    status.error = /permission denied for table/i.test(e.message)
+    status.error = /failed to fetch|network/i.test(e.message) ? 'No connection. It will sync when you\'re back online.'
+      : /signed out/i.test(e.message) ? e.message
+      : /permission denied for table/i.test(e.message)
       ? 'The sync table needs access rights. In Supabase (this app\'s project), open SQL Editor and run the "grant" lines at the end of tools/supabase.sql, then tap Sync now.'
       : e.message;
   } finally { busy = false; document.dispatchEvent(new Event('pg27:sync')); }

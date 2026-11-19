@@ -3,7 +3,6 @@ import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
 import * as sync from '../sync.js';
 import { healthSettings } from './health.js';
-let lastEmail = '';
 
 function syncCard() {
   if (!sync.configured()) {
@@ -19,15 +18,26 @@ function syncCard() {
   }
   const a = sync.account(), st = sync.status;
   if (!a) {
-    return `<p class="small muted" style="margin:0 0 10px">Use the same email and password on every device. Your first sign-in uploads this device's progress.</p>
-      <div class="field" style="margin-top:0"><label for="sy-email">Email</label><input id="sy-email" class="inp" type="email" autocomplete="username" inputmode="email" value="${h(lastEmail)}"></div>
-      <div class="field"><label for="sy-pass">Password</label><input id="sy-pass" class="inp" type="password" autocomplete="current-password" minlength="6"></div>
-      <div class="btns"><button class="btn primary" data-act="sync-in">Sign in</button><button class="btn" data-act="sync-up">Create account</button></div>
-      ${st.error ? `<p class="hint bad-t">${h(st.error)}</p>` : ''}`;
+    const up = auth.mode === 'up';
+    return `<div class="auth">
+      <div class="seg auth-seg"><button data-act="auth-mode" data-v="in" aria-pressed="${!up}">Sign in</button><button data-act="auth-mode" data-v="up" aria-pressed="${up}">Create account</button></div>
+      <p class="small muted auth-lead">${up ? 'One account for all your devices. Your progress on this phone becomes your starting point.' : 'Use the same email and password on iPhone and iPad. Edits on both are merged.'}</p>
+      <label class="auth-field"><span>Email</span><input id="sy-email" class="inp" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" value="${h(auth.email)}"></label>
+      <label class="auth-field"><span>Password</span><div class="pw"><input id="sy-pass" class="inp" type="${auth.show ? 'text' : 'password'}" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'At least 6 characters' : 'Your password'}" value="${h(auth.pass)}">
+        <button class="pw-eye" data-act="auth-show" aria-label="${auth.show ? 'Hide' : 'Show'} password">${auth.show ? 'Hide' : 'Show'}</button></div></label>
+      ${up ? `<label class="auth-field"><span>Confirm password</span><input id="sy-pass2" class="inp" type="${auth.show ? 'text' : 'password'}" autocomplete="new-password" placeholder="Type it again" value="${h(auth.pass2)}"></label>` : ''}
+      ${auth.error ? `<div class="auth-msg bad" role="alert">${h(auth.error)}</div>` : auth.note ? `<div class="auth-msg good" role="status">${h(auth.note)}</div>` : ''}
+      <button class="btn primary block auth-go${auth.busy ? ' busy' : ''}" data-act="${up ? 'sync-up' : 'sync-in'}" ${auth.busy ? 'disabled' : ''}>${auth.busy ? `<span class="spin"></span>${up ? 'Creating account…' : 'Signing in…'}` : up ? 'Create account' : 'Sign in'}</button>
+      ${up ? '' : `<button class="link auth-forgot" data-act="auth-forgot">Forgot password?</button>`}
+    </div>`;
   }
-  return `<p class="small" style="margin:0 0 4px"><b>Signed in as ${h(a.email)}.</b></p>
-    <p class="small muted" style="margin:0 0 12px">${st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="bad-t">Couldn't sync: ${h(st.error)}</span>` : st.at ? `Synced at ${st.at.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}` : 'Changes sync a few seconds after you make them.'}</p>
-    <div class="btns"><button class="btn" data-act="sync-now">Sync now</button><button class="btn danger" data-act="sync-out">Sign out</button></div>`;
+  const pill = st.state === 'syncing' ? '<span class="sync-pill busy"><span class="spin"></span>Syncing…</span>'
+    : st.state === 'error' ? '<span class="sync-pill bad">● Not synced</span>'
+    : st.at ? `<span class="sync-pill good">● Synced ${st.at.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</span>` : '<span class="sync-pill good">● Connected</span>';
+  return `<div class="acct"><div class="avatar">${h(a.email[0].toUpperCase())}</div>
+      <div class="grow"><div class="t">${h(a.email)}</div>${pill}</div></div>
+    ${st.state === 'error' ? `<div class="auth-msg bad">${h(st.error)}</div>` : '<p class="small muted" style="margin:10px 0 12px">Changes sync a few seconds after you make them, and when you open the app.</p>'}
+    <div class="btns"><button class="btn" data-act="sync-now" ${st.state === 'syncing' ? 'disabled' : ''}>Sync now</button><button class="btn danger" data-act="sync-out">Sign out</button></div>`;
 }
 
 function reminders() {
@@ -121,14 +131,33 @@ export function view() {
   };
 }
 
+
+// Sign-in form state lives here, so redraws (like switching tabs) keep what was typed.
+const auth = { mode: 'in', email: '', pass: '', pass2: '', show: false, busy: false, error: '', note: '' };
+const friendly = m => /invalid login credentials/i.test(m) ? 'Wrong email or password.'
+  : /already registered|already exists/i.test(m) ? 'This email already has an account. Sign in instead.'
+  : /email not confirmed/i.test(m) ? 'Confirm your email first (check your inbox), then sign in.'
+  : /password should be at least|weak password/i.test(m) ? 'Choose a password with at least 6 characters.'
+  : /rate limit|too many/i.test(m) ? 'Too many tries. Wait a minute and try again.'
+  : /failed to fetch|network/i.test(m) ? 'No connection. Check your internet and try again.'
+  : m;
+const rerender = () => document.dispatchEvent(new Event('pg27:render'));
+
 function authAct(kind) {
-  const email = document.getElementById('sy-email').value.trim(), pass = document.getElementById('sy-pass').value;
-  lastEmail = email;
-  if (!email.includes('@') || pass.length < 6) { toast('Enter your email and a password of 6+ characters'); return; }
-  sync.status.error = '';
+  const email = auth.email.trim(), pass = auth.pass;
+  auth.error = ''; auth.note = '';
+  if (!/^\S+@\S+\.\S+$/.test(email)) { auth.error = 'Enter a valid email.'; return; }
+  if (pass.length < 6) { auth.error = 'Passwords have at least 6 characters.'; return; }
+  if (kind === 'up' && pass !== auth.pass2) { auth.error = "The two passwords don't match."; return; }
+  auth.busy = true; sync.status.error = '';
   (kind === 'in' ? sync.signIn(email, pass) : sync.signUp(email, pass))
-    .then(r => { toast(r === 'confirm' ? 'Check your email to confirm the account, then sign in' : 'Signed in. Syncing…'); document.dispatchEvent(new Event('pg27:render')); })
-    .catch(e => { sync.status.error = e.message; toast(e.message); document.dispatchEvent(new Event('pg27:render')); });
+    .then(r => {
+      auth.busy = false;
+      if (r === 'confirm') { auth.mode = 'in'; auth.note = `Account created. Open the email sent to ${email} to confirm it, then sign in here.`; }
+      else { auth.pass = auth.pass2 = ''; toast(kind === 'up' ? 'Account created. Syncing…' : 'Signed in. Syncing…'); }
+      rerender();
+    })
+    .catch(e => { auth.busy = false; auth.error = friendly(e.message); rerender(); });
 }
 
 export const actions = {
@@ -151,6 +180,14 @@ export const actions = {
   },
   'sync-in': () => authAct('in'),
   'sync-up': () => authAct('up'),
+  'auth-mode': el => { auth.mode = el.dataset.v; auth.error = auth.note = ''; },
+  'auth-show': () => { auth.show = !auth.show; },
+  'auth-forgot': () => {
+    auth.error = auth.note = '';
+    if (!/^\S+@\S+\.\S+$/.test(auth.email.trim())) { auth.error = 'Type your email above first.'; return; }
+    sync.resetPassword(auth.email.trim()).then(() => { auth.note = `If ${auth.email.trim()} has an account, a reset link is on its way.`; rerender(); })
+      .catch(e => { auth.error = friendly(e.message); rerender(); });
+  },
   'sync-now': () => { sync.syncNow(); },
   'sync-out': () => { if (confirm('Sign out on this device? Your progress stays here, and in your account.')) { sync.signOut(); toast('Signed out'); } },
   'push-on': () => {
@@ -184,6 +221,12 @@ export const actions = {
   },
 };
 
+export function onInput(e) {
+  const k = { 'sy-email': 'email', 'sy-pass': 'pass', 'sy-pass2': 'pass2' }[e.target.id];
+  if (!k) return false;
+  auth[k] = e.target.value; return true;
+}
+
 export function onChange(e) {
   const el = e.target;
   if (el.dataset.set && el.value) {
@@ -205,3 +248,8 @@ export function onChange(e) {
   }
   return false;
 }
+
+// Return / "Go" on the keyboard submits the sign-in form.
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && ['sy-email', 'sy-pass', 'sy-pass2'].includes(e.target.id)) { e.preventDefault(); document.querySelector('.auth-go')?.click(); }
+});

@@ -124,6 +124,23 @@ function render({ top = false, enter = false } = {}) {
   writeSummary(); // keeps the next reminder current
 }
 
+const keyOf = el => `${el.dataset.act}|${el.dataset.id || ''}|${el.dataset.v || ''}|${el.dataset.k || ''}`;
+const sigOf = el => `${el.className}|${el.getAttribute('aria-pressed') || ''}|${el.getAttribute('aria-current') || ''}`;
+function stateOf() {
+  const m = new Map();
+  for (const el of document.querySelectorAll('#view [data-act], #sheet-root [data-act], #tabs [data-act]')) m.set(keyOf(el), sigOf(el));
+  return m;
+}
+function animateChanges(before) {
+  for (const el of document.querySelectorAll('#view [data-act], #sheet-root [data-act], #tabs [data-act]')) {
+    const was = before.get(keyOf(el));
+    if (was !== undefined && was !== sigOf(el)) {
+      el.classList.add('changed');
+      const row = el.closest('.item'); if (row) row.classList.add('row-changed');
+    }
+  }
+}
+
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
@@ -131,7 +148,11 @@ document.addEventListener('click', e => {
   if (!fn) return;
   const r = fn(el, e);
   save();
+  // Redraws replace the markup, so CSS transitions can't run on their own. Note each control's
+  // state first, then animate the ones that changed (a tick, a chip, a tab), so taps feel smooth.
+  const before = r === 'enter' ? null : stateOf();
   render({ top: r === 'top', enter: r === 'enter' });
+  if (before) animateChanges(before);
   if (typeof r === 'function') r();
 });
 

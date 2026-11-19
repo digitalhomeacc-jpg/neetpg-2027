@@ -80,9 +80,24 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 input, select, textarea { font: inherit; font-size: 16px; color: inherit; } /* 16px stops iOS zooming into fields */
 .num { font-variant-numeric: tabular-nums; }
 .ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-button { transition: transform .2s cubic-bezier(.3, .7, .4, 1.4), opacity .15s, background-color .2s, color .2s; }
-button:active:not(:disabled) { transform: scale(.965); }
-.tabs button:active { transform: scale(.88); }
+/* Press feedback: quick to sink, gentle to come back (no bounce). */
+button { transition: transform .28s cubic-bezier(.2, .8, .2, 1), opacity .2s, background-color .25s ease, color .25s ease, box-shadow .25s ease; }
+button:active:not(:disabled) { transform: scale(.97); transition-duration: .08s; }
+.tabs button:active { transform: scale(.9); }
+.item { transition: background-color .3s ease; }
+.item:has(> .open:active), .item:has(> button.open:active) { background: var(--surface-2); transition-duration: .05s; }
+.item .open:active, .rt-topic:active, .ak-row .open:active { transform: none; }
+/* A control whose state just changed eases into it (redraws replace the markup). */
+.changed { animation: settle .32s cubic-bezier(.2, .8, .2, 1); }
+.check.changed, .ak-check.changed { animation: pop .38s cubic-bezier(.2, .9, .3, 1.25); }
+.row-changed { animation: rowGlow .6s ease; }
+@keyframes settle { from { opacity: .55; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(.7); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes rowGlow { from { background: var(--accent-soft); } to { background: transparent; } }
+.sheet.leave { animation: down .24s cubic-bezier(.4, 0, 1, 1) forwards; pointer-events: none; }
+.scrim.leave { animation: fadeOut .24s ease forwards; pointer-events: none; }
+@keyframes down { to { transform: translateY(105%); } }
+@keyframes fadeOut { to { opacity: 0; } }
 
 /* Compact nav bar (appears on scroll) ------------------------------------ */
 .navbar {
@@ -800,3 +815,27 @@ code { font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; background: var(-
 .ak-row .open { flex: 1; min-width: 0; text-align: left; }
 .ak-c { text-align: right; font-size: 15px; line-height: 1.15; }
 .ak-c span { display: block; font-size: 11px; color: var(--muted); }
+
+/* ---------- Sign in / account ---------- */
+.auth-seg { margin-bottom: 12px; }
+.auth-lead { margin: 0 0 14px; }
+.auth-field { display: block; margin-bottom: 12px; }
+.auth-field > span { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 6px 2px; }
+.pw { position: relative; }
+.pw .inp { padding-right: 70px; }
+.pw-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--accent); }
+.pw-eye:active:not(:disabled) { transform: translateY(-50%) scale(.95); }
+.auth-msg { border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; margin: 2px 0 12px; animation: fade .25s ease; }
+.auth-msg.bad { background: var(--bad-soft); color: var(--bad); }
+.auth-msg.good { background: var(--accent-soft); color: var(--accent); }
+.auth-go { height: 50px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.auth-go.busy { opacity: .85; }
+.auth-forgot { display: block; margin: 12px auto 0; font-size: 14px; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; display: inline-block; animation: spin .7s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.acct { display: flex; align-items: center; gap: 12px; }
+.acct .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--grad); color: var(--on-grad); display: grid; place-content: center; font-weight: 700; font-size: 19px; flex: none; }
+.acct .t { font-weight: 600; word-break: break-all; }
+.sync-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; margin-top: 3px; }
+.sync-pill.good { color: var(--accent); } .sync-pill.bad { color: var(--bad); } .sync-pill.busy { color: var(--muted); }
+.sync-pill .spin { width: 11px; height: 11px; border-width: 1.6px; }

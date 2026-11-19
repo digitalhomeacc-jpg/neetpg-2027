@@ -63,13 +63,22 @@ export function videoItem(v, { showSubject = false, showBlock = true, real = nul
 /* ---------- bottom sheet ---------- */
 let sheetFn = null;
 export function openSheet(fn) { sheetFn = fn; renderSheet(true); }
-export function closeSheet() { sheetFn = null; document.getElementById('sheet-root').innerHTML = ''; document.body.classList.remove('locked'); }
+export function closeSheet() {
+  sheetFn = null; document.body.classList.remove('locked');
+  const root = document.getElementById('sheet-root'), sh = root.querySelector('.sheet');
+  if (!sh || matchMedia('(prefers-reduced-motion: reduce)').matches) { root.innerHTML = ''; return; }
+  // Keep the old sheet on screen just long enough to slide away; a new sheet replaces it at once.
+  root.querySelector('.scrim')?.classList.add('leave'); sh.classList.add('leave');
+  root.querySelectorAll('[data-act]').forEach(el => el.removeAttribute('data-act'));
+  setTimeout(() => { if (!sheetFn && root.querySelector('.sheet.leave')) root.innerHTML = ''; }, 260);
+}
 export const sheetOpen = () => !!sheetFn;
 export function renderSheet(first = false) {
   const root = document.getElementById('sheet-root');
-  if (!sheetFn) { root.innerHTML = ''; return; }
+  if (!sheetFn) { if (!root.querySelector('.sheet.leave')) root.innerHTML = ''; return; }
   const old = root.querySelector('.sheet');
   const scroll = old ? old.scrollTop : 0;
+  if (root.querySelector('.sheet.leave')) first = true; // replacing one that's sliding away
   root.innerHTML = `<div class="scrim${first ? ' enter' : ''}" data-act="close"></div>
     <div class="sheet${first ? ' enter' : ''}" role="dialog" aria-modal="true"><div class="grab"></div>${sheetFn()}</div>`;
   const sh = root.querySelector('.sheet');
