@@ -87,6 +87,7 @@ function defaults() {
     reflect: {},   // week start -> {went, hard, change}
     pairs: [],     // lookalike concepts: {id, a, b, how, subject, d}
     rehearsals: [], // GT rehearsals: {id, date, checks}
+    duty: {},      // date -> hospital duty hours that day
     runtimes: {},  // video id -> runtime in minutes you corrected (from Marrow)
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
@@ -101,7 +102,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {},
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {}, duty: raw.duty || {},
   };
 }
 function load() {
@@ -241,16 +242,18 @@ export function metrics() {
       done += v.mins; doneCount++;
       if (p.fr.d < t) doneBefore += v.mins; else if (p.fr.d === t) frToday += v.mins;
       if (p.fr.d >= recentFrom && p.fr.d <= t) { recent += v.mins; activeDays.add(p.fr.d); }
-      wSpeed += v.mins * p.fr.s; wMins += v.mins;
+      // Effective speed = runtime ÷ real time (an average of speeds would overstate it).
+      wSpeed += v.mins / (p.fr.s || st.speed || 1); wMins += v.mins;
     }
     for (const k of PASSES) if (p[k]) realAll += passMins(v, p[k]);
   }
   const byDay = realByDay();
   const realToday = byDay[t] || 0;
+  const frRealToday = VIDS.reduce((a, v) => { const f = prog(v.id).fr; return a + (f?.d === t ? passMins(v, f) : 0); }, 0);
   const sessDay = sessionsByDay();
   const otherToday = sessDay[t] || 0;
   const otherAll = S.sessions.reduce((a, x) => a + x.m, 0);
-  const avgSpeed = wMins ? wSpeed / wMins : null;
+  const avgSpeed = wMins ? wMins / wSpeed : null;
   // Plan with the speed you really watch at once there's 2h+ of history.
   const planSpeed = wMins >= 120 ? avgSpeed : st.speed;
   const remaining = total - done;
@@ -293,7 +296,7 @@ export function metrics() {
   }
 
   return {
-    t, total, done, doneCount, remaining, frToday, realToday, realAll, avgSpeed, planSpeed, byDay, sessDay, otherToday, otherAll,
+    t, total, done, doneCount, remaining, frToday, realToday, frRealToday, realAll, avgSpeed, planSpeed, byDay, sessDay, otherToday, otherAll,
     due, dueMins, must, mustMins, revDoneToday, revDoneCount, goal, minimum,
     restToday, daysLeft, overdue, target, totalDays, elapsed, expected, behind, recentRate, projected, streak,
     examDays: dayDiff(t, st.exam),
@@ -325,7 +328,7 @@ export function forecast(m, realPerDay = m.target) {
   for (let d = t, guard = 0; (pool.length || ahead) && guard < 1500; d = addDays(d, 1), guard++) {
     const rest = isRest(d);
     const mine = (S.plan[d] || []).filter(id => BY[id] && !watched(id));
-    const cap = rest ? 0 : d === t ? Math.max(0, realPerDay - m.realToday) : realPerDay;
+    const cap = rest ? 0 : d === t ? Math.max(0, realPerDay - m.frRealToday) : realPerDay; // new-video time already spent today (revisions don't count)
     const day = { date: d, cap, items: [], total: 0, planned: (S.plan[d] || []).length > 0 };
     for (const id of mine) { const v = BY[id], real = v.mins / m.planSpeed; day.items.push({ v, real, planned: true }); day.total += real; ahead--; }
     if (!day.planned && !rest && realPerDay > 0) {
@@ -341,6 +344,82 @@ export function forecast(m, realPerDay = m.target) {
   }
   return days;
 }
+// Day-by-day simulation with a fixed amount of study time a day (minutes, real time).
+// Each day: revisions that are due go first (oldest first), then new videos with what's left.
+// This is what "can I finish by X on Y hours a day?" needs: revisions grow as you watch more,
+// and together they take more time than the first watch itself. Days with duty hours entered
+// (S.duty) use that day's free time instead, when it's smaller.
+export function simulate(capMin, { until = S.settings.exam } = {}) {
+  const m = metrics(), t = m.t, exam = S.settings.exam, latest = addDays(exam, -5);
+  const revs = [];
+  for (const v of VIDS) { const r = rawRev(v, t); if (r?.k) revs.push({ due: r.due, v, i: PASSES.indexOf(r.k) }); }
+  const queue = forecast(m, Math.max(30, capMin)).flatMap(d => d.items.map(x => x.v));
+  // When each round (R1…R5) is done for every video. Rounds already complete count from today.
+  const passDone = {}, passLeft = {};
+  for (const k of PASSES.slice(1)) { passLeft[k] = VIDS.filter(v => !prog(v.id)[k]).length; if (!passLeft[k]) passDone[k] = t; }
+  let finish = m.remaining <= 0 ? t : null, revPeak = 0, revTotal = 0, newTotal = 0, days = 0, lateMax = 0;
+  for (let d = t, g = 0; d <= until && g < 1200; d = addDays(d, 1), g++) {
+    let avail = isRest(d) ? 0 : Math.min(capMin, freeMinutes(d) ?? capMin);
+    if (d === t) avail = Math.max(0, avail - m.realToday);
+    const tight = dayDiff(d, exam) <= 42 ? 0.7 : 1;
+    const due = revs.filter(r => r.due <= d).sort((a, b) => a.due.localeCompare(b.due));
+    let revToday = 0;
+    for (const r of due) {
+      const b = Math.max(2, Math.round(r.v.mins * REV[PASSES[r.i]].budget * tight));
+      if (avail < b && !(avail > 0 && b > capMin)) continue;
+      avail -= b; revToday += b; lateMax = Math.max(lateMax, dayDiff(r.due, d));
+      const kk = PASSES[r.i]; if (--passLeft[kk] === 0) passDone[kk] = d;
+      revs.splice(revs.indexOf(r), 1);
+      const k = r.i + 1;
+      if (k < PASSES.length) {
+        const left = PASSES.slice(k).reduce((a, kk) => a + REV[kk].gap, 0), room = Math.max(k, dayDiff(d, latest));
+        revs.push({ due: addDays(d, Math.max(1, Math.round(REV[PASSES[k]].gap * Math.min(1, room / left)))), v: r.v, i: k });
+      }
+    }
+    revPeak = Math.max(revPeak, revToday); revTotal += revToday;
+    while (queue.length && avail > 0 && !isRest(d)) {
+      const v = queue[0], real = v.mins / m.planSpeed;
+      if (real > avail && avail < real * 0.5) break;
+      queue.shift(); avail -= real; newTotal += real;
+      const room = Math.max(1, dayDiff(d, latest)), sq = Math.min(1, room / PASSES.slice(1).reduce((a, kk) => a + REV[kk].gap, 0));
+      revs.push({ due: addDays(d, Math.max(1, Math.round(REV.r1.gap * sq))), v, i: 1 });
+      if (!queue.length) finish = d;
+    }
+    days++;
+  }
+  return { finish, revPeak, revTotal, newTotal, revLeft: revs.length, lateMax, passDone, passLeft };
+}
+// Study hours a day (revisions included) needed to finish the first watch by a date.
+let needKey = '', needVal = null;
+export function hoursNeeded(by = S.settings.target) {
+  const key = `${saveVersion}|${today()}|${by}`;
+  if (key === needKey) return needVal;
+  let lo = 0.5, hi = 14;
+  if ((simulate(hi * 60, { until: by }).finish || '9') > by) { needKey = key; return (needVal = null); }
+  for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; if ((simulate(mid * 60, { until: by }).finish || '9') <= by) hi = mid; else lo = mid; }
+  needKey = key; return (needVal = Math.ceil(hi * 4) / 4);
+}
+// When the first watch finishes if you keep studying as much as in the last two weeks
+// (real time a study day, revisions included). Revisions grow, so this is simulated too.
+export function pace() {
+  const m = metrics(), from = addDays(m.t, -13), st = S.settings;
+  let sum = 0, days = 0, active = 0;
+  for (let d = from < st.start ? st.start : from; d <= m.t; d = addDays(d, 1)) {
+    if (isRest(d)) continue;
+    days++; const x = m.byDay[d] || 0; sum += x; if (x) active++;
+  }
+  const perDay = days ? sum / days : 0;
+  if (active < 3 || !perDay || m.remaining <= 0) return null;
+  return { perDay, finish: simulate(perDay).finish };
+}
+// Free study time on a day from the duty hours you entered (null if none entered).
+export function freeMinutes(d) {
+  const x = S.duty?.[d];
+  if (x == null) return null;
+  const st = S.settings;
+  return Math.max(0, ((st.awake ?? 16) - x - (st.essentials ?? 3)) * 60);
+}
+
 export const plannedOn = id => Object.keys(S.plan).filter(d => d >= today() && S.plan[d].includes(id)).sort()[0] || null;
 
 /* ---------- phases from now to the exam ---------- */

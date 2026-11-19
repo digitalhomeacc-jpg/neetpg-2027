@@ -1,6 +1,6 @@
 // Backlogs and self-improvement: what skipping costs, today and as a habit, what's piled up,
 // and what your own data says to change. All numbers come from your plan and history.
-import { S, VIDS, BY, PASSES, REV, prog, passMins, metrics, phases, revisionsDue, studyDays, isRest, addDays, dayDiff, today, parse,
+import { S, VIDS, BY, PASSES, REV, prog, passMins, metrics, simulate, hoursNeeded, phases, revisionsDue, studyDays, isRest, addDays, dayDiff, today, parse,
   DOW_LONG, h, mins, hrs, pct, fmtDay, fmtDayYear } from '../core.js';
 import { sectionH, closeSheet } from '../ui.js';
 
@@ -72,9 +72,8 @@ export function view() {
   const ph = phases();
   const scen = [0, 1, 2, 3].filter(s => s < studyPerWeek).map(s => {
     const share = (studyPerWeek - s) / studyPerWeek;
-    let need = remReal, d = t, guard = 0;
-    while (need > 0 && guard++ < 2000) { if (!isRest(d)) need -= T * share; d = addDays(d, 1); }
-    const finish = addDays(d, -1);
+    // Simulated with revisions: the hours a day that make the deadline, cut by the skipped share.
+    const finish = simulate((hoursNeeded() ?? 8) * 60 * share).finish || st.exam;
     const late = Math.max(0, dayDiff(st.target, finish));
     const p2days = Math.max(0, dayDiff(finish, ph[1].end));
     const catchUp = left ? (remReal / (left * share)) : 0;
@@ -172,7 +171,7 @@ export function view() {
     <label class="lbl" for="pull-x">Extra each study day this week: <b class="num" id="pull-v">+${mins(x)}</b></label>
     <input id="pull-x" type="range" min="0" max="${max}" step="5" value="${x}" class="pull-range">
     <div id="pull-out">${pullOut(w, x)}</div>
-    <div class="btns" style="margin-top:10px"><button class="btn primary" data-act="plan-week">Plan this week</button></div>
+    <div class="btns" style="margin-top:10px"><button class="btn primary" data-act="plan-week">Plan this week</button><button class="btn" data-act="duty-open">Duty hours</button></div>
   </section>`;
   })()}
 

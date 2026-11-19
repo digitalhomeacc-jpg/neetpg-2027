@@ -23,13 +23,14 @@ import * as backlogV from './views/backlog.js';
 import * as ankiV from './views/anki.js';
 import * as ankiLibV from './views/ankilib.js';
 import * as helloV from './views/hello.js';
+import * as dutyV from './views/duty.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
-const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV, ankilib: ankiLibV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV];
+const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV, ankilib: ankiLibV, duty: dutyV };
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV, dutyV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -40,6 +41,7 @@ function quickActions() {
       <li class="item"><span class="rbadge" style="--h:45">📌</span><button class="open" data-act="qa-pins"><div class="t">High-yield sheet</div><div class="s">Facts you've pinned, by subject</div></button></li>
       <li class="item"><span class="rbadge" style="--h:160">🔁</span><button class="open" data-act="revisions" data-v="r1"><div class="t">Revisions</div><div class="s">R1–R5 with dates, limits and time taken</div></button></li>
       <li class="item"><span class="rbadge" style="--h:10">⚠️</span><button class="open" data-act="backlog"><div class="t">Backlogs and self-improvement</div><div class="s">What skipping costs, and how to get back</div></button></li>
+      <li class="item"><span class="rbadge" style="--h:340">🏥</span><button class="open" data-act="duty-open"><div class="t">Duty & free time</div><div class="s">Enter duty hours, see the time you really have</div></button></li>
       <li class="item"><span class="rbadge" style="--h:200">🗂️</span><button class="open" data-act="qa-anki"><div class="t">Anki tags</div><div class="s">Tags and cards hit, video by video</div></button></li>
       <li class="item"><span class="rbadge" style="--h:300">🔀</span><button class="open" data-act="pairs"><div class="t">Lookalikes</div><div class="s">Things you mix up, side by side</div></button></li>
       <li class="item"><span class="rbadge" style="--h:250">📊</span><button class="open" data-act="qa-report"><div class="t">Weekly report</div><div class="s">Your week, three questions, a card to share</div></button></li>
@@ -57,6 +59,7 @@ const ACTIONS = Object.assign({
     if (S.ui.tab === 'times') { S.ui.tab = S.ui.timesBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'pins') { S.ui.tab = S.ui.pinsBack || 'videos'; return 'enter'; }
     if (S.ui.tab === 'revisions') { S.ui.tab = S.ui.revBack || 'today'; return 'enter'; }
+    if (S.ui.tab === 'duty') { S.ui.tab = S.ui.dutyBack || 'plan'; return 'enter'; }
     if (S.ui.tab === 'ankilib') { S.ui.tab = S.ui.libBack || 'anki'; return 'enter'; }
     if (S.ui.tab === 'anki') { S.ui.tab = S.ui.ankiBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'backlog') { S.ui.tab = S.ui.backlogBack || 'today'; return 'enter'; }
@@ -103,7 +106,7 @@ function render({ top = false, enter = false } = {}) {
   const tab = VIEWS[S.ui.tab] ? S.ui.tab : 'today';
   const { title, meta, html } = VIEWS[tab].view();
   document.getElementById('nav-title').textContent = title;
-  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog', 'anki', 'ankilib'].includes(tab)
+  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog', 'anki', 'ankilib', 'duty'].includes(tab)
     ? `<button class="icon-btn" data-act="back" aria-label="Back">${ICON.back}</button>`
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;

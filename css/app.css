@@ -903,3 +903,14 @@ details[open] > :not(summary) { animation: fade .25s ease; }
 .pgw.in .pgw-card > :nth-child(4) { transition-delay: .18s; } .pgw.in .pgw-card > :nth-child(5) { transition-delay: .24s; }
 .pgw.in .pgw-card > :nth-child(6) { transition-delay: .3s; }
 .version-stamp { margin-top: 2px; margin-bottom: 18px; }
+.duty-set { gap: 10px; margin: 6px 0; } .duty-set .inp { max-width: 90px; text-align: center; }
+.duty-row { padding: 12px 16px; } .duty-row + .duty-row { border-top: .5px solid var(--line-2); }
+.duty-row .t { font-weight: 600; } .duty-row.over { background: color-mix(in srgb, var(--bad) 7%, transparent); }
+.duty-bar { margin: 8px 0 2px; } .duty-row.over .duty-bar > i { background: var(--bad); }
+.duty-chips { margin-top: 8px; }
+.rounds { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 12px 0 4px; }
+.round { background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
+.round span { display: block; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+.round b { display: block; font-size: 16px; margin-top: 2px; }
+.round.miss { background: var(--bad-soft); } .round.miss b { color: var(--bad); font-size: 14px; }
+.round em { font-style: normal; font-size: 12px; color: var(--bad); }

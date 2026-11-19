@@ -1,5 +1,5 @@
 import {
-  S, VIDS, metrics, forecast, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
+  S, VIDS, PASSES, metrics, forecast, simulate, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
 import { sectionH, CHECK } from '../ui.js';
@@ -38,8 +38,9 @@ export function view() {
 
   // What-if: hours a day you can give, and when that gets WOR done.
   const whatif = S.ui.whatif ?? (Math.round((m.target / 60) * 4) / 4 || 3);
-  const wfc = m.remaining > 0 ? forecast(m, whatif * 60) : [];
-  const wEnd = wfc.length ? wfc[wfc.length - 1].date : t;
+  // Revisions come out of the same hours, so simulate day by day rather than divide.
+  const sim = m.remaining > 0 ? simulate(whatif * 60) : null;
+  const wEnd = sim ? (sim.finish || st.exam) : t;
   const wDiff = dayDiff(st.target, wEnd);
   const wMsg = !m.remaining ? 'WOR is done.' : wDiff <= 0
     ? `Done <b>${fmtDayYear(wEnd)}</b>, ${wDiff === 0 ? 'right on' : `${-wDiff} days before`} your ${fmtDay(st.target)} deadline.`
@@ -93,8 +94,12 @@ export function view() {
   ${sectionH('What if', 'real hours a day')}
   <section class="card">
     <div class="row"><input type="range" id="whatif" min="1" max="8" step="0.25" value="${whatif}" aria-label="Hours a day"><span class="whatif-v num">${whatif}h</span></div>
-    <p class="small" style="margin:10px 0 0">${wMsg}</p>
-    <p class="small faint" style="margin:4px 0 0">You need <b class="num">${mins(m.target)}</b> a study day to make the deadline. Change the deadline or rest days in Settings.</p>
+    <p class="small" style="margin:10px 0 0">${sim?.finish ? wMsg : `At ${whatif}h a day the first watch doesn't finish before the exam.`}</p>
+    ${sim ? `<p class="small muted" style="margin:6px 0 0">Counts revisions too: they come out of the same ${whatif}h, up to <b class="num">${mins(sim.revPeak)}</b> on the busiest day. Over the whole plan, revisions take <b class="num">${hrs(sim.revTotal)}</b> and new videos <b class="num">${hrs(sim.newTotal)}</b>.</p>` : ''}
+    ${(() => { const need = hoursNeeded(); return `<p class="small" style="margin:8px 0 0">${need ? `To finish by ${fmtDay(st.target)} you need about <b class="num">${need}h</b> every study day, revisions included` : `Your ${fmtDay(st.target)} deadline can't be met even at 14h a day`}. Today's new-video target alone is ${mins(m.target)}; revisions come on top.</p>`; })()}
+    ${sim ? `<div class="rounds">${[['First watch', sim.finish, 0], ...PASSES.slice(1).map(k => [k.toUpperCase(), sim.passDone[k], sim.passLeft[k]])].map(([l, d, left]) => `<div class="round${d ? '' : ' miss'}"><span>${l}</span><b class="num">${d ? fmtDay(d) : 'Not by the exam'}</b>${d ? '' : `<em class="num">${left} left</em>`}</div>`).join('')}</div>
+    <p class="hint">When every video has had each round, at ${whatif}h a day. A round "not by the exam" means some videos won't get it in time: add hours, start revisions earlier, or accept fewer rounds for weak-yield topics.</p>` : ''}
+    <p class="small faint" style="margin:4px 0 0">Change the deadline or rest days in Settings.</p>
   </section>
 
   ${sectionH('Revision load', 'next 8 weeks')}
@@ -104,6 +109,7 @@ export function view() {
   </section>
 
   ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
+  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="duty-open">🏥 Duty & free time</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn primary" data-act="plan-week">🗓️ Plan the week</button><button class="btn" data-act="ics">📅 To Calendar</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="rehearsals">🎯 GT rehearsals</button><button class="btn" data-act="final-preview">🏁 Final 7 days</button></div>

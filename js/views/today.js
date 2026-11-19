@@ -9,22 +9,27 @@ import { checkinCard } from './health.js';
 import { rehearsalCard, finalCard } from './extras.js';
 import { backlogCard } from './backlog.js';
 import { account } from '../sync.js';
-import { finishDate, studyDays, dayDiff } from '../core.js';
+import { finishDate, studyDays, dayDiff, pace, hoursNeeded } from '../core.js';
 
 // When your recent pace won't make the deadline, offer three concrete fixes.
 function catchUp(m, st) {
-  if (!m.projected || m.remaining <= 0 || m.projected <= st.target) return '';
-  const late = dayDiff(st.target, m.projected);
+  const p = pace();
+  if (!p || m.remaining <= 0) return '';
+  const proj = p.finish || st.exam;
+  if (proj <= st.target) return '';
+  const late = dayDiff(st.target, proj);
+  // Both numbers are real study time a day, revisions included.
+  const nowReal = p.perDay, needReal = (hoursNeeded() ?? 14) * 60;
+  m = { ...m, projected: proj };
   const daysLeft = Math.max(1, studyDays(addDays(m.t, 1), st.target));
-  const needRuntime = m.remaining / daysLeft;               // runtime minutes a day to make it
-  const nowReal = m.recentRate / m.planSpeed, needReal = needRuntime / m.planSpeed;
-  const at2 = needRuntime / 2;
+  const at2 = m.remaining / daysLeft / 2;
   return `<section class="card catchup">
-    <div class="cu-h">⚠️ At your last two weeks' pace you finish WOR on <b>${fmtDay(m.projected)}</b>, ${late} day${late > 1 ? 's' : ''} after your deadline.</div>
+    <div class="cu-h">⚠️ At your last two weeks' pace you finish WOR ${p.finish ? `on <b>${fmtDay(m.projected)}</b>` : '<b>after the exam</b>'}, ${late} day${late > 1 ? 's' : ''} after your deadline.</div>
     <div class="cu-opts">
-      <button class="cu-opt" data-act="plan-day" data-v="${addDays(m.t, 1)}"><b>+${mins(Math.max(0, needReal - nowReal))} a day</b><span>Study ${mins(needReal)} of new videos a day (now ${mins(nowReal)}) and keep ${fmtDay(st.target)}. Plan tomorrow →</span></button>
-      <button class="cu-opt" data-act="cu-deadline" data-v="${m.projected}"><b>Move deadline to ${fmtDay(m.projected)}</b><span>Keep your current pace. Later phases shift too.</span></button>
-      ${m.planSpeed < 2 ? `<button class="cu-opt" data-act="cu-speed"><b>Watch at 2×</b><span>${mins(at2)} a day keeps ${fmtDay(st.target)}, instead of ${mins(needReal)} at ${sp(m.planSpeed)}.</span></button>` : ''}
+      <button class="cu-opt" data-act="plan-day" data-v="${addDays(m.t, 1)}"><b>+${mins(Math.max(0, needReal - nowReal))} a day</b><span>Study ${mins(needReal)} a day in all, revisions included (now ${mins(nowReal)}), and keep ${fmtDay(st.target)}. Plan tomorrow →</span></button>
+      ${m.projected < addDays(st.exam, -60) ? `<button class="cu-opt" data-act="cu-deadline" data-v="${m.projected}"><b>Move deadline to ${fmtDay(m.projected)}</b><span>Keep your current pace. Later phases shift too.</span></button>`
+        : `<div class="cu-opt"><b>Moving the deadline won't fix it</b><span>At this pace the first watch ends ${p.finish ? `on ${fmtDay(p.finish)}, too close to the exam` : 'after the exam'}. Study time a day has to go up.</span></div>`}
+      ${m.planSpeed < 2 ? `<button class="cu-opt" data-act="cu-speed"><b>Watch at 2×</b><span>New videos take ${Math.round((1 - m.planSpeed / 2) * 100)}% less time than at ${sp(m.planSpeed)}. Revision limits stay the same.</span></button>` : ''}
     </div></section>`;
 }
 function backupNudge() {
@@ -213,7 +218,7 @@ export function view() {
     <div class="tile"><div class="k">Exam</div><div class="v num">${m.examDays} days</div><div class="s">${fmtDayYear(st.exam)} (est.)</div></div>
   </section>
 
-  ${m.projected ? `<p class="small faint center">At your last two weeks' pace, WOR first watch finishes ${fmtDayYear(m.projected)}.</p>` : ''}
+  ${(() => { const p = pace(); return p ? `<p class="small faint center">At your last two weeks' pace (${mins(p.perDay)} a study day, revisions included), WOR first watch finishes ${p.finish ? fmtDayYear(p.finish) : 'after the exam'}.</p>` : ''; })()}
   `,
   };
 }
