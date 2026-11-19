@@ -1,6 +1,6 @@
 // Video panels: quick "mark watched" and the full detail with passes, Anki tags and mistakes.
-import { S, BY, PASSES, PLABEL, SPEEDS, REV, prog, save, today, h, mins, sp, fmtDay, subjDot, ankiQuery, REASONS, revInfo, passMins, ratingName } from '../core.js';
-import { openSheet, closeSheet, toast, seg } from '../ui.js';
+import { S, BY, PASSES, PLABEL, SPEEDS, REV, prog, save, today, h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, ankiQuery, REASONS, revInfo, passMins, ratingName, plannedOn } from '../core.js';
+import { openSheet, closeSheet, toast, seg, clockTime } from '../ui.js';
 import { openMistake } from './tests.js';
 
 let ctx = null; // { id, kind, speed, date }
@@ -9,7 +9,8 @@ function body() {
   const v = BY[ctx.id], p = prog(v.id);
   const speeds = seg('vs-speed', SPEEDS.map(s => [s, sp(s)]), ctx.speed);
   const head = `<h3>${h(v.title)}</h3>
-    <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Block ${v.block} · ${mins(v.mins)} runtime</div>`;
+    <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Block ${v.block} · ${mins(v.mins)} runtime</div>
+    ${p.fr ? `<div class="stamp-big">✓ Watched on ${fmtDayLong(p.fr.d)}${p.fr.t ? ` at ${clockTime(p.fr.t)}` : ''} · ${sp(p.fr.s)}</div>` : plannedOn(v.id) ? `<div class="stamp-big plan">Planned for ${fmtDayLong(plannedOn(v.id))}</div>` : ''}`;
   if (ctx.kind === 'mark') {
     return `${head}
       <div class="field"><span class="lbl">Watched at</span>${speeds}</div>
@@ -21,7 +22,7 @@ function body() {
     const x = p[k];
     let info, btn = '';
     if (x) {
-      info = `${fmtDay(x.d)} · ${mins(passMins(v, x))}${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}`;
+      info = `<span class="stamp">✓ ${fmtDow(x.d)}${x.t ? ` · ${clockTime(x.t)}` : ''}</span> ${mins(passMins(v, x))}${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}`;
       const latest = PASSES.filter(kk => p[kk]).pop() === k;
       btn = latest ? `<button class="btn ghost danger" data-act="vs-unpass" data-k="${k}">Undo</button>` : '';
     } else if (k === 'fr') {
@@ -67,7 +68,7 @@ export const actions = {
   'vs-speed': el => { ctx.speed = +el.dataset.v; const d = document.getElementById('vs-date'); if (d?.value) ctx.date = d.value; },
   'vs-confirm': () => {
     const d = document.getElementById('vs-date').value || today();
-    (S.progress[ctx.id] ||= {}).fr = { d, s: ctx.speed };
+    (S.progress[ctx.id] ||= {}).fr = { d, s: ctx.speed, ...(d === today() ? { t: new Date().toISOString() } : {}) };
     save(); const id = ctx.id, title = BY[id].title; closeSheet();
     toast(`Watched: ${title}`, () => { delete S.progress[id].fr; if (!Object.keys(S.progress[id]).length) delete S.progress[id]; save(); });
   },

@@ -80,6 +80,7 @@ function defaults() {
     days: {},      // date -> {t: target minutes that day}
     goals: {},     // goal id -> true
     sessions: [],  // focus sessions: {id, d, m, kind}
+    plan: {},      // date -> [video ids] you picked for that day
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
   };
@@ -92,7 +93,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {},
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {},
   };
 }
 function load() {
@@ -239,27 +240,38 @@ export function finishDate(runtimePerDay, from = today()) {
 const metricsRemaining = () => VIDS.reduce((a, v) => a + (prog(v.id).fr ? 0 : v.mins), 0);
 
 /* ---------- forecast: lay the remaining videos out over study days ---------- */
+// Lectures you've planned for a day go on that day. Planned ones you didn't get to
+// carry over to the front of the queue. Days you haven't planned are filled with
+// suggestions in sheet order, up to the day's required time.
 export function forecast(m, realPerDay = m.target) {
-  const days = [];
-  const pending = VIDS.filter(v => !prog(v.id).fr);
-  if (!pending.length || realPerDay <= 0) return days;
-  let d = m.t, cap = m.restToday ? 0 : Math.max(0, realPerDay - m.realToday);
-  let cur = { date: d, cap, items: [], total: 0 };
-  const push = () => { if (cur.items.length) days.push(cur); };
-  for (const v of pending) {
-    const real = v.mins / m.planSpeed;
-    // Start a new day when this video would push the day more than 15% over.
-    while (cur.items.length ? cur.total + real > cur.cap * 1.15 : cur.cap < Math.min(real, realPerDay) * 0.5) {
-      push();
-      do { d = addDays(d, 1); } while (isRest(d));
-      cur = { date: d, cap: realPerDay, items: [], total: 0 };
-      if (days.length > 2000) return days;
+  const t = m.t, days = [];
+  const watched = id => !!prog(id).fr;
+  const plannedAhead = new Set();
+  for (const [d, ids] of Object.entries(S.plan)) if (d >= t) for (const id of ids) if (BY[id] && !watched(id)) plannedAhead.add(id);
+  const carried = [];
+  for (const d of Object.keys(S.plan).sort()) if (d < t) for (const id of S.plan[d]) if (BY[id] && !watched(id) && !plannedAhead.has(id) && !carried.includes(id)) carried.push(id);
+  const pool = [...carried.map(id => BY[id]), ...VIDS.filter(v => !watched(v.id) && !plannedAhead.has(v.id) && !carried.includes(v.id))];
+  let ahead = plannedAhead.size;
+  for (let d = t, guard = 0; (pool.length || ahead) && guard < 1500; d = addDays(d, 1), guard++) {
+    const rest = isRest(d);
+    const mine = (S.plan[d] || []).filter(id => BY[id] && !watched(id));
+    const cap = rest ? 0 : d === t ? Math.max(0, realPerDay - m.realToday) : realPerDay;
+    const day = { date: d, cap, items: [], total: 0, planned: (S.plan[d] || []).length > 0 };
+    for (const id of mine) { const v = BY[id], real = v.mins / m.planSpeed; day.items.push({ v, real, planned: true }); day.total += real; ahead--; }
+    if (!day.planned && !rest && realPerDay > 0) {
+      while (pool.length) {
+        const v = pool[0], real = v.mins / m.planSpeed;
+        // Start the next day when this video would push the day more than 15% over.
+        if (day.items.length ? day.total + real > cap * 1.15 : cap < Math.min(real, realPerDay) * 0.5) break;
+        pool.shift(); day.items.push({ v, real, carried: carried.includes(v.id) }); day.total += real;
+      }
     }
-    cur.items.push({ v, real }); cur.total += real;
+    if (day.items.length) days.push(day);
+    if (!pool.length && ahead <= 0) break;
   }
-  push();
   return days;
 }
+export const plannedOn = id => Object.keys(S.plan).filter(d => d >= today() && S.plan[d].includes(id)).sort()[0] || null;
 
 /* ---------- phases from now to the exam ---------- */
 export function phases() {

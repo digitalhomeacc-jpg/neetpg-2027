@@ -88,7 +88,7 @@ export const actions = {
   'rv-finish': () => {
     const v = BY[ctx.id], r = revInfo(v);
     const spent = Math.max(1, Math.round(elapsed() / 60)) || r.budget;
-    (S.progress[v.id] ||= {})[r.k] = { d: today(), m: spent, q: ctx.q ?? 3 };
+    (S.progress[v.id] ||= {})[r.k] = { d: today(), t: new Date().toISOString(), m: spent, q: ctx.q ?? 3 };
     save(); clearInterval(timer); closeSheet();
     const nx = revInfo(v);
     toast(nx?.k ? `${r.k.toUpperCase()} done in ${mins(spent)}. ${nx.k.toUpperCase()} due ${fmtDay(nx.due)}` : `All 5 revisions done for ${v.title}`,

@@ -70,7 +70,8 @@ export function view() {
   const maxW = Math.max(60, ...revWeeks.map(w => w.tot));
 
   const dayHtml = soon.map(d => { const rv = revBy[d.date] || []; const rvMins = rv.reduce((a, x) => a + x.r.budget, 0); return `<li class="day">
-    <div class="day-h"><span class="t num">${d.date === t ? 'Today' : fmtDow(d.date)}</span><span class="small faint num">${mins(d.total + rvMins)}</span></div>
+    <div class="day-h"><span class="t num">${d.date === t ? 'Today' : fmtDow(d.date)} ${d.planned ? '<span class="pill accent">Your plan</span>' : '<span class="pill">Suggested</span>'}</span>
+      <span class="row" style="gap:10px"><span class="small faint num">${mins(d.total + rvMins)}</span><button class="link" data-act="plan-day" data-v="${d.date}">Edit</button></span></div>
     ${rv.length ? `<ul class="list">${rv.map(({ v, r }) => `<li><button class="day-v" data-act="revise" data-id="${v.id}"><span class="rtag">${r.k.toUpperCase()}</span><span class="grow">${h(v.title)}</span><span class="small faint num">${mins(r.budget)}</span></button></li>`).join('')}</ul>` : ''}
     <ul class="list">${d.items.map(({ v, real }) => `<li><button class="day-v" data-act="open-video" data-id="${v.id}">${subjDot(v.subject)}<span class="grow">${h(v.title)}</span><span class="small faint num">${mins(real)}</span></button></li>`).join('')}</ul>
   </li>`; }).join('');
@@ -102,7 +103,8 @@ export function view() {
     <p class="small faint" style="margin:10px 0 0">Every video you watch adds 5 revisions, each shorter than the last. This load grows as you watch more, so keep clearing what's due.</p>
   </section>
 
-  ${sectionH('Next two weeks', `new at ${mins(m.target)} a day + revisions`)}
+  ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
+  <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.target)} a day.</p>
   <ul class="card flush list daylist">${dayHtml}</ul>
 
   ${weeks.length ? `${sectionH('After that')}

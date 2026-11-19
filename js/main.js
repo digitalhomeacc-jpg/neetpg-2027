@@ -9,12 +9,13 @@ import * as settingsV from './views/settings.js';
 import * as videoS from './views/video.js';
 import * as reviseS from './views/revise.js';
 import * as focusS from './views/focus.js';
+import * as plannerS from './views/planner.js';
 import { writeSummary } from './notify.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
 const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV];
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>

@@ -12,7 +12,7 @@ function greeting() {
 
 function weekStrip(m, fc) {
   const ws = weekStart(m.t);
-  const plan = Object.fromEntries(fc.map(d => [d.date, d.cap]));
+  const plan = Object.fromEntries(fc.map(d => [d.date, d.planned ? d.total : d.cap]));
   let cells = '';
   for (let i = 0; i < 7; i++) {
     const d = addDays(ws, i), real = (m.byDay[d] || 0) + (m.sessDay[d] || 0);
@@ -45,12 +45,15 @@ export function view() {
   const behindCls = m.behind > 60 ? 'bad' : m.behind > 0 ? 'warn' : 'good';
   const behindTxt = m.behind > 0 ? `${hrs(m.behind)}` : `+${hrs(-m.behind)}`;
 
-  const todayPlan = fc[0] && fc[0].date === m.t ? fc[0].items : (fc[0]?.items.slice(0, 2) || []);
-  const bonus = !(fc[0] && fc[0].date === m.t);
+  const mineToday = (S.plan[m.t] || []).length > 0;
+  const todayPlan = fc[0] && fc[0].date === m.t ? fc[0].items : mineToday ? [] : (fc[0]?.items.slice(0, 2) || []);
+  const bonus = !mineToday && !(fc[0] && fc[0].date === m.t);
+  const tmr = addDays(m.t, 1);
+  const tmrIds = (S.plan[tmr] || []).filter(id => BY[id] && !prog(id).fr);
+  const tmrMins = tmrIds.reduce((a, id) => a + BY[id].mins / m.planSpeed, 0);
   let nextHtml = '', lastBlock = null, acc = 0;
-  for (const { v, real } of todayPlan) {
-    if (v.block !== lastBlock) { nextHtml += `<li class="group-h">${subjDot(v.subject)}Block ${v.block} · ${h(v.subject)}</li>`; lastBlock = v.block; }
-    nextHtml += videoItem(v, { showBlock: false, real }); acc += real;
+  for (const { v, real, carried } of todayPlan) {
+    nextHtml += videoItem(v, { showBlock: false, showSubject: true, real, note: carried ? 'carried over' : '' }); acc += real;
   }
 
   const doneToday = VIDS.filter(v => PASSES.some(k => prog(v.id)[k]?.d === m.t));
@@ -100,9 +103,18 @@ export function view() {
       <button class="btn small-btn" data-act="revise" data-id="${v.id}">Start</button></li>`;
   }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="ei">🎉</div><div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="ei">🧠</div><div class="e1">Nothing to revise yet</div>Each video's R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.`}</section>`}
 
-  ${m.remaining > 0 && todayPlan.length ? `
-  ${sectionH(bonus ? 'New videos · bonus' : 'New videos', `<span class="num">${mins(acc)}</span>`)}
-  <ul class="card flush list">${nextHtml}</ul>` : ''}
+  ${m.remaining > 0 ? `
+  ${sectionH(mineToday ? "Today's plan" : bonus ? 'Suggested · bonus' : 'Suggested for today',
+    `<button class="link" data-act="plan-day" data-v="${m.t}">${mineToday ? 'Edit' : 'Choose myself'}</button>`)}
+  ${todayPlan.length ? `<ul class="card flush list">${nextHtml}</ul>` : `<section class="card empty small"><div class="e1">${mineToday ? 'Everything planned is watched' : 'Nothing left for today'}</div>${mins(m.realToday)} done today.</section>`}
+  ${!mineToday && todayPlan.length ? `<p class="small faint" style="margin:6px 4px 0">These follow your sheet's order. Tap “Choose myself” to pick your own lectures.</p>` : ''}
+
+  <button class="card tomorrow" data-act="plan-day" data-v="${tmr}">
+    <span class="rbadge" style="--h:215">${ICON.cal}</span>
+    <span class="grow"><span class="t">${tmrIds.length ? `Tomorrow: ${tmrIds.length} lecture${tmrIds.length > 1 ? 's' : ''} · ${mins(tmrMins)}` : 'Plan tomorrow'}</span>
+      <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.target)} it needs`}</span></span>
+    <span class="faint">${ICON.chev}</span>
+  </button>` : ''}
 
   ${openMistakes.length ? `
   ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}

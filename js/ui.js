@@ -1,5 +1,6 @@
 // Shared bits of UI: rings, list rows, the bottom sheet, toasts.
-import { S, prog, PASSES, h, mins, sp, fmtDay, subjDot } from './core.js';
+import { S, prog, PASSES, h, mins, sp, fmtDay, fmtDow, subjDot } from './core.js';
+export const clockTime = iso => new Date(iso).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
 
 export const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 export const ICON = {
@@ -8,6 +9,7 @@ export const ICON = {
   chev: '<svg viewBox="0 0 24 24" class="ic"><path d="M9 6l6 6-6 6"/></svg>',
   gear: '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M6 18l1.6-1.6M16.4 7.6L18 6"/></svg>',
   back: '<svg viewBox="0 0 24 24" class="ic"><path d="M15 6l-6 6 6 6"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" class="ic"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>',
   x: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   down: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 9l6 6 6-6"/></svg>',
   timer: '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg>',
@@ -38,13 +40,14 @@ export function revPill(p) {
   return n ? `<span class="pill good">R${n}</span>` : '';
 }
 
-export function videoItem(v, { showSubject = false, showBlock = true, real = null } = {}) {
+export function videoItem(v, { showSubject = false, showBlock = true, real = null, note = '' } = {}) {
   const p = prog(v.id), done = !!p.fr;
   const bits = [];
   if (showSubject) bits.push(h(v.subject));
-  if (showBlock) bits.push(`Block ${v.block}`);
-  if (done) bits.push(`${fmtDay(p.fr.d)} at ${sp(p.fr.s)}`);
+  if (showBlock && !done) bits.push(`Block ${v.block}`);
+  if (done) bits.push(`<span class="stamp">✓ Watched ${fmtDow(p.fr.d)}${p.fr.t ? ` · ${clockTime(p.fr.t)}` : ''}</span> ${sp(p.fr.s)}`);
   else bits.push(`${mins(v.mins)} · ${mins(real ?? v.mins / S.settings.speed)} at ${sp(S.settings.speed)}`);
+  if (note) bits.push(`<span class="warn-t">${h(note)}</span>`);
   const open = S.mistakes.filter(x => x.video === v.id && !x.done).length;
   return `<li class="item${done ? ' done' : ''}">
     <button class="check${done ? ' on' : ''}" data-act="${done ? 'unmark' : 'mark'}" data-id="${v.id}" aria-label="${done ? 'Watched: tap to undo' : 'Mark watched'}">${CHECK}</button>

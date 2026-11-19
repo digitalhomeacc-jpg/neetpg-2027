@@ -37,6 +37,7 @@ function snapshot() {
   for (const x of S.sessions) {
     recs[`session:${x.id}`] = { kind: 'session', title: `${kindName[x.kind] || x.kind} session`, f: { Date: fmtDay(x.d), Minutes: String(x.m) } };
   }
+  for (const [d, ids] of Object.entries(S.plan || {})) recs[`plan:${d}`] = { kind: 'plan', title: `Plan for ${fmtDay(d)}`, f: Object.fromEntries(ids.map((id, i) => [`${i + 1}.`, BY[id]?.title || id])) };
   const st = S.settings, f = {};
   for (const k of Object.keys(SETTING)) f[SETTING[k]] = k === 'rest' ? st.rest.slice().sort().map(i => DAYS[i]).join(', ') || 'None' : k === 'speed' ? sp(st.speed) : String(st[k]);
   recs.settings = { kind: 'settings', title: 'Settings', f };
@@ -92,7 +93,7 @@ const ACTION = {
   create: ['Added', 'good', '＋'], done: ['Done', 'good', '✓'], edit: ['Changed', 'warn', '✎'],
   delete: ['Deleted', 'bad', '✕'], undone: ['Undone', 'bad', '↺'], unlock: ['Unlocked', 'accent', '★'], bulk: ['Bulk change', 'warn', '⇅'],
 };
-const KIND = { video: 'Video', test: 'Test', mistake: 'Mistake', session: 'Focus session', settings: 'Settings', goal: 'Phase goal', badge: 'Achievement', other: 'Other' };
+const KIND = { plan: 'Day plan', video: 'Video', test: 'Test', mistake: 'Mistake', session: 'Focus session', settings: 'Settings', goal: 'Phase goal', badge: 'Achievement', other: 'Other' };
 const FILTERS = [['all', 'All'], ['video', 'Videos'], ['test', 'Tests'], ['mistake', 'Mistakes'], ['other', 'Other']];
 const pad = n => String(n).padStart(2, '0');
 const stamp = iso => { const d = new Date(iso); return `${d.getDate()}/${d.getMonth() + 1}/${String(d.getFullYear()).slice(2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };

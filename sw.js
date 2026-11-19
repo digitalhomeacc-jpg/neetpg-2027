@@ -1,8 +1,8 @@
 // Offline cache for the app, plus daily reminders. Bump VERSION whenever any file changes.
-const VERSION = 'pg27-v5';
+const VERSION = 'pg27-v6';
 const FILES = ['./', 'index.html', 'css/app.css', 'js/main.js', 'js/core.js', 'js/ui.js', 'js/notify.js',
   'js/views/today.js', 'js/views/plan.js', 'js/views/videos.js', 'js/views/tests.js', 'js/views/progress.js',
-  'js/views/settings.js', 'js/views/video.js', 'js/views/revise.js', 'js/views/focus.js', 'js/history.js', 'js/data-wor.js', 'js/note.js', 'manifest.webmanifest',
+  'js/views/settings.js', 'js/views/video.js', 'js/views/revise.js', 'js/views/focus.js', 'js/history.js', 'js/views/planner.js', 'js/data-wor.js', 'js/note.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
