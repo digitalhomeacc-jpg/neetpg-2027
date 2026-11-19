@@ -26,7 +26,7 @@ export function view() {
     const left = t < p.start ? `starts in ${dayDiff(t, p.start)} days` : past ? 'done' : `${dayDiff(t, p.end)} days left`;
     return `<li class="phase${isCur ? ' cur' : ''}${past ? ' past' : ''}">
       <button class="phase-h" data-act="phase" data-v="${p.id}" aria-expanded="${isOpen}">
-        <span class="pnum p${i + 1}">${i + 1}</span>
+        <span class="pnum p${i + 1}"><b>${i + 1}</b></span>
         <span class="grow"><span class="t">${h(p.name)}</span><span class="s num">${fmtDay(p.start)} – ${fmtDay(p.end)} · ${left}</span></span>
         <span class="small faint num">${doneGoals}/${p.goals.length}</span>
       </button>

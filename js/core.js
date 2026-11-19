@@ -79,6 +79,8 @@ function defaults() {
     mistakes: [],  // {id, date, subject, video, reason, note, test, done}
     days: {},      // date -> {t: target minutes that day}
     goals: {},     // goal id -> true
+    sessions: [],  // focus sessions: {id, d, m, kind}
+    badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
   };
 }
@@ -90,6 +92,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
+    sessions: raw.sessions || [], badges: raw.badges || {},
   };
 }
 function load() {
@@ -117,6 +120,12 @@ export function realByDay() {
     const p = prog(v.id);
     for (const k of PASSES) if (p[k]) out[p[k].d] = (out[p[k].d] || 0) + passMins(v, p[k]);
   }
+  return out;
+}
+export const FOCUS_KINDS = [['anki', 'Anki'], ['qbank', 'Q-bank'], ['pyq', 'PYQs'], ['notes', 'Notes'], ['other', 'Other']];
+export function sessionsByDay() {
+  const out = {};
+  for (const x of S.sessions) out[x.d] = (out[x.d] || 0) + x.m;
   return out;
 }
 export const passMins = (v, x) => x.m != null ? x.m : v.mins / (x.s || 1);
@@ -168,6 +177,9 @@ export function metrics() {
   }
   const byDay = realByDay();
   const realToday = byDay[t] || 0;
+  const sessDay = sessionsByDay();
+  const otherToday = sessDay[t] || 0;
+  const otherAll = S.sessions.reduce((a, x) => a + x.m, 0);
   const avgSpeed = wMins ? wSpeed / wMins : null;
   // Plan with the speed you really watch at once there's 2h+ of history.
   const planSpeed = wMins >= 120 ? avgSpeed : st.speed;
@@ -203,13 +215,14 @@ export function metrics() {
 
   // Streak: study days in a row with any watching. Rest days don't break it; today counts once you start.
   let streak = 0;
-  for (let d = byDay[t] ? t : addDays(t, -1), i = 0; i < 400; d = addDays(d, -1), i++) {
-    if (byDay[d]) streak++;
+  const any = d => byDay[d] || sessDay[d];
+  for (let d = any(t) ? t : addDays(t, -1), i = 0; i < 400; d = addDays(d, -1), i++) {
+    if (any(d)) streak++;
     else if (!isRest(d)) break;
   }
 
   return {
-    t, total, done, doneCount, remaining, frToday, realToday, realAll, avgSpeed, planSpeed, byDay,
+    t, total, done, doneCount, remaining, frToday, realToday, realAll, avgSpeed, planSpeed, byDay, sessDay, otherToday, otherAll,
     due, dueMins, must, mustMins, revDoneToday, revDoneCount, goal, minimum,
     restToday, daysLeft, overdue, target, totalDays, elapsed, expected, behind, recentRate, projected, streak,
     examDays: dayDiff(t, st.exam),
@@ -311,3 +324,34 @@ export const ankiQuery = (tags, onlySuspended) => {
   const q = tags.map(t => `"tag:${t.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`).join(' OR ');
   return onlySuspended ? `(${q}) is:suspended` : q;
 };
+
+/* ---------- levels and achievements ---------- */
+// Level from total hours studied: L2 at 3h, L5 at 48h, L10 at 243h.
+export function level(totalMins) {
+  const h = totalMins / 60;
+  const lv = Math.floor(Math.sqrt(h / 3)) + 1;
+  const at = l => 3 * (l - 1) ** 2 * 60;
+  return { lv, from: at(lv), to: at(lv + 1), frac: (totalMins - at(lv)) / (at(lv + 1) - at(lv)) };
+}
+export function achievements(m) {
+  const passes = VIDS.reduce((a, v) => a + PASSES.slice(1).filter(k => prog(v.id)[k]).length, 0);
+  const subjectDone = SUBJECTS.some(s => VIDS.filter(v => v.subject === s).every(v => prog(v.id).fr));
+  const best = Math.max(0, ...S.tests.map(t => testScore(t).frac));
+  const fixed = S.mistakes.filter(x => x.done).length;
+  const hours = (m.realAll + m.otherAll) / 60;
+  const list = [
+    ['first', '🎬', 'First video', 'Watch one WOR video', m.doneCount >= 1],
+    ['v50', '📚', '50 videos', 'Watch 50 WOR videos', m.doneCount >= 50],
+    ['subject', '✅', 'Subject done', 'Finish every video in a subject', subjectDone],
+    ['wor', '🏁', 'WOR complete', 'Watch all 271 videos', m.doneCount >= VIDS.length],
+    ['rev1', '🔁', 'First revision', 'Finish an R1', passes >= 1],
+    ['rev100', '🧠', '100 revisions', 'Finish 100 revision passes', passes >= 100],
+    ['s7', '🔥', '7-day streak', 'Study 7 study days in a row', m.streak >= 7],
+    ['s30', '⚡', '30-day streak', 'Study 30 study days in a row', m.streak >= 30],
+    ['h100', '⏱️', '100 hours', 'Log 100 hours of study', hours >= 100],
+    ['gt', '📝', 'First GT', 'Log a grand test', S.tests.some(t => t.type === 'gt')],
+    ['zone', '🎯', 'In the zone', `Score ${Math.round(TARGET_PCT * 100)}%+ in a test`, best >= TARGET_PCT],
+    ['fix10', '🩹', '10 fixed', 'Revisit 10 mistakes', fixed >= 10],
+  ];
+  return list.map(([id, icon, name, desc, got]) => ({ id, icon, name, desc, got: got || !!S.badges[id] }));
+}

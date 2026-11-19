@@ -64,10 +64,13 @@ export async function enablePush() {
 }
 
 export async function testNotification(kind = 'morning') {
-  const reg = await navigator.serviceWorker.ready;
-  await caches.open('pg27-data').then(c => c.put('summary.json', new Response(JSON.stringify(buildSummary()))));
-  // The service worker builds the text exactly as it will for a real push.
-  reg.active?.postMessage({ type: 'test-notification', kind });
+  if (!('Notification' in window) || Notification.permission !== 'granted') throw new Error('Notifications are not allowed for PG 2027');
+  const sum = buildSummary();
+  await caches.open('pg27-data').then(c => c.put('summary.json', new Response(JSON.stringify(sum)))).catch(() => {});
+  const n = window.PG27Note.build(sum, kind);
+  const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('Background worker not running. Close and reopen the app.')), 4000))]);
+  await reg.showNotification(n.title, { body: n.body, tag: `pg27-test-${kind}`, icon: 'icons/icon-192.png', data: { url: './' } });
+  return n;
 }
 
 export function summaryLine() {

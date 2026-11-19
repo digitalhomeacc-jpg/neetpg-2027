@@ -82,7 +82,11 @@ export const actions = {
     enablePush().then(() => { toast('Reminders on. Finish the GitHub setup below.'); document.dispatchEvent(new Event('pg27:render')); })
       .catch(e => toast(e.message === 'denied' ? 'Notifications were not allowed' : "Couldn't turn on reminders here"));
   },
-  'push-test': el => { testNotification(el.dataset.v).catch(() => toast("Couldn't show a notification")); },
+  'push-test': el => {
+    testNotification(el.dataset.v)
+      .then(n => toast(`Sent: “${n.title}”. Check your notifications.`))
+      .catch(e => toast(e.message || "Couldn't show a notification"));
+  },
   'push-copy': () => copy(S.push, 'Copied. Paste it as the PUSH_SUBSCRIPTION secret.'),
   'export': () => {
     const blob = new Blob([JSON.stringify({ app: 'pg27', exported: new Date().toISOString(), state: S }, null, 1)], { type: 'application/json' });

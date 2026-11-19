@@ -2,38 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>PG 2027</title>
-<meta name="description" content="Personal NEET PG 2027 tracker: Marrow WOR videos, Anki tags and previous-year questions.">
-<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="description" content="Personal NEET PG 2027 tracker: Marrow WOR videos, spaced revisions, tests and Anki.">
+<meta name="theme-color" content="#05070b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PG 2027">
+<meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="top">
-  <div class="top-inner">
-    <div class="grow"><h1 id="title">Today</h1><div id="top-meta" class="top-meta"></div></div>
-    <div id="top-btn"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#34d399"/><stop offset=".55" stop-color="#2dd4bf"/><stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+  </defs>
+</svg>
+<header class="navbar">
+  <div class="nav-inner">
+    <div id="nav-title" class="nav-title"></div>
+    <div id="nav-btns" class="nav-btns"></div>
   </div>
 </header>
 <main id="view" class="view"></main>
 <nav class="tabs" id="tabs">
   <button data-act="tab" data-v="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Today</span></button>
-  <button data-act="tab" data-v="plan"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg><span>Plan</span></button>
-  <button data-act="tab" data-v="videos"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M10.5 9.5v5l4-2.5z"/></svg><span>Videos</span></button>
+  <button data-act="tab" data-v="plan"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg><span>Plan</span></button>
+  <button data-act="tab" data-v="videos"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="M10.5 9.5v5l4-2.5z"/></svg><span>Library</span></button>
   <button data-act="tab" data-v="tests"><svg viewBox="0 0 24 24"><path d="M8 4.5h8M9 4.5v5.2L4.8 17.4A2 2 0 0 0 6.6 20.5h10.8a2 2 0 0 0 1.8-3.1L15 9.7V4.5"/><path d="M7 14h10"/></svg><span>Tests</span></button>
   <button data-act="tab" data-v="progress"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M7 16v-4M12 16V7M17 16v-6.5"/></svg><span>Progress</span></button>
 </nav>
 <div id="sheet-root"></div>
+<div id="focus-root"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="js/data-wor.js"></script>
+<script src="js/note.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

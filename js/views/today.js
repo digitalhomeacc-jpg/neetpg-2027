@@ -3,6 +3,7 @@ import {
   h, mins, hrs, sp, pct, fmtDay, fmtDayLong, fmtDayYear, subjDot, subjHue, ankiQuery, REASONS, plural,
 } from '../core.js';
 import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
+import { focusPill } from './focus.js';
 
 function greeting() {
   const hr = new Date().getHours();
@@ -14,7 +15,7 @@ function weekStrip(m, fc) {
   const plan = Object.fromEntries(fc.map(d => [d.date, d.cap]));
   let cells = '';
   for (let i = 0; i < 7; i++) {
-    const d = addDays(ws, i), real = m.byDay[d] || 0;
+    const d = addDays(ws, i), real = (m.byDay[d] || 0) + (m.sessDay[d] || 0);
     const tgt = d === m.t ? m.target : d < m.t ? S.days[d]?.t : plan[d];
     const rest = isRest(d);
     const frac = tgt ? real / tgt : real ? 1 : 0;
@@ -63,21 +64,27 @@ export function view() {
     title: 'Today',
     meta: fmtDayLong(m.t),
     html: `
+  ${focusPill()}
   <section class="card hero-card">
     <div class="hero-top">
       <span class="hello">${greeting()}</span>
       ${phase ? `<button class="pill accent" data-act="tab" data-v="plan">${h(phase.name)} · until ${fmtDay(phase.end)}</button>` : ''}
     </div>
     <div class="hero">
-      ${ring(frac, goal ? pct(Math.min(frac, 9.99)) : mins(real), goal ? `of ${mins(goal)}` : 'today', 116, goal ? min / goal : 0)}
+      ${ring(frac, goal ? pct(Math.min(frac, 9.99)) : mins(real), goal ? `of ${mins(goal)}` : 'today', 124, goal ? min / goal : 0)}
       <div class="hero-text grow">
         <p class="status">${status}</p>
         <p>${line}</p>
       </div>
     </div>
+    <div class="hero-cta">
+      ${nDue ? `<button class="btn primary" data-act="revise" data-id="${m.due[0].v.id}">${ICON.timer}Revise next</button>`
+        : todayPlan[0] ? `<button class="btn primary" data-act="mark" data-id="${todayPlan[0].v.id}">Watched next video</button>` : ''}
+      <button class="btn" data-act="focus-open">${ICON.timer}Focus</button>
+    </div>
     <div class="stats">
       <div class="stat ${behindCls}"><div class="v num">${m.remaining > 0 ? behindTxt : 'Done'}</div><div class="k">${m.behind > 0 ? 'behind' : 'ahead of'} even pace</div></div>
-      <div class="stat"><div class="v num">${m.daysLeft}</div><div class="k">study days to ${fmtDay(st.target)}</div></div>
+      <div class="stat"><div class="v num">${mins(m.otherToday).replace(' min', 'm')}</div><div class="k">Anki & Qs today</div></div>
       <div class="stat ${m.streak ? 'good' : ''}"><div class="v num">${ICON.flame}${m.streak}</div><div class="k">day streak</div></div>
     </div>
   </section>
@@ -91,7 +98,7 @@ export function view() {
       <button class="open" data-act="revise" data-id="${v.id}"><div class="t">${h(v.title)}</div>
       <div class="s num">${subjDot(v.subject)}${mins(r.budget)} limit · ${r.overdue > 0 ? `<span class="bad-t">${r.overdue}d overdue</span>` : 'due today'}${r.pulled ? ' · from a mistake' : ''}${extra ? ' · if you have time' : ''}</div></button>
       <button class="btn small-btn" data-act="revise" data-id="${v.id}">Start</button></li>`;
-  }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="e1">Nothing to revise yet</div>Each video's R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.`}</section>`}
+  }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="ei">🎉</div><div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="ei">🧠</div><div class="e1">Nothing to revise yet</div>Each video's R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.`}</section>`}
 
   ${m.remaining > 0 && todayPlan.length ? `
   ${sectionH(bonus ? 'New videos · bonus' : 'New videos', `<span class="num">${mins(acc)}</span>`)}
@@ -124,6 +131,9 @@ export function view() {
   <section class="card tiles">
     <button class="tile" data-act="tab" data-v="plan"><div class="k">WOR done by</div><div class="v num">${fc.length ? fmtDay(fc[fc.length - 1].date) : '—'}</div><div class="s">if you hit each day's target</div></button>
     <button class="tile" data-act="tab" data-v="tests"><div class="k">Last test</div><div class="v num">${lastTest ? `${4 * lastTest.c - lastTest.w}/${4 * lastTest.n}` : '—'}</div><div class="s">${lastTest ? h(lastTest.name) : 'Log one from Tests'}</div></button>
+    <div class="tile"><div class="k">Study days</div><div class="v num">${m.daysLeft}</div><div class="s">to ${fmtDay(st.target)} deadline</div></div>
+  </section>
+  <section class="card tiles" style="grid-template-columns:1fr;margin-top:-4px">
     <div class="tile"><div class="k">Exam</div><div class="v num">${m.examDays} days</div><div class="s">${fmtDayYear(st.exam)} (est.)</div></div>
   </section>
 

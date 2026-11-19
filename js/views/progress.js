@@ -1,6 +1,6 @@
 import {
   S, VIDS, SUBJECTS, PASSES, prog, metrics, isRest, addDays, dayDiff, parse, studyDays,
-  h, mins, hrs, sp, pct, fmtDay, MON, subjDot, subjHue,
+  h, mins, hrs, sp, pct, fmtDay, MON, subjDot, subjHue, level, achievements,
 } from '../core.js';
 import { ring, sectionH } from '../ui.js';
 
@@ -45,7 +45,7 @@ function heatmap(m) {
   const start = addDays(end, -(weeks * 7) + 1);
   let cells = '';
   for (let d = start; d <= end; d = addDays(d, 1)) {
-    const val = m.byDay[d] || 0, ref = S.days[d]?.t || m.target || 180;
+    const val = (m.byDay[d] || 0) + (m.sessDay[d] || 0), ref = S.days[d]?.t || m.target || 180;
     const l = val <= 0 ? 0 : val < ref * .35 ? 1 : val < ref * .7 ? 2 : val < ref ? 3 : 4;
     const cls = [d > m.t ? 'future' : '', isRest(d) && !val ? 'rest' : '', d === m.t ? 'today' : ''].filter(Boolean).join(' ');
     cells += `<i data-l="${l}"${cls ? ` class="${cls}"` : ''} title="${fmtDay(d)}: ${mins(val)}"></i>`;
@@ -66,11 +66,25 @@ export function view() {
       <div class="bar-line subj-bar" style="margin-top:8px"><i style="width:${(dn / tot) * 100}%"></i></div></button></li>`;
   }).join('');
   const passCounts = PASSES.map(k => VIDS.filter(v => prog(v.id)[k]).length);
-  const weekReal = Array.from({ length: 7 }, (_, i) => m.byDay[addDays(m.t, -i)] || 0).reduce((a, b) => a + b, 0);
+  const weekReal = Array.from({ length: 7 }, (_, i) => (m.byDay[addDays(m.t, -i)] || 0) + (m.sessDay[addDays(m.t, -i)] || 0)).reduce((a, b) => a + b, 0);
+  const lv = level(m.realAll + m.otherAll);
+  const badges = achievements(m);
+  const mosaic = SUBJECTS.map(s => `<div class="mz-row" style="--h:${subjHue(s)}"><div class="mz-name">${h(s)}</div><div class="mz-tiles">${
+    VIDS.filter(v => v.subject === s).map(v => { const p = prog(v.id); const l = PASSES.filter(k => p[k]).length;
+      return `<button data-act="open-video" data-id="${v.id}" data-l="${l}" aria-label="${h(v.title)}"></button>`; }).join('')}</div></div>`).join('');
   return {
     title: 'Progress',
     meta: `${pct(m.done / m.total)} of WOR`,
     html: `
+  <section class="card level">
+    <div class="lvl-badge"><div style="text-align:center"><small>LEVEL</small>${lv.lv}</div></div>
+    <div class="grow">
+      <div class="status num">${hrs(m.realAll + m.otherAll)} studied</div>
+      <div class="small muted num" style="margin:2px 0 8px">${hrs(lv.to - (m.realAll + m.otherAll))} to level ${lv.lv + 1}</div>
+      <div class="bar-line"><i style="width:${Math.max(2, lv.frac * 100)}%"></i></div>
+    </div>
+  </section>
+
   <section class="card">
     <div class="hero">
       ${ring(m.done / m.total, pct(m.done / m.total), 'watched')}
@@ -86,6 +100,13 @@ export function view() {
       <div class="stat"><div class="v num">${hrs(m.realAll)}</div><div class="k">total time watching</div></div>
     </div>
   </section>
+
+  ${sectionH('Syllabus map', 'every video, by pass')}
+  <section class="card"><div class="mosaic">${mosaic}</div>
+    <div class="mz-key"><span>Not watched</span><i style="opacity:.15"></i><i style="opacity:.35"></i><i style="opacity:.55"></i><i style="opacity:.75"></i><i style="opacity:.9"></i><i></i><span>All 5 revisions</span></div></section>
+
+  ${sectionH('Achievements', `${badges.filter(b => b.got).length} of ${badges.length}`)}
+  <section class="card"><div class="badges">${badges.map(b => `<div class="badge${b.got ? ' got' : ''}"><div class="bi">${b.icon}</div><div class="bn">${h(b.name)}</div><div class="bd">${h(b.desc)}</div></div>`).join('')}</div></section>
 
   ${sectionH('Pace', `${fmtDay(S.settings.start)} – ${fmtDay(S.settings.target)}`)}
   <section class="card">${paceChart(m)}</section>

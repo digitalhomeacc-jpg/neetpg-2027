@@ -8,6 +8,12 @@ export const ICON = {
   chev: '<svg viewBox="0 0 24 24" class="ic"><path d="M9 6l6 6-6 6"/></svg>',
   gear: '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M6 18l1.6-1.6M16.4 7.6L18 6"/></svg>',
   back: '<svg viewBox="0 0 24 24" class="ic"><path d="M15 6l-6 6 6 6"/></svg>',
+  x: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  down: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 9l6 6 6-6"/></svg>',
+  timer: '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg>',
+  test: '<svg viewBox="0 0 24 24" class="ic"><path d="M8 4.5h8M9 4.5v5.2L4.8 17.4A2 2 0 0 0 6.6 20.5h10.8a2 2 0 0 0 1.8-3.1L15 9.7V4.5"/></svg>',
+  bug: '<svg viewBox="0 0 24 24" class="ic"><path d="M12 20a6 6 0 0 1-6-6v-3a6 6 0 0 1 12 0v3a6 6 0 0 1-6 6zM12 9v11M6 13H3M21 13h-3M7 6.5L5 4.5M17 6.5l2-2"/></svg>',
+  search: '<svg viewBox="0 0 24 24" class="ic"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>',
   copy: '<svg viewBox="0 0 24 24" class="ic"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>',
 };
 
@@ -59,10 +65,50 @@ export function renderSheet(first = false) {
   if (!sheetFn) { root.innerHTML = ''; return; }
   const old = root.querySelector('.sheet');
   const scroll = old ? old.scrollTop : 0;
-  root.innerHTML = `<div class="scrim" data-act="close"></div>
+  root.innerHTML = `<div class="scrim${first ? ' enter' : ''}" data-act="close"></div>
     <div class="sheet${first ? ' enter' : ''}" role="dialog" aria-modal="true"><div class="grab"></div>${sheetFn()}</div>`;
-  root.querySelector('.sheet').scrollTop = scroll;
+  const sh = root.querySelector('.sheet');
+  sh.scrollTop = scroll;
   document.body.classList.add('locked');
+  dragToClose(sh);
+}
+
+// Swipe a sheet down to dismiss it, like a native iOS sheet.
+function dragToClose(sh) {
+  let y0 = null, dy = 0;
+  sh.addEventListener('touchstart', e => {
+    if (sh.scrollTop > 0 || e.target.closest('input, textarea, select, input[type=range]')) return;
+    y0 = e.touches[0].clientY; dy = 0;
+  }, { passive: true });
+  sh.addEventListener('touchmove', e => {
+    if (y0 == null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy > 0) { sh.classList.add('dragging'); sh.style.transform = `translateY(${dy}px)`; e.preventDefault(); }
+  }, { passive: false });
+  sh.addEventListener('touchend', () => {
+    if (y0 == null) return;
+    sh.classList.remove('dragging');
+    if (dy > 110) { sh.style.transform = 'translateY(100%)'; setTimeout(() => { closeSheet(); document.dispatchEvent(new Event('pg27:render')); }, 220); }
+    else sh.style.transform = '';
+    y0 = null;
+  });
+}
+
+export function confetti() {
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  const colors = ['#34d399', '#2dd4bf', '#60a5fa', '#fbbf5a', '#f472b6', '#a78bfa'];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement('i');
+    c.style.left = `${Math.random() * 100}%`;
+    c.style.background = colors[i % colors.length];
+    c.style.animationDelay = `${Math.random() * 0.35}s`;
+    c.style.setProperty('--dx', `${(Math.random() - 0.5) * 160}px`);
+    c.style.setProperty('--rot', `${Math.random() * 720 - 360}deg`);
+    box.appendChild(c);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 2600);
 }
 
 /* ---------- toast + clipboard ---------- */

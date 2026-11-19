@@ -9,8 +9,8 @@ export function view() {
     const tot = vs.reduce((a, v) => a + v.mins, 0);
     const dn = vs.reduce((a, v) => a + (prog(v.id).fr ? v.mins : 0), 0);
     return `<button class="subj" data-act="subject" data-s="${h(s)}" aria-pressed="${ui.subject === s}" style="--h:${subjHue(s)}">
-      <div class="n">${h(s)}</div>
-      <div class="m num">${vs.filter(v => prog(v.id).fr).length}/${vs.length} · ${hrs(tot - dn)} left</div>
+      <div class="n">${h(s)}</div><span class="pc num">${tot ? Math.round((dn / tot) * 100) : 0}%</span>
+      <div class="m num">${vs.filter(v => prog(v.id).fr).length}/${vs.length} · ${tot - dn > 0 ? `${hrs(tot - dn)} left` : 'Done'}</div>
       <div class="bar-line subj-bar"><i style="width:${tot ? (dn / tot) * 100 : 0}%"></i></div>
     </button>`;
   }).join('');
@@ -29,7 +29,7 @@ export function view() {
   }
 
   return {
-    title: 'Videos',
+    title: 'Library',
     meta: `<span class="num">${VIDS.filter(v => prog(v.id).fr).length} / ${VIDS.length}</span> watched`,
     html: `
   <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
