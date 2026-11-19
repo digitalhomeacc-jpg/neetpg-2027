@@ -12,9 +12,13 @@ for v in d['videos']:
     v['done'] = v.pop('passes')
     v.pop('date', None)
 # Runtimes checked against the Marrow app where the sheet was off.
-RUNTIME_FIX = {'wor-ophtha-03': 65, 'wor-pathol-13': 67}
+RUNTIME_FIX = {'wor-ophtha-03': 65, 'wor-pathol-13': 67, 'wor-microb-14': 35}
 for v in d['videos']:
     if v.get('id') in RUNTIME_FIX: v['mins'] = float(RUNTIME_FIX[v['id']])
+# The sheet's "Clinical Pathology & Recent Updates" isn't a Marrow WOR video; Marrow has a 3-min intro there.
+for v in d['videos']:
+    if v.get('id') == 'wor-pathol-15' and v['title'].startswith('Clinical Pathology'):
+        v.update(title='Introduction to Pathology Revision', mins=3.0, notes='Overview of the Pathology revision series', tags=[])
 d['source'] = 'Marrow WOR'
 d['sheetDoneDate'] = '2026-11-19'
 with open(sys.argv[2], 'w') as f:
