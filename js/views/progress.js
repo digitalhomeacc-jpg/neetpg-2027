@@ -3,6 +3,7 @@ import {
   h, mins, hrs, sp, pct, fmtDay, MON, subjDot, subjHue, level, achievements,
 } from '../core.js';
 import { ring, sectionH } from '../ui.js';
+import { sleepCard } from './health.js';
 
 function paceChart(m) {
   const st = S.settings;
@@ -116,6 +117,9 @@ export function view() {
 
   ${sectionH('Pace', `${fmtDay(S.settings.start)} – ${fmtDay(S.settings.target)}`)}
   <section class="card">${paceChart(m)}</section>
+
+  ${sectionH('Sleep and study', 'last 14 days')}
+  ${sleepCard(m)}
 
   ${sectionH('Activity')}
   <section class="card">${heatmap(m)}</section>

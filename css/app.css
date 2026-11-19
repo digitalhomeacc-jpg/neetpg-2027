@@ -662,3 +662,31 @@ code { font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; background: var(-
 @keyframes breathe { 0%, 100% { transform: scale(.55); opacity: .6; } 50% { transform: scale(1); opacity: 1; } }
 .watch a.btn { text-decoration: none; }
 .hero-text .split { font-size: 12.5px; color: var(--faint); margin-top: 6px; }
+
+/* Check-in and sleep ------------------------------------------------- */
+.checkin .ci-q { font-weight: 700; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.checkin .chips.energy .chip { font-size: 20px; padding: 6px 12px; }
+.checkin.done { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 12px 0; padding: 12px 16px; border-radius: 16px; background: var(--surface); border: .5px solid var(--line); font-size: 14.5px; text-align: left; }
+.chart .sbar { fill: var(--accent); opacity: .75; }
+.chart .sleep-line { fill: none; stroke: #a78bfa; stroke-width: 2.2; stroke-linejoin: round; }
+.chart .sleep-pt { fill: #a78bfa; }
+.legend i.bar-key { border: 0; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); }
+.legend i.sleep-key { border-top: 2.2px solid #a78bfa; }
+.sgrid { display: grid; grid-template-columns: 1fr 64px 64px; gap: 6px 8px; align-items: center; }
+.sgrid .cap { font-size: 11.5px; color: var(--faint); text-align: center; }
+.sgrid .sn { font-size: 13.5px; display: flex; align-items: center; min-width: 0; }
+.sgrid .inp { min-height: 38px; padding: 6px 8px; text-align: center; }
+.hbar.wide { grid-template-columns: 130px 1fr 40px 40px; }
+.hbar .ha { text-align: right; color: var(--muted); font-size: 12.5px; }
+.hbar .hl { display: flex; align-items: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.qr-count { font-family: var(--round); font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+.catchup { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); background: linear-gradient(160deg, var(--warn-soft), var(--surface) 60%); }
+.cu-h { font-size: 15px; line-height: 1.4; margin-bottom: 12px; }
+.cu-opts { display: flex; flex-direction: column; gap: 8px; }
+.cu-opt { text-align: left; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); display: flex; flex-direction: column; gap: 2px; }
+.cu-opt b { font-size: 15px; }
+.cu-opt span { font-size: 13px; color: var(--muted); }
+.pinbox { display: flex; gap: 8px; margin-top: 10px; }
+.pinbox .inp { flex: 1; }
+.pinbox .btn { height: 48px; flex: none; }
+.pin-t { font-weight: 550 !important; }

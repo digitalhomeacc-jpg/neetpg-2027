@@ -1,10 +1,38 @@
 import {
-  S, VIDS, BY, PASSES, prog, metrics, forecast, currentPhase, isRest, addDays, weekStart, parse, DOW,
+  today, S, VIDS, BY, PASSES, prog, metrics, forecast, currentPhase, isRest, addDays, weekStart, parse, DOW,
   h, mins, hrs, sp, pct, fmtDay, fmtDayLong, fmtDayYear, subjDot, subjHue, ankiQuery, REASONS, plural,
 } from '../core.js';
 import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
 import { focusPill } from './focus.js';
 import { watchPill } from './watch.js';
+import { checkinCard } from './health.js';
+import { account } from '../sync.js';
+import { finishDate, studyDays, dayDiff } from '../core.js';
+
+// When your recent pace won't make the deadline, offer three concrete fixes.
+function catchUp(m, st) {
+  if (!m.projected || m.remaining <= 0 || m.projected <= st.target) return '';
+  const late = dayDiff(st.target, m.projected);
+  const daysLeft = Math.max(1, studyDays(addDays(m.t, 1), st.target));
+  const needRuntime = m.remaining / daysLeft;               // runtime minutes a day to make it
+  const nowReal = m.recentRate / m.planSpeed, needReal = needRuntime / m.planSpeed;
+  const at2 = needRuntime / 2;
+  return `<section class="card catchup">
+    <div class="cu-h">⚠️ At your last two weeks' pace you finish WOR on <b>${fmtDay(m.projected)}</b>, ${late} day${late > 1 ? 's' : ''} after your deadline.</div>
+    <div class="cu-opts">
+      <button class="cu-opt" data-act="plan-day" data-v="${addDays(m.t, 1)}"><b>+${mins(Math.max(0, needReal - nowReal))} a day</b><span>Study ${mins(needReal)} of new videos a day (now ${mins(nowReal)}) and keep ${fmtDay(st.target)}. Plan tomorrow →</span></button>
+      <button class="cu-opt" data-act="cu-deadline" data-v="${m.projected}"><b>Move deadline to ${fmtDay(m.projected)}</b><span>Keep your current pace. Later phases shift too.</span></button>
+      ${m.planSpeed < 2 ? `<button class="cu-opt" data-act="cu-speed"><b>Watch at 2×</b><span>${mins(at2)} a day keeps ${fmtDay(st.target)}, instead of ${mins(needReal)} at ${sp(m.planSpeed)}.</span></button>` : ''}
+    </div></section>`;
+}
+function backupNudge() {
+  if (account()) return '';
+  const last = S.lastBackup ? dayDiff(S.lastBackup, today()) : 99;
+  const has = Object.keys(S.progress).length > 5;
+  if (!has || last < 7) return '';
+  return `<button class="card tomorrow nudge" data-act="export"><span class="rbadge" style="--h:200">💾</span>
+    <span class="grow"><span class="t">Back up your progress</span><span class="s">${S.lastBackup ? `Last backup ${last} days ago.` : 'You haven’t backed up yet.'} Save a copy to iCloud Drive, or turn on Sync in Settings.</span></span></button>`;
+}
 import { QUOTES, quoteIndex, nextQuote } from '../quotes.js';
 import { save } from '../core.js';
 
@@ -18,7 +46,15 @@ function quoteStrip() {
   </button>`;
 }
 
-export const actions = { 'quote-next': () => { nextQuote(S.ui); save(); } };
+export const actions = {
+  'quote-next': () => { nextQuote(S.ui); save(); },
+  'cu-deadline': el => {
+    if (el.dataset.v >= S.settings.exam) { return; }
+    const was = S.settings.target; S.settings.target = el.dataset.v; save();
+    import('../ui.js').then(u => u.toast(`Deadline moved to ${fmtDay(el.dataset.v)}`, () => { S.settings.target = was; save(); }));
+  },
+  'cu-speed': () => { const was = S.settings.speed; S.settings.speed = 2; save(); import('../ui.js').then(u => u.toast('Usual speed set to 2×', () => { S.settings.speed = was; save(); })); },
+};
 
 function greeting() {
   const hr = new Date().getHours();
@@ -111,6 +147,10 @@ export function view() {
   </section>
 
   ${weekStrip(m, fc)}
+
+  ${catchUp(m, st)}
+  ${checkinCard()}
+  ${backupNudge()}
 
   ${sectionH('Revise today', nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span>` : '')}
   ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {

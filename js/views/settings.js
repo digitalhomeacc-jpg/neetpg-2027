@@ -2,6 +2,7 @@ import { S, VIDS, D, DOW, DOW_LONG, SPEEDS, save, today, h, hrs, sp, mergeState,
 import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
 import * as sync from '../sync.js';
+import { healthSettings } from './health.js';
 let lastEmail = '';
 
 function syncCard() {
@@ -91,6 +92,9 @@ export function view() {
   ${sectionH('Sync between devices')}
   <section class="card">${syncCard()}</section>
 
+  ${sectionH('Apple Health')}
+  <section class="card">${healthSettings()}</section>
+
   ${sectionH('Share with friends')}
   <section class="card">
     <p class="small muted" style="margin:0 0 12px">Friends open the same link and get their own plan. Their progress stays on their phone, and nobody sees anyone else's.</p>
@@ -172,6 +176,7 @@ export const actions = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `pg27-backup-${today()}.json`;
+    S.lastBackup = today(); save();
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   },

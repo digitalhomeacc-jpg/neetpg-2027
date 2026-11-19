@@ -17,7 +17,7 @@ export function results() {
 
   let list = '';
   if (q) {
-    const hits = VIDS.filter(v => (v.title + ' ' + v.subject + ' ' + v.notes + ' ' + v.tags.join(' ')).toLowerCase().includes(q));
+    const hits = VIDS.filter(v => (v.title + ' ' + v.subject + ' ' + v.notes + ' ' + v.tags.join(' ') + ' ' + (S.notes[v.id] || '')).toLowerCase().includes(q));
     list = sectionH('Results', `<span class="num">${hits.length}</span>`) +
       (hits.length ? `<ul class="card flush list">${hits.map(v => videoItem(v, { showSubject: true })).join('')}</ul>`
         : `<div class="card empty"><div class="e1">No videos match “${h(ui.q)}”</div>Try a shorter word, like “thyroid”.</div>`);
@@ -28,7 +28,7 @@ export function results() {
       <ul class="card flush list">${vs.map(v => videoItem(v)).join('')}</ul>`;
   }
 
-  return q ? list : `${sectionH('Marrow WOR', 'tap a subject')}<div class="subjects">${grid}</div>${list}`;
+  return q ? list : `${S.pins.length ? `<button class="card tomorrow" data-act="pins"><span class="rbadge" style="--h:45">📌</span><span class="grow"><span class="t">High-yield sheet</span><span class="s">${S.pins.length} pinned fact${S.pins.length > 1 ? 's' : ''}, by subject</span></span><span class="faint">›</span></button>` : ''}${sectionH('Marrow WOR', 'tap a subject')}<div class="subjects">${grid}</div>${list}`;
 }
 
 export function view() {

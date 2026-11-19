@@ -4,6 +4,7 @@ import {
   h, mins, fmtDay, fmtDayYear, subjDot,
 } from '../core.js';
 import { openSheet, closeSheet, toast } from '../ui.js';
+import { pinBox } from './pins.js';
 
 let ctx = null; // { id, k, step, dump, q, startedAt, elapsed, running }
 let timer = null;
@@ -41,7 +42,8 @@ function body() {
         <p>Before you look at anything, write or say out loud everything you remember about this topic. Key facts, numbers, drugs of choice, classic presentations.</p>
       </div>
       <div class="field"><label for="rv-dump">Brain dump (optional, only you see it)</label>
-        <textarea id="rv-dump" class="inp" rows="5" placeholder="Type what comes to mind…">${h(ctx.dump)}</textarea></div>
+        <textarea id="rv-dump" class="inp" rows="5" placeholder="Type what comes to mind…">${h(ctx.dump)}</textarea>
+        <p class="hint">Faster: tap the 🎤 on the keyboard and say it out loud.</p></div>
       <button class="btn primary block" data-act="rv-reveal">I've recalled what I can · show the topics</button>`;
   }
 
@@ -52,6 +54,8 @@ function body() {
       ${ctx.dump ? `<div class="field"><span class="lbl">What you recalled</span><div class="dump">${h(ctx.dump)}</div></div>` : ''}
       <div class="field"><span class="lbl">What this video covers</span>
         ${tp.length ? `<ul class="topics">${tp.map(t => `<li>${h(t)}</li>`).join('')}</ul>` : '<p class="small muted">No topic notes for this video yet.</p>'}</div>
+      ${S.notes[v.id] ? `<div class="field"><span class="lbl">Your notes</span><div class="dump">${h(S.notes[v.id])}</div></div>` : ''}
+      <div class="field"><span class="lbl">Missed something important?</span>${pinBox(v.id)}</div>
       ${ms.length ? `<div class="field"><span class="lbl">Your open mistakes here</span><ul class="topics bad">${ms.map(x => `<li>${h(x.note || 'No note')} <span class="faint">· ${reasonName[x.reason]}</span></li>`).join('')}</ul></div>` : ''}
       <div class="field"><span class="lbl">How much did you recall?</span>
         <div class="rate">${RATINGS.map(([q, l]) => `<button data-act="rv-rate" data-v="${q}" class="q${q}"><b>${l}</b><span>${['Next one sooner', 'A bit sooner', 'On schedule', 'Later'][q - 1]}</span></button>`).join('')}</div></div>`;

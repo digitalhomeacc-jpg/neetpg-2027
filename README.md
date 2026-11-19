@@ -9,6 +9,14 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 - **Day planner:** pick the lectures for today, tomorrow or any day in the next week against the time that day needs (a bar fills as you add). Days you plan keep exactly your lectures in your order. Unplanned days are filled with suggestions in sheet order. Planned lectures you didn't watch carry over to the next day.
 - **Date stamps:** every watched video shows when you watched it ("✓ Watched Thu 19 Nov · 7:01 pm"), and so does every revision.
 - **Spaced revisions with active recall:** every video gets five revisions after the first watch, each with less time than the last (50%, 35%, 25%, 15% and 10% of the runtime). They fall due after growing gaps (3, 10, 30, 60 and 90 days), squeezed to fit before the exam. Each session goes: recall from memory → check against the video's topics and your mistakes → rate yourself (which moves the next revision sooner or later) → revise against a countdown.
+- **Study now:** a get-ready countdown (breathing, Open Marrow), then a timer. Stopping it marks the video watched with the real time.
+- **Sync:** sign in on iPhone and iPad (Supabase; run `tools/supabase.sql` once and put the project URL and anon key in `js/config.js`). Edits on both devices merge.
+- **Apple Health:** an iPhone Shortcut opens the app with last night's sleep, HRV and resting HR (`?health=1&sleep=…`). There's also a one-tap check-in on Today, and Progress shows sleep against study.
+- **Tests:** subject breakdown (where marks are lost), guess tracking, seconds per question, and fast review of wrong answers into the mistakes diary.
+- **Catch-up plan:** when your recent pace misses the deadline, three concrete fixes on Today.
+- **Notes and pins:** your own notes per video (searchable, shown in recall), and pinned facts collected into a high-yield sheet.
+- **Calendar:** the next 14 days as all-day events with a 7 am alert.
+- **Revision smoothing:** no day goes over your revision cap. Some R2–R5 move to nearby lighter days.
 - **Revision times:** how long the first watch and each of R1–R5 really took, for every video and subject, against each revision's limit. Subjects whose revisions run over get flagged. Each revision ends by confirming its time (from the timer, or edited), and any logged time can be corrected from the video's panel.
 - **Plan:** a timeline of the four phases up to the exam, with goals to tick off. Also a "what if" slider (hours a day → finish date), the revision load for the next 8 weeks, and a day-by-day schedule of revisions and new videos.
 - **Tests:** log grand tests, subject tests and PYQ sets (+4/−1). Shows a score trend against the rank <1,500 zone (~620/800, from unofficial 2025 tables). The mistakes diary sorts errors by cause, and a mistake tied to a video pulls that video's next revision forward.

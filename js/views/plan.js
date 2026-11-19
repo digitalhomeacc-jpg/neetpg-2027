@@ -104,6 +104,7 @@ export function view() {
   </section>
 
   ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
+  <button class="btn block" style="margin:0 0 8px" data-act="ics">📅 Add the next 14 days to Calendar</button>
   <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.target)} a day.</p>
   <ul class="card flush list daylist">${dayHtml}</ul>
 
@@ -114,7 +115,31 @@ export function view() {
   };
 }
 
+// One all-day event per study day, with what's planned and a 7 am alert.
+function icsFile(days, revBy) {
+  const esc = x => String(x).replace(/[\\;,]/g, m => '\\' + m).replace(/\n/g, '\\n');
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const ev = days.slice(0, 14).map(d => {
+    const rv = revBy[d.date] || [], ymd = d.date.replace(/-/g, ''), next = addDays(d.date, 1).replace(/-/g, '');
+    const total = d.total + rv.reduce((a, x) => a + x.r.budget, 0);
+    const lines = [...rv.map(x => `${x.r.k.toUpperCase()} ${x.v.title} (${mins(x.r.budget)})`), ...d.items.map(x => `${x.v.title} (${mins(x.real)})`)];
+    return ['BEGIN:VEVENT', `UID:pg27-${ymd}@neetpg-2027`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${ymd}`, `DTEND;VALUE=DATE:${next}`,
+      `SUMMARY:${esc(`PG 2027 · ${mins(total)}${rv.length ? ` · ${rv.length} revision${rv.length > 1 ? 's' : ''}` : ''}`)}`,
+      `DESCRIPTION:${esc(lines.join('\n'))}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc('PG 2027: today\'s plan')}`, 'TRIGGER:PT7H', 'END:VALARM', 'END:VEVENT'].join('\r\n');
+  });
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PG 2027//EN', 'CALSCALE:GREGORIAN', ...ev, 'END:VCALENDAR'].join('\r\n');
+}
+
 export const actions = {
+  'ics': () => {
+    const m = metrics(), t = m.t, revBy = {};
+    for (const v of VIDS) { const r = revInfo(v, t); if (r?.k) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ v, r }); } }
+    const blob = new Blob([icsFile(forecast(m), revBy)], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = 'pg27-next-14-days.ics'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  },
   'phase': el => { S.ui.phase = S.ui.phase === el.dataset.v ? '' : el.dataset.v; save(); },
   'goal': el => { const id = el.dataset.v; if (S.goals[id]) delete S.goals[id]; else S.goals[id] = true; save(); },
 };

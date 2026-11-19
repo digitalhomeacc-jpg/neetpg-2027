@@ -2,6 +2,7 @@
 import { S, BY, PASSES, PLABEL, SPEEDS, REV, prog, save, today, h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, ankiQuery, REASONS, revInfo, passMins, ratingName, plannedOn } from '../core.js';
 import { openSheet, closeSheet, toast, seg, clockTime } from '../ui.js';
 import { openMistake } from './tests.js';
+import { pinBox } from './pins.js';
 
 let ctx = null; // { id, kind, speed, date }
 
@@ -47,6 +48,11 @@ function body() {
   return `${head}
     ${p.fr ? '' : `<button class="btn primary block" data-act="study-now" data-id="${v.id}" style="margin:0 0 14px">▶ Study now</button>`}
     ${v.notes ? `<p class="small" style="margin:0 0 4px">${h(v.notes)}</p>` : ''}
+    <div class="field"><label for="v-notes">My notes</label>
+      <textarea id="v-notes" class="inp" rows="3" placeholder="High-yield points in your own words. They show up in this video's recall check.">${h(S.notes[v.id] || '')}</textarea>
+      <p class="hint">Saved as you type. Tip: tap the 🎤 on the keyboard to dictate.</p>
+      ${pinBox(v.id)}
+      ${S.pins.filter(x => x.video === v.id).length ? `<button class="link" data-act="pins" style="margin-top:6px">📌 ${S.pins.filter(x => x.video === v.id).length} pinned from this video</button>` : ''}</div>
     <div class="field"><span class="lbl">Passes · each revision gets less time</span><div class="passes">${rows}</div></div>
 
     <div class="field"><span class="lbl">Anki tags · ${v.tags.length}</span>
@@ -104,3 +110,12 @@ export const actions = {
   },
   'vs-mistake': () => openMistake({ video: ctx.id, subject: BY[ctx.id].subject }),
 };
+
+let noteTimer;
+export function onInput(e) {
+  if (e.target.id !== 'v-notes' || !ctx) return false;
+  const id = ctx.id, val = e.target.value;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => { if (val.trim()) S.notes[id] = val; else delete S.notes[id]; save(); }, 500);
+  return true;
+}
