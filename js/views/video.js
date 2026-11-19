@@ -22,7 +22,13 @@ function body() {
     const x = p[k];
     let info, btn = '';
     if (x) {
-      info = `<span class="stamp">✓ ${fmtDow(x.d)}${x.t ? ` · ${clockTime(x.t)}` : ''}</span> ${mins(passMins(v, x))}${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}`;
+      const lim = k === 'fr' ? null : Math.max(2, Math.round(v.mins * REV[k].budget));
+      const took = passMins(v, x), over = lim && took > lim;
+      info = ctx.editK === k
+        ? `<span class="row" style="gap:8px"><input id="vs-min" class="inp num" type="number" inputmode="numeric" min="1" value="${Math.round(took)}" style="max-width:84px;min-height:38px;padding:6px 10px"> min
+            <button class="btn ghost" data-act="vs-time-save" data-k="${k}">Save</button></span>`
+        : `<span class="stamp">✓ ${fmtDow(x.d)}${x.t ? ` · ${clockTime(x.t)}` : ''}</span>
+           <button class="time-chip${over ? ' over' : ''}" data-act="vs-time" data-k="${k}" aria-label="Edit time">${mins(took)}${lim ? ` / ${mins(lim)}` : ''}</button>${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}`;
       const latest = PASSES.filter(kk => p[kk]).pop() === k;
       btn = latest ? `<button class="btn ghost danger" data-act="vs-unpass" data-k="${k}">Undo</button>` : '';
     } else if (k === 'fr') {
@@ -50,7 +56,8 @@ function body() {
       <div class="note"><b>Draft mapping.</b> This gets replaced with your checked tags once your Anki tag list is in.</div>
     </div>
 
-    <button class="btn block" style="margin-top:14px" data-act="hist-open" data-v="video:${v.id}">History of this video</button>
+    <p class="hint">Tap a time to correct it.</p>
+    <div class="btns" style="margin-top:14px"><button class="btn" data-act="times" data-v="${h(v.subject)}">Revision times</button><button class="btn" data-act="hist-open" data-v="video:${v.id}">History</button></div>
 
     <div class="field"><div class="row"><span class="lbl grow" style="margin:0">Mistakes on this video · ${ms.length}</span>
       <button class="btn ghost" data-act="vs-mistake">+ Log one</button></div>
@@ -60,7 +67,7 @@ function body() {
 }
 
 export function openMark(id) { ctx = { id, kind: 'mark', speed: S.settings.speed, date: today() }; openSheet(body); }
-export function openVideo(id) { ctx = { id, kind: 'detail', speed: S.settings.speed }; openSheet(body); }
+export function openVideo(id) { ctx = { id, kind: 'detail', speed: S.settings.speed, editK: null }; openSheet(body); }
 
 export const actions = {
   'mark': el => openMark(el.dataset.id),
@@ -81,6 +88,12 @@ export const actions = {
     delete p.fr; if (!Object.keys(p).length) delete S.progress[id];
     save();
     toast(`Unmarked: ${BY[id].title}`, () => { (S.progress[id] ||= {}).fr = was; save(); });
+  },
+  'vs-time': el => { ctx.editK = el.dataset.k; return () => document.getElementById('vs-min')?.select(); },
+  'vs-time-save': el => {
+    const k = el.dataset.k, x = S.progress[ctx.id][k], n = Math.round(+document.getElementById('vs-min').value);
+    if (n >= 1) { x.m = n; save(); }
+    ctx.editK = null;
   },
   'vs-unpass': el => {
     const id = ctx.id, k = el.dataset.k, p = S.progress[id], was = p[k];

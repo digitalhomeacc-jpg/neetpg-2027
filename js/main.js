@@ -11,12 +11,13 @@ import * as reviseS from './views/revise.js';
 import * as focusS from './views/focus.js';
 import * as plannerS from './views/planner.js';
 import * as welcomeV from './views/welcome.js';
+import * as timesV from './views/times.js';
 import { writeSummary } from './notify.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
-const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV];
+const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV };
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -35,6 +36,7 @@ const ACTIONS = Object.assign({
   copy: el => copy(el.dataset.q),
   settings: () => { S.ui.back = S.ui.tab; S.ui.tab = 'settings'; return 'enter'; },
   back: () => {
+    if (S.ui.tab === 'times') { S.ui.tab = S.ui.timesBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'history') {
       if (S.ui.histKey && S.ui.histFromList) { S.ui.histKey = null; return 'enter'; }
       S.ui.histKey = null; S.ui.tab = S.ui.histBack || 'settings'; return 'enter';
@@ -73,7 +75,7 @@ function render({ top = false, enter = false } = {}) {
   const tab = VIEWS[S.ui.tab] ? S.ui.tab : 'today';
   const { title, meta, html } = VIEWS[tab].view();
   document.getElementById('nav-title').textContent = title;
-  document.getElementById('nav-btns').innerHTML = tab === 'settings' || tab === 'history'
+  document.getElementById('nav-btns').innerHTML = tab === 'settings' || tab === 'history' || tab === 'times'
     ? `<button class="icon-btn" data-act="back" aria-label="Back">${ICON.back}</button>`
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;

@@ -101,6 +101,12 @@ export function view() {
     </div>
   </section>
 
+  <button class="card tomorrow" data-act="times">
+    <span class="rbadge" style="--h:30">⏱️</span>
+    <span class="grow"><span class="t">Revision times</span><span class="s">How long your first watch and R1–R5 took for every topic</span></span>
+    <span class="faint">›</span>
+  </button>
+
   ${sectionH('Syllabus map', 'every video, by pass')}
   <section class="card"><div class="mosaic">${mosaic}</div>
     <div class="mz-key"><span>Not watched</span><i style="opacity:.15"></i><i style="opacity:.35"></i><i style="opacity:.55"></i><i style="opacity:.75"></i><i style="opacity:.9"></i><i></i><span>All 5 revisions</span></div></section>

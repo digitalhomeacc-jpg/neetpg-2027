@@ -29,7 +29,7 @@ function body() {
   if (!r?.k) return `<h3>${h(v.title)}</h3><p class="muted">All five revisions are done.</p>`;
   const n = PASSES.indexOf(r.k);
   const steps = ['Recall', 'Check', 'Revise'];
-  const si = { recall: 0, rate: 1, timer: 2 }[ctx.step];
+  const si = { recall: 0, rate: 1, timer: 2, log: 2 }[ctx.step];
   const head = `<div class="rv-steps">${steps.map((s, i) => `<span class="${i === si ? 'on' : i < si ? 'done' : ''}">${i + 1}. ${s}</span>`).join('')}</div>
     <h3>${h(v.title)}</h3>
     <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Revision ${n} of 5 · ${mins(r.budget)} limit${r.overdue > 0 ? ` · <span class="bad-t">${r.overdue}d overdue</span>` : ''}</div>`;
@@ -57,6 +57,14 @@ function body() {
         <div class="rate">${RATINGS.map(([q, l]) => `<button data-act="rv-rate" data-v="${q}" class="q${q}"><b>${l}</b><span>${['Next one sooner', 'A bit sooner', 'On schedule', 'Later'][q - 1]}</span></button>`).join('')}</div></div>`;
   }
 
+  if (ctx.step === 'log') {
+    return `${head}
+      <div class="field"><label for="rv-min">How long did this revision take?</label>
+        <div class="row"><input id="rv-min" class="inp num" type="number" inputmode="numeric" min="1" value="${ctx.spent}" style="max-width:120px"><span class="muted">minutes · limit ${mins(r.budget)}</span></div>
+        <div class="chips" style="margin-top:10px">${[-5, -1, 1, 5, 10].map(d => `<button class="chip" data-act="rv-time" data-v="${d}">${d > 0 ? '+' : '−'}${Math.abs(d)}</button>`).join('')}</div>
+        <p class="hint">${ctx.elapsed >= 45 ? `From the timer: ${mins(ctx.elapsed / 60)}.` : 'The timer wasn’t used, so this starts at the limit. Change it to what it really took.'}</p></div>
+      <button class="btn primary block" data-act="rv-save">Save ${r.k.toUpperCase()}</button>`;
+  }
   const left = r.budget * 60 - elapsed();
   return `${head}
     <div class="timer">
@@ -86,8 +94,16 @@ export const actions = {
     else { ctx.startedAt = Date.now(); ctx.running = true; }
   },
   'rv-finish': () => {
+    // Confirm the time: the timer's reading if it ran, otherwise the limit, editable either way.
+    const r = revInfo(BY[ctx.id]);
+    ctx.elapsed = elapsed(); ctx.running = false;
+    ctx.spent = ctx.elapsed >= 45 ? Math.round(ctx.elapsed / 60) : r.budget;
+    ctx.step = 'log';
+  },
+  'rv-time': el => { const i = document.getElementById('rv-min'); i.value = Math.max(1, (+i.value || 0) + +el.dataset.v); },
+  'rv-save': () => {
     const v = BY[ctx.id], r = revInfo(v);
-    const spent = Math.max(1, Math.round(elapsed() / 60)) || r.budget;
+    const spent = Math.max(1, Math.round(+document.getElementById('rv-min').value || ctx.spent));
     (S.progress[v.id] ||= {})[r.k] = { d: today(), t: new Date().toISOString(), m: spent, q: ctx.q ?? 3 };
     save(); clearInterval(timer); closeSheet();
     const nx = revInfo(v);
