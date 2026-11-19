@@ -1,5 +1,5 @@
 // Offline cache for the app, plus daily reminders. Bump VERSION whenever any file changes.
-const VERSION = 'pg27-v17';
+const VERSION = 'pg27-v18';
 const FILES = ['./', 'index.html', 'css/app.css', 'js/main.js', 'js/core.js', 'js/ui.js', 'js/notify.js',
   'js/views/today.js', 'js/views/plan.js', 'js/views/videos.js', 'js/views/tests.js', 'js/views/progress.js',
   'js/views/settings.js', 'js/views/video.js', 'js/views/revise.js', 'js/views/focus.js', 'js/history.js', 'js/views/planner.js', 'js/quotes.js', 'js/views/welcome.js', 'js/views/times.js', 'js/views/watch.js', 'js/views/health.js', 'js/views/pins.js', 'js/views/week.js', 'js/views/report.js', 'js/views/extras.js', 'js/views/revisions.js', 'js/views/backlog.js', 'js/sync.js', 'js/config.js', 'js/data-wor.js', 'js/data-anki.js', 'js/views/anki.js', 'js/note.js', 'manifest.webmanifest',

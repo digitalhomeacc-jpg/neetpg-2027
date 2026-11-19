@@ -11,7 +11,11 @@ function body() {
   const v = BY[ctx.id], p = prog(v.id);
   const speeds = seg('vs-speed', SPEEDS.map(s => [s, sp(s)]), ctx.speed);
   const head = `<h3>${h(v.title)}</h3>
-    <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Block ${v.block} · ${mins(v.mins)} runtime</div>
+    <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Block ${v.block} · <button class="link num" data-act="vs-rt">${mins(v.mins)} runtime${S.runtimes[v.id] ? ' (corrected)' : ''} ✎</button></div>
+    ${ctx.rt ? `<div class="field rt-edit"><label for="vs-rt">Runtime in Marrow (minutes)</label>
+      <div class="row"><input id="vs-rt" class="inp num" type="number" inputmode="numeric" min="1" max="300" value="${ctx.rtVal ?? Math.round(v.mins)}" style="max-width:110px">
+      <button class="btn primary" data-act="vs-rt-save">Save</button><button class="btn ghost" data-act="vs-rt-cancel">Cancel</button></div>
+      <p class="hint">Your sheet says ${mins(v.sheetMins)}.${S.runtimes[v.id] ? ` <button class="link" data-act="vs-rt-reset">Go back to ${mins(v.sheetMins)}</button>` : ''} Revision limits and plans follow the new runtime.</p></div>` : ''}
     ${p.fr ? `<div class="stamp-big">✓ Watched on ${fmtDayLong(p.fr.d)}${p.fr.t ? ` at ${clockTime(p.fr.t)}` : ''} · ${p.fr.m ? `${mins(p.fr.m)} studied` : sp(p.fr.s)}${p.fr.breaks ? `<span class="span-note">across ${mins(p.fr.span)} with ${p.fr.breaks} break${p.fr.breaks > 1 ? 's' : ''}</span>` : ''}</div>` : plannedOn(v.id) ? `<div class="stamp-big plan">Planned for ${fmtDayLong(plannedOn(v.id))}</div>` : ''}`;
   if (ctx.kind === 'mark') {
     return `${head}
@@ -76,6 +80,25 @@ export function openMark(id) { ctx = { id, kind: 'mark', speed: S.settings.speed
 export function openVideo(id) { ctx = { id, kind: 'detail', speed: S.settings.speed, editK: null }; openSheet(body); }
 
 export const actions = {
+  'vs-rt': () => { ctx.rt = true; ctx.rtVal = null; return () => document.getElementById('vs-rt')?.select(); },
+  'vs-rt-cancel': () => { ctx.rt = false; },
+  'vs-rt-save': () => {
+    const v = BY[ctx.id], n = Math.round(+document.getElementById('vs-rt').value);
+    if (!(n >= 1 && n <= 300)) { toast('Enter the runtime in minutes'); return; }
+    if (n === Math.round(v.mins)) { ctx.rt = false; return; }
+    ctx.rtVal = n; // keep the typed number if the panel redraws
+    if (!confirm(`Change the runtime of "${v.title}" from ${mins(v.mins)} to ${mins(n)}?\n\nIts revision limits and your plans will use ${mins(n)}.`)) return;
+    const was = S.runtimes[v.id];
+    if (n === Math.round(v.sheetMins)) delete S.runtimes[v.id]; else S.runtimes[v.id] = n;
+    ctx.rt = false; ctx.rtVal = null; save();
+    toast(`Runtime set to ${mins(n)}`, () => { if (was) S.runtimes[v.id] = was; else delete S.runtimes[v.id]; save(); });
+  },
+  'vs-rt-reset': () => {
+    const v = BY[ctx.id], was = S.runtimes[v.id];
+    if (!confirm(`Go back to the sheet's runtime, ${mins(v.sheetMins)}?`)) return;
+    delete S.runtimes[v.id]; ctx.rt = false; save();
+    toast(`Runtime back to ${mins(v.sheetMins)}`, () => { S.runtimes[v.id] = was; save(); });
+  },
   'mark': el => openMark(el.dataset.id),
   'open-video': el => openVideo(el.dataset.id),
   'vs-speed': el => { ctx.speed = +el.dataset.v; const d = document.getElementById('vs-date'); if (d?.value) ctx.date = d.value; },

@@ -2,6 +2,7 @@
 
 export const D = window.WOR;
 export const VIDS = D.videos;
+for (const v of VIDS) v.sheetMins = v.mins;
 export const BY = Object.fromEntries(VIDS.map(v => [v.id, v]));
 export const SUBJECTS = D.subjects.filter(s => VIDS.some(v => v.subject === s));
 export const PASSES = ['fr', 'r1', 'r2', 'r3', 'r4', 'r5'];
@@ -86,6 +87,7 @@ function defaults() {
     reflect: {},   // week start -> {went, hard, change}
     pairs: [],     // lookalike concepts: {id, a, b, how, subject, d}
     rehearsals: [], // GT rehearsals: {id, date, checks}
+    runtimes: {},  // video id -> runtime in minutes you corrected (from Marrow)
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
   };
@@ -99,13 +101,16 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [],
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {},
   };
 }
 function load() {
   try { return mergeState(JSON.parse(localStorage.getItem(KEY))); } catch { return defaults(); }
 }
 export let S = load();
+// A corrected runtime replaces the sheet's everywhere: plans, revision limits, totals.
+export function applyRuntimes() { for (const v of VIDS) v.mins = S.runtimes?.[v.id] || v.sheetMins; }
+applyRuntimes();
 export function replaceState(n) { S = n; save(); }
 export function resetProgress() {
   const keep = S.settings, hist = S.history; S = defaults(); S.settings = keep; S.history = hist; S.onboarded = true; save();
@@ -115,6 +120,7 @@ const saveHooks = [];
 export const onSave = fn => saveHooks.push(fn);
 export function save() {
   saveVersion++;
+  applyRuntimes();
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: keep going in memory */ }
   for (const fn of saveHooks) { try { fn(); } catch { /* a hook must never break saving */ } }
 }

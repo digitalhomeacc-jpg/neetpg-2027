@@ -23,6 +23,11 @@ function snapshot() {
     for (const k of PASSES) if (p[k]) f[PLABEL[k]] = passText(v, p[k], k);
     recs[`video:${id}`] = { kind: 'video', title: v.title, sub: v.subject, f };
   }
+  for (const [id, m] of Object.entries(S.runtimes || {})) {
+    const v = BY[id]; if (!v) continue;
+    const r = (recs[`video:${id}`] ||= { kind: 'video', title: v.title, sub: v.subject, f: {} });
+    r.f.Runtime = `${m} min (sheet ${Math.round(v.sheetMins)})`;
+  }
   for (const t of S.tests) {
     const sc = testScore(t);
     recs[`test:${t.id}`] = { kind: 'test', title: t.name, f: {
