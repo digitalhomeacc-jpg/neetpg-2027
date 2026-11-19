@@ -343,11 +343,10 @@ for n in notes:
     if kind[n['id']] == 's':
         for t in n['tags']:
             if re.match(r'(pyqs?|aiims_previous_year|\$i_anki::aiims)', t, re.I) or t.upper().startswith('PG27::'): continue
-            segs = [x for x in t.split('::') if not GENERIC.match(x)]
-            if segs: p['tags'][' › '.join(segs[-2:]).replace('_', ' ')] += n['cards']
+            if [x for x in t.split('::') if not GENERIC.match(x)]: p['tags'][t] += n['cards']  # full name, so Anki can search it
 # Your own tags per video: the ones with the most cards there (tag names and counts only, no card text).
 for p in per.values():
-    p['top'] = [[t, c] for t, c in p['tags'].most_common(6) if c >= 2]
+    p['top'] = [[t, c] for t, c in p['tags'].most_common(12) if c >= 2]
     del p['tags']
 data = {vid: {k: (dict(v) if k == 'pyq' else v) for k, v in p.items() if v and (k not in ('ch', 'chq') or any(v))} for vid, p in per.items()}
 with open(f'{out}/data-anki.js', 'w', encoding='utf-8') as f:
@@ -356,7 +355,7 @@ with open(f'{out}/data-anki.js', 'w', encoding='utf-8') as f:
 
 # ---------- Anki library: what's in the collection, by kind of card ----------
 # Sections overlap on purpose: PYQ cards also sit in "regular" or "frozen".
-PYQ_RE = re.compile(r'pyq|previous.?year|aiims|inicet|neet.?pg|neet_?20\d\d|\bneet\b', re.I)
+PYQ_RE = re.compile(r'pyq|previous.?year|aiims|inicet|neet.?(pg)?.?(20\d\d|\d{2}\b)|recall', re.I)  # not plain "NEETPG": every deck starts with it
 def is_pyq(n): return bool(pyq_of(n)) or any(PYQ_RE.search(t) for t in n['tags'] + n['decks'])
 def pg_tag(vid, ch=None):
     v = BY_ID[vid]; si = SUBJECTS.index(v['subject']) + 1

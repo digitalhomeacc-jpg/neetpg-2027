@@ -21,13 +21,14 @@ import * as extrasV from './views/extras.js';
 import * as revisionsV from './views/revisions.js';
 import * as backlogV from './views/backlog.js';
 import * as ankiV from './views/anki.js';
+import * as ankiLibV from './views/ankilib.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
-const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV];
+const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV, ankilib: ankiLibV };
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -55,6 +56,7 @@ const ACTIONS = Object.assign({
     if (S.ui.tab === 'times') { S.ui.tab = S.ui.timesBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'pins') { S.ui.tab = S.ui.pinsBack || 'videos'; return 'enter'; }
     if (S.ui.tab === 'revisions') { S.ui.tab = S.ui.revBack || 'today'; return 'enter'; }
+    if (S.ui.tab === 'ankilib') { S.ui.tab = S.ui.libBack || 'anki'; return 'enter'; }
     if (S.ui.tab === 'anki') { S.ui.tab = S.ui.ankiBack || 'progress'; return 'enter'; }
     if (S.ui.tab === 'backlog') { S.ui.tab = S.ui.backlogBack || 'today'; return 'enter'; }
     if (S.ui.tab === 'report') { S.ui.tab = S.ui.reportBack || 'progress'; return 'enter'; }
@@ -100,7 +102,7 @@ function render({ top = false, enter = false } = {}) {
   const tab = VIEWS[S.ui.tab] ? S.ui.tab : 'today';
   const { title, meta, html } = VIEWS[tab].view();
   document.getElementById('nav-title').textContent = title;
-  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog', 'anki'].includes(tab)
+  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog', 'anki', 'ankilib'].includes(tab)
     ? `<button class="icon-btn" data-act="back" aria-label="Back">${ICON.back}</button>`
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;

@@ -178,7 +178,7 @@ export function view() {
       <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.target)} it needs`}</span></span>
     <span class="faint">${ICON.chev}</span>
   </button>
-  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], true))}">${ICON.copy}Copy tomorrow's Anki cards (suspended)</button>` : ''}` : ''}
+  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], true))}">${ICON.copy}Copy tomorrow's Anki cards · still suspended</button>` : ''}` : ''}
 
   ${openMistakes.length ? `
   ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}
@@ -197,7 +197,7 @@ export function view() {
   <section class="card">
     <p class="small muted" style="margin:0 0 12px">Paste into the Anki browser search, select all, then unsuspend (Ctrl/⌘+J on desktop).</p>
     <div class="btns">
-      <button class="btn primary" data-act="copy" data-q="${h(ankiQuery(tagsToday, true))}">${ICON.copy}Suspended cards</button>
+      <button class="btn primary" data-act="copy" data-q="${h(ankiQuery(tagsToday, true))}">${ICON.copy}Still suspended</button>
       <button class="btn" data-act="copy" data-q="${h(ankiQuery(tagsToday, false))}">All cards</button>
     </div>
     <div class="spacer"></div>
