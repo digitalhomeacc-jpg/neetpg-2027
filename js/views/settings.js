@@ -1,6 +1,33 @@
 import { S, VIDS, D, DOW, DOW_LONG, SPEEDS, save, today, h, hrs, sp, mergeState, replaceState, resetProgress } from '../core.js';
 import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
+import * as sync from '../sync.js';
+let lastEmail = '';
+
+function syncCard() {
+  if (!sync.configured()) {
+    return `<p class="small muted" style="margin:0 0 10px">Sign in on your iPhone and iPad to keep them in step. This needs the app's sync server to be set up once.</p>
+      <details class="setup"><summary>Set up sync (repo owner, once)</summary><ol class="small">
+        <li>Create a free project at supabase.com.</li>
+        <li>SQL Editor → paste <code>tools/supabase.sql</code> from the repo → Run.</li>
+        <li>Authentication → Sign In / Providers → Email: turn <b>Confirm email</b> off (or confirm each new account from its email).</li>
+        <li>Project Settings → API: copy the Project URL and the <b>anon public</b> key, and send them to Claude to put in <code>js/config.js</code>. Or enter them below on each device.</li></ol>
+        <div class="field"><label for="sy-url">Project URL</label><input id="sy-url" class="inp" placeholder="https://xxxx.supabase.co" autocomplete="off"></div>
+        <div class="field"><label for="sy-key">Anon public key</label><input id="sy-key" class="inp" autocomplete="off"></div>
+        <button class="btn block" data-act="sync-config">Save server details</button></details>`;
+  }
+  const a = sync.account(), st = sync.status;
+  if (!a) {
+    return `<p class="small muted" style="margin:0 0 10px">Use the same email and password on every device. Your first sign-in uploads this device's progress.</p>
+      <div class="field" style="margin-top:0"><label for="sy-email">Email</label><input id="sy-email" class="inp" type="email" autocomplete="username" inputmode="email" value="${h(lastEmail)}"></div>
+      <div class="field"><label for="sy-pass">Password</label><input id="sy-pass" class="inp" type="password" autocomplete="current-password" minlength="6"></div>
+      <div class="btns"><button class="btn primary" data-act="sync-in">Sign in</button><button class="btn" data-act="sync-up">Create account</button></div>
+      ${st.error ? `<p class="hint bad-t">${h(st.error)}</p>` : ''}`;
+  }
+  return `<p class="small" style="margin:0 0 4px"><b>Signed in as ${h(a.email)}.</b></p>
+    <p class="small muted" style="margin:0 0 12px">${st.state === 'syncing' ? 'Syncing…' : st.state === 'error' ? `<span class="bad-t">Couldn't sync: ${h(st.error)}</span>` : st.at ? `Synced at ${st.at.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}` : 'Changes sync a few seconds after you make them.'}</p>
+    <div class="btns"><button class="btn" data-act="sync-now">Sync now</button><button class="btn danger" data-act="sync-out">Sign out</button></div>`;
+}
 
 function reminders() {
   const perm = 'Notification' in window ? Notification.permission : 'unsupported';
@@ -47,8 +74,22 @@ export function view() {
       <p class="hint">Reports conflict on whether 2026 had 180 or 200 questions. This only sets the default when you log a test.</p></div>
   </section>
 
+  ${sectionH('Daily targets')}
+  <section class="card">
+    <div class="field" style="margin-top:0"><span class="lbl">Bare minimum counts</span>${seg('minpct', [[0.5, '50%'], [0.75, '75%'], [1, '100%']], st.minPct ?? 0.5)}
+      <p class="hint">Minimum = revisions due today (up to 2 hours) + this share of the day's new videos. Full day = all revisions due + all new videos. Anki and Q-bank focus time is counted separately.</p></div>
+    <div class="field"><span class="lbl">Most revision per day</span>${seg('revcap', [[60, '1h'], [90, '1.5h'], [120, '2h'], [180, '3h'], [0, 'No cap']], st.revCap ?? 120)}
+      <p class="hint">When more revisions than this fall on one day, some R2–R5 move a few days earlier so they don't pile up.</p></div>
+    <div class="field"><span class="lbl">Get-ready time before Study now</span>${seg('breath', [[0, 'None'], [60, '1 min'], [120, '2 min'], [180, '3 min']], st.breath ?? 120)}</div>
+    <div class="field" style="margin-bottom:0"><label for="s-marrow">“Open Marrow” link</label><input id="s-marrow" class="inp" data-set="marrowUrl" value="${h(st.marrowUrl || 'https://www.marrow.com/')}" autocomplete="off">
+      <p class="hint">Opens Marrow during the get-ready time. If it opens Safari instead of the app, try the link your Marrow app uses.</p></div>
+  </section>
+
   <section class="card flush"><ul class="list"><li class="item"><span class="rbadge" style="--h:30">🕘</span>
     <button class="open" data-act="history"><div class="t">Change history</div><div class="s">Every change, with the exact time and what it was before</div></button><span class="faint">${ICON.chev}</span></li></ul></section>
+
+  ${sectionH('Sync between devices')}
+  <section class="card">${syncCard()}</section>
 
   ${sectionH('Share with friends')}
   <section class="card">
@@ -78,9 +119,22 @@ export function view() {
   };
 }
 
+function authAct(kind) {
+  const email = document.getElementById('sy-email').value.trim(), pass = document.getElementById('sy-pass').value;
+  lastEmail = email;
+  if (!email.includes('@') || pass.length < 6) { toast('Enter your email and a password of 6+ characters'); return; }
+  sync.status.error = '';
+  (kind === 'in' ? sync.signIn(email, pass) : sync.signUp(email, pass))
+    .then(r => { toast(r === 'confirm' ? 'Check your email to confirm the account, then sign in' : 'Signed in. Syncing…'); document.dispatchEvent(new Event('pg27:render')); })
+    .catch(e => { sync.status.error = e.message; toast(e.message); document.dispatchEvent(new Event('pg27:render')); });
+}
+
 export const actions = {
   'speed': el => { S.settings.speed = +el.dataset.v; save(); },
   'questions': el => { S.settings.questions = +el.dataset.v; save(); },
+  'minpct': el => { S.settings.minPct = +el.dataset.v; save(); },
+  'revcap': el => { S.settings.revCap = +el.dataset.v; save(); },
+  'breath': el => { S.settings.breath = +el.dataset.v; save(); },
   'theme': el => { S.settings.theme = el.dataset.v; save(); },
   'rest': el => {
     const i = +el.dataset.v, r = S.settings.rest;
@@ -88,6 +142,15 @@ export const actions = {
     if (next.length > 6) { toast('Keep at least one study day'); return; }
     S.settings.rest = next; save();
   },
+  'sync-config': () => {
+    const url = document.getElementById('sy-url').value.trim(), key = document.getElementById('sy-key').value.trim();
+    if (!/^https:\/\/.+/.test(url) || key.length < 20) { toast('Check the URL and key'); return; }
+    S.settings.syncUrl = url; S.settings.syncKey = key; save(); toast('Server saved. Now sign in.');
+  },
+  'sync-in': () => authAct('in'),
+  'sync-up': () => authAct('up'),
+  'sync-now': () => { sync.syncNow(); },
+  'sync-out': () => { if (confirm('Sign out on this device? Your progress stays here, and in your account.')) { sync.signOut(); toast('Signed out'); } },
   'push-on': () => {
     enablePush().then(() => { toast('Reminders on. Finish the GitHub setup below.'); document.dispatchEvent(new Event('pg27:render')); })
       .catch(e => toast(e.message === 'denied' ? 'Notifications were not allowed' : "Couldn't turn on reminders here"));
@@ -121,6 +184,7 @@ export const actions = {
 export function onChange(e) {
   const el = e.target;
   if (el.dataset.set && el.value) {
+    if (!['start', 'target', 'exam'].includes(el.dataset.set)) { S.settings[el.dataset.set] = el.value.trim(); save(); return true; }
     const next = { ...S.settings, [el.dataset.set]: el.value };
     if (next.target <= next.start) { toast('The WOR deadline has to be after the start date'); return true; }
     if (next.exam <= next.target) { toast('The exam has to be after the WOR deadline'); return true; }

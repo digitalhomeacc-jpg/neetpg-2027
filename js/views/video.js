@@ -45,6 +45,7 @@ function body() {
   const ms = S.mistakes.filter(x => x.video === v.id);
   const reason = Object.fromEntries(REASONS);
   return `${head}
+    ${p.fr ? '' : `<button class="btn primary block" data-act="study-now" data-id="${v.id}" style="margin:0 0 14px">▶ Study now</button>`}
     ${v.notes ? `<p class="small" style="margin:0 0 4px">${h(v.notes)}</p>` : ''}
     <div class="field"><span class="lbl">Passes · each revision gets less time</span><div class="passes">${rows}</div></div>
 

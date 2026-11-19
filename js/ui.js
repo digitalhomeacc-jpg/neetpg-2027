@@ -11,6 +11,7 @@ export const ICON = {
   back: '<svg viewBox="0 0 24 24" class="ic"><path d="M15 6l-6 6 6 6"/></svg>',
   cal: '<svg viewBox="0 0 24 24" class="ic"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>',
   share: '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3.5v12M7.5 8L12 3.5 16.5 8"/><path d="M5.5 12.5v5a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-5"/></svg>',
+  play: '<svg viewBox="0 0 24 24" class="ic"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/></svg>',
   x: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   down: '<svg viewBox="0 0 24 24" class="ic"><path d="M6 9l6 6 6-6"/></svg>',
   timer: '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg>',
@@ -55,7 +56,7 @@ export function videoItem(v, { showSubject = false, showBlock = true, real = nul
     <button class="open" data-act="open-video" data-id="${v.id}">
       <div class="t">${h(v.title)}</div>
       <div class="s num">${showSubject ? subjDot(v.subject) : ''}${bits.join(' · ')}</div></button>
-    <div class="end">${open ? `<span class="pill bad">${open}</span>` : ''}${revPill(p)}</div>
+    <div class="end">${open ? `<span class="pill bad">${open}</span>` : ''}${revPill(p)}${done ? '' : `<button class="play" data-act="study-now" data-id="${v.id}" aria-label="Study now">${ICON.play}</button>`}</div>
   </li>`;
 }
 

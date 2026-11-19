@@ -12,12 +12,14 @@ import * as focusS from './views/focus.js';
 import * as plannerS from './views/planner.js';
 import * as welcomeV from './views/welcome.js';
 import * as timesV from './views/times.js';
+import * as watchS from './views/watch.js';
 import { writeSummary } from './notify.js';
+import { startSync } from './sync.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
 const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV];
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -92,6 +94,7 @@ function render({ top = false, enter = false } = {}) {
   onScroll();
   if (sheetOpen()) renderSheet();
   focusS.renderFocus();
+  watchS.renderWatch();
   welcomeV.renderWelcome();
   checkBadges(m);
   historyV.recordChanges(); // compare with the last snapshot and log what changed
@@ -164,9 +167,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 if (S.ui.focusOpen) S.ui.focusOpen = false;
+if (S.ui.watchOpen && !S.watch) S.ui.watchOpen = false;
 historyV.setGoalLabels(Object.fromEntries(phases().flatMap(p => p.goals)));
 historyV.startHistory();
 render({ top: true, enter: true });
+startSync();
+document.addEventListener('pg27:sync', () => { if (S.ui.tab === 'settings') render(); });
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // When a new version takes over, reload once so the whole app is the new version.

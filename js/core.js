@@ -72,7 +72,7 @@ function defaults() {
   return {
     v: 2,
     onboarded: false,
-    settings: { start: t, target: addDays(t, 75), exam: '2027-08-29', rest: [0], speed: 1.5, theme: 'auto', questions: 200 },
+    settings: { start: t, target: addDays(t, 75), exam: '2027-08-29', rest: [0], speed: 1.5, theme: 'auto', questions: 200, minPct: 0.5, revCap: 120, breath: 120, marrowUrl: 'https://www.marrow.com/' },
     progress: {},
     tests: [],     // {id, name, type, date, n, c, w, rank, notes}
     mistakes: [],  // {id, date, subject, video, reason, note, test, done}
@@ -80,6 +80,9 @@ function defaults() {
     goals: {},     // goal id -> true
     sessions: [],  // focus sessions: {id, d, m, kind}
     plan: {},      // date -> [video ids] you picked for that day
+    notes: {},     // video id -> your own notes
+    pins: [],      // pinned facts: {id, video, text, d, done}
+    health: {},    // date -> {sleep, hrv, rhr, steps, energy, src}
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
   };
@@ -93,7 +96,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {},
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {},
   };
 }
 function load() {
@@ -104,7 +107,14 @@ export function replaceState(n) { S = n; save(); }
 export function resetProgress() {
   const keep = S.settings, hist = S.history; S = defaults(); S.settings = keep; S.history = hist; S.onboarded = true; save();
 }
-export function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: keep going in memory */ } }
+let saveVersion = 0;
+const saveHooks = [];
+export const onSave = fn => saveHooks.push(fn);
+export function save() {
+  saveVersion++;
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: keep going in memory */ }
+  for (const fn of saveHooks) { try { fn(); } catch { /* a hook must never break saving */ } }
+}
 
 export const prog = id => S.progress[id] || {};
 export const isRest = s => S.settings.rest.includes(dow(s));
@@ -133,7 +143,7 @@ export const passMins = (v, x) => x.m != null ? x.m : v.mins / (x.s || 1);
 
 /* ---------- spaced revisions ---------- */
 export const nextPass = p => PASSES.find(k => !p[k]);
-export function revInfo(v, t = today()) {
+function rawRev(v, t) {
   const p = prog(v.id);
   if (!p.fr) return null;
   const k = nextPass(p);
@@ -150,7 +160,55 @@ export function revInfo(v, t = today()) {
   const m = S.mistakes.filter(x => x.video === v.id && !x.done && x.date >= prev.d).map(x => addDays(x.date, 2)).sort()[0];
   const pulled = m && m < due;
   if (pulled) due = m;
-  return { k, due, pulled, budget: Math.max(2, Math.round(v.mins * REV[k].budget)), overdue: dayDiff(due, t) };
+  return { k, due, pulled, gap, prev: prev.d, budget: Math.max(2, Math.round(v.mins * REV[k].budget)), overdue: dayDiff(due, t) };
+}
+
+// Smoothing: when too many revisions land on one day, move some R2–R5 up to a quarter
+// of their gap earlier (or at most 2 days later) so no day goes over the revision cap.
+let smoothKey = '', smoothMap = {};
+function smoothing(t) {
+  const key = `${saveVersion}|${t}`;
+  if (key === smoothKey) return smoothMap;
+  smoothKey = key; smoothMap = {};
+  const cap = S.settings.revCap || 120;
+  if (!cap) return smoothMap;
+  const load = {}, add = (d, m) => { load[d] = (load[d] || 0) + m; };
+  const items = [];
+  for (const v of VIDS) {
+    const r = rawRev(v, t);
+    if (!r?.k) continue;
+    if (r.due <= t) add(t, r.budget);
+    else if (r.k === 'r1' || dayDiff(t, r.due) > 150) add(r.due, r.budget);
+    else items.push({ v, r });
+  }
+  items.sort((a, b) => a.r.due.localeCompare(b.r.due) || b.r.budget - a.r.budget);
+  const tomorrow = addDays(t, 1);
+  for (const { v, r } of items) {
+    const fits = d => (load[d] || 0) + r.budget <= cap;
+    let d = r.due;
+    if (!fits(d)) {
+      let found = null;
+      const back = Math.max(1, Math.floor(r.gap * 0.25));
+      for (let o = 1; o <= back && !found; o++) { const c = addDays(r.due, -o); if (c >= tomorrow && c > r.prev && fits(c)) found = c; }
+      for (let o = 1; o <= 2 && !found; o++) { const c = addDays(r.due, o); if (fits(c)) found = c; }
+      // Nothing fits: use the least-busy day in the window rather than piling onto the due date.
+      if (!found) {
+        const opts = [];
+        for (let o = -back; o <= 2; o++) { const c = addDays(r.due, o); if (c >= tomorrow && c > r.prev) opts.push(c); }
+        found = opts.sort((a, b) => (load[a] || 0) - (load[b] || 0) || Math.abs(dayDiff(r.due, a)) - Math.abs(dayDiff(r.due, b)))[0];
+      }
+      if (found && found !== r.due) { d = found; smoothMap[v.id] = { k: r.k, due: d, from: r.due }; }
+    }
+    add(d, r.budget);
+  }
+  return smoothMap;
+}
+export function revInfo(v, t = today()) {
+  const r = rawRev(v, t);
+  if (!r?.k) return r;
+  const adj = smoothing(today())[v.id];
+  if (adj && adj.k === r.k && !r.pulled) { r.due = adj.due; r.moved = adj.from; r.overdue = dayDiff(r.due, t); }
+  return r;
 }
 export function revisionsDue(t = today()) {
   return VIDS.map(v => ({ v, r: revInfo(v, t) })).filter(x => x.r?.k && x.r.due <= t)
@@ -199,7 +257,8 @@ export function metrics() {
   const must = []; let mustMins = 0;
   for (const x of due) { if (must.length && mustMins + x.r.budget > MUST_REV_CAP - Math.min(revDoneToday, MUST_REV_CAP)) break; must.push(x); mustMins += x.r.budget; }
   const goal = target + dueMins + revDoneToday;
-  const minimum = (restToday ? 0 : target * 0.5) + Math.min(MUST_REV_CAP, mustMins + revDoneToday);
+  const minPct = st.minPct ?? 0.5;
+  const minimum = (restToday ? 0 : target * minPct) + Math.min(MUST_REV_CAP, mustMins + revDoneToday);
   // Remember the day's numbers so the week strip can show how past days went.
   if (goal && (!S.days[t] || Math.abs(S.days[t].t - goal) > 0.5 || Math.abs((S.days[t].min || 0) - minimum) > 0.5)) {
     S.days[t] = { t: Math.round(goal), min: Math.round(minimum) }; save();

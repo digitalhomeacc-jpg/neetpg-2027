@@ -4,6 +4,7 @@ import {
 } from '../core.js';
 import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
 import { focusPill } from './focus.js';
+import { watchPill } from './watch.js';
 import { QUOTES, quoteIndex, nextQuote } from '../quotes.js';
 import { save } from '../core.js';
 
@@ -82,6 +83,7 @@ export function view() {
     meta: fmtDayLong(m.t),
     html: `
   ${quoteStrip()}
+  ${watchPill()}
   ${focusPill()}
   <section class="card hero-card">
     <div class="hero-top">
@@ -93,6 +95,7 @@ export function view() {
       <div class="hero-text grow">
         <p class="status">${status}</p>
         <p>${line}</p>
+        ${goal ? `<p class="split num">Minimum = ${mins(Math.min(120, m.mustMins + m.revDoneToday))} revisions + ${mins(m.restToday ? 0 : m.target * (st.minPct ?? 0.5))} new</p>` : ''}
       </div>
     </div>
     <div class="hero-cta">
