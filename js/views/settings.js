@@ -15,14 +15,15 @@ function reminders() {
   }
   return `<p class="small" style="margin:0 0 4px"><b>On for this device.</b> Today: ${summaryLine()}.</p>
     <div class="btns" style="margin:12px 0"><button class="btn" data-act="push-test" data-v="morning">Test morning</button><button class="btn" data-act="push-test" data-v="evening">Test evening</button></div>
-    <details class="setup"><summary>One-time GitHub setup (3 minutes)</summary>
+    <button class="btn block" data-act="push-copy">Copy my reminder code</button>
+    <p class="hint">Reminders reach a phone only once its code is saved in the app's GitHub repo. Friends: send this code to whoever runs the repo. It contains no study data.</p>
+    <details class="setup"><summary>Repo owner: adding codes on GitHub</summary>
       <ol class="small">
-        <li>In GitHub, open the <b>neetpg-2027</b> repo → Settings → Secrets and variables → Actions → <b>New repository secret</b>.</li>
-        <li>Name <code>PUSH_SUBSCRIPTION</code>, value: tap the button below and paste.</li>
-        <li>Add another secret named <code>VAPID_PRIVATE_KEY</code> with the key from the file Claude sent you.</li>
-        <li>Actions tab → Daily reminders → <b>Run workflow</b> to test it.</li>
+        <li>In GitHub, open the <b>neetpg-2027</b> repo → Settings → Secrets and variables → Actions.</li>
+        <li>Edit <code>PUSH_SUBSCRIPTION</code>. Paste <b>every</b> code, yours and your friends', <b>one per line</b>. GitHub doesn't show the old value, so keep all the codes together somewhere (a note or a WhatsApp chat to yourself).</li>
+        <li><code>VAPID_PRIVATE_KEY</code> stays as it is. One key works for everyone.</li>
+        <li>Actions tab → Daily reminders → <b>Run workflow</b>. The log shows a line per phone.</li>
       </ol>
-      <button class="btn block" data-act="push-copy">Copy subscription code</button>
     </details>`;
 }
 
@@ -48,6 +49,12 @@ export function view() {
 
   <section class="card flush"><ul class="list"><li class="item"><span class="rbadge" style="--h:30">🕘</span>
     <button class="open" data-act="history"><div class="t">Change history</div><div class="s">Every change, with the exact time and what it was before</div></button><span class="faint">${ICON.chev}</span></li></ul></section>
+
+  ${sectionH('Share with friends')}
+  <section class="card">
+    <p class="small muted" style="margin:0 0 12px">Friends open the same link and get their own plan. Their progress stays on their phone, and nobody sees anyone else's.</p>
+    <button class="btn primary block" data-act="share-app">${ICON.share}Share PG 2027</button>
+  </section>
 
   ${sectionH('Reminders')}
   <section class="card">${reminders()}</section>
@@ -90,7 +97,13 @@ export const actions = {
       .then(n => toast(`Sent: “${n.title}”. Check your notifications.`))
       .catch(e => toast(e.message || "Couldn't show a notification"));
   },
-  'push-copy': () => copy(S.push, 'Copied. Paste it as the PUSH_SUBSCRIPTION secret.'),
+  'push-copy': () => copy(S.push, 'Copied. Send it to the repo owner, or add it to PUSH_SUBSCRIPTION yourself.'),
+  'share-app': () => {
+    const url = location.origin + location.pathname;
+    const data = { title: 'PG 2027', text: 'My NEET PG 2027 planner: WOR videos, spaced revisions, tests and daily targets. Add it to your home screen.', url };
+    if (navigator.share) navigator.share(data).catch(() => {});
+    else copy(url, 'Link copied. Send it to your friends.');
+  },
   'export': () => {
     const blob = new Blob([JSON.stringify({ app: 'pg27', exported: new Date().toISOString(), state: S }, null, 1)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

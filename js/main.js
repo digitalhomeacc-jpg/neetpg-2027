@@ -10,12 +10,13 @@ import * as videoS from './views/video.js';
 import * as reviseS from './views/revise.js';
 import * as focusS from './views/focus.js';
 import * as plannerS from './views/planner.js';
+import * as welcomeV from './views/welcome.js';
 import { writeSummary } from './notify.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
 const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS];
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -89,6 +90,7 @@ function render({ top = false, enter = false } = {}) {
   onScroll();
   if (sheetOpen()) renderSheet();
   focusS.renderFocus();
+  welcomeV.renderWelcome();
   checkBadges(m);
   historyV.recordChanges(); // compare with the last snapshot and log what changed
   writeSummary(); // keeps the next reminder current

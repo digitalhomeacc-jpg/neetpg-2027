@@ -67,14 +67,13 @@ export const subjDot = s => `<i class="dot" style="--h:${subjHue(s)}"></i>`;
 
 /* ---------- state ---------- */
 function defaults() {
-  const progress = {};
-  VIDS.forEach(v => v.done.forEach((x, i) => {
-    if (x) (progress[v.id] ||= {})[PASSES[i]] = { d: D.sheetDoneDate, s: 1.5 };
-  }));
+  // A fresh install starts empty; the welcome screen sets the dates.
+  const t = iso(new Date());
   return {
     v: 2,
-    settings: { start: '2026-10-02', target: '2027-01-15', exam: '2027-08-29', rest: [0], speed: 1.5, theme: 'auto', questions: 200 },
-    progress,
+    onboarded: false,
+    settings: { start: t, target: addDays(t, 75), exam: '2027-08-29', rest: [0], speed: 1.5, theme: 'auto', questions: 200 },
+    progress: {},
     tests: [],     // {id, name, type, date, n, c, w, rank, notes}
     mistakes: [],  // {id, date, subject, video, reason, note, test, done}
     days: {},      // date -> {t: target minutes that day}
@@ -90,6 +89,7 @@ export function mergeState(raw) {
   if (!raw) return base;
   return {
     ...base, ...raw, v: 2,
+    onboarded: raw.onboarded ?? true, // anyone who used the app before this screen existed skips it
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
@@ -102,7 +102,7 @@ function load() {
 export let S = load();
 export function replaceState(n) { S = n; save(); }
 export function resetProgress() {
-  const keep = S.settings, hist = S.history; S = defaults(); S.progress = {}; S.settings = keep; S.history = hist; save();
+  const keep = S.settings, hist = S.history; S = defaults(); S.settings = keep; S.history = hist; S.onboarded = true; save();
 }
 export function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: keep going in memory */ } }
 

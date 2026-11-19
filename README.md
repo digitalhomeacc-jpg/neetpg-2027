@@ -17,13 +17,19 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 
 Everything is stored on the device (`localStorage`). Export a backup from Settings.
 
+## Sharing with friends
+
+Send friends the link (Settings → Share PG 2027). A new phone gets a short welcome screen to set its own dates, rest days and speed, and to tick subjects already watched. Each phone keeps its own data, and nothing is uploaded.
+
+For a friend's reminders: they turn reminders on and tap **Copy my reminder code**, then send it to the repo owner. The owner pastes every code, one per line, into the `PUSH_SUBSCRIPTION` secret. Each phone fills in its own plan.
+
 ## Reminders
 
 GitHub Actions (`.github/workflows/reminders.yml`) sends a wake-up push twice a day. The service worker on the phone fills in the text from a summary the app keeps in its cache, so the repo never sees your progress. Setup:
 
 1. Add the app to the iPhone home screen and open it from there (iOS 16.4+).
-2. Settings → Reminders → **Turn on reminders**, then **Copy subscription code**.
-3. In the repo: Settings → Secrets and variables → Actions. Add `PUSH_SUBSCRIPTION` (the copied code) and `VAPID_PRIVATE_KEY` (sent privately; it pairs with the public key in `js/notify.js`).
+2. Settings → Reminders → **Turn on reminders**, then **Copy my reminder code**.
+3. In the repo: Settings → Secrets and variables → Actions. Add `PUSH_SUBSCRIPTION` (the copied codes, one per line) and `VAPID_PRIVATE_KEY` (sent privately; it pairs with the public key in `js/notify.js`).
 4. Actions → Daily reminders → Run workflow to test.
 
 Times are in the workflow's cron lines, in UTC (01:30 and 15:30 UTC = 7 am and 9 pm IST).
