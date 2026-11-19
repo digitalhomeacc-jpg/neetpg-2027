@@ -1,6 +1,6 @@
 // A revision session: recall from memory, check against the topics, rate yourself, then revise against the clock.
 import {
-  S, BY, PASSES, REV, RATINGS, prog, save, today, revInfo, ankiQuery, REASONS,
+  S, BY, PASSES, REV, RATINGS, prog, save, today, revInfo, ankiQuery, vTags, REASONS,
   h, mins, fmtDay, fmtDayYear, subjDot,
 } from '../core.js';
 import { openSheet, closeSheet, toast } from '../ui.js';
@@ -22,6 +22,7 @@ function tick() {
 }
 
 function topics(v) {
+  if (v.chapters?.length) return v.chapters.map(c => c[1]);
   return v.notes ? v.notes.split(/,\s*|\s+&\s+|;\s*/).map(x => x.trim()).filter(Boolean) : [];
 }
 
@@ -80,7 +81,7 @@ function body() {
       <button class="btn${ctx.running ? '' : ' primary'}" data-act="rv-toggle">${ctx.running ? 'Pause' : elapsed() ? 'Resume' : 'Start timer'}</button>
       <button class="btn${ctx.running || elapsed() ? ' primary' : ''}" data-act="rv-finish">Finish revision</button>
     </div>
-    ${v.tags.length ? `<div class="spacer"></div><button class="btn block" data-act="copy" data-q="${h(ankiQuery(v.tags, false))}">Copy Anki search for this video</button>` : ''}`;
+    ${vTags(v).length ? `<div class="spacer"></div><button class="btn block" data-act="copy" data-q="${h(ankiQuery([v], false))}">Copy Anki search for this video</button>` : ''}`;
 }
 
 export function openRevise(id) {

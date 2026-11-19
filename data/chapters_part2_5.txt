@@ -1,0 +1,1716 @@
+# Marrow WOR chapters, read from photos of the Marrow app (Parts 2-5: Pharmacology to OBG).
+# Format: "## <video id> <title>" then "<start time> <chapter>" per line. ? = time not visible.
+## wor-pharma-02 General Pharmacology: Part 1
+00:07 Types of Drugs
+14:05 Pharmacokinetics and Pharmacodynamics
+17:24 Drug Absorption
+41:47 Drug Distribution
+54:14 Drug Metabolism
+1:07:50 Drug Excretion
+## wor-pharma-03 General Pharmacology: Part 2
+00:10 Parameters of Pharmacodynamics
+05:08 Dose-Response Curve (DRC)
+20:46 Drug Receptor Interaction
+33:53 Receptors
+43:21 Drug Safety
+52:05 Adverse Drug Reactions
+56:49 Therapeutic Drug Monitoring
+59:17 Miscellaneous
+## wor-pharma-04 Drugs Acting on Autonomic Nervous System
+01:50 Neurotransmitters of ANS
+08:58 Systemic ANS Drugs: Action
+34:51 Side Effects of Drugs
+37:51 β-blockers
+40:04 Physiological Effects of Autonomic Drugs
+50:21 Anti-glaucoma Drugs
+## wor-pharma-05 Drugs Acting on Cardiovascular System
+00:20 Anti-Arrhythmic Drugs
+20:20 Heart Failure Drugs
+31:00 Hypertension
+38:40 Anti-anginal Drug
+47:04 Side Effects
+1:03:10 Hypolipidemic Drugs
+## wor-pharma-06 Drugs Acting on Kidney
+00:08 Diuretics
+14:41 Vasopressin Related Drugs
+## wor-pharma-07 Drugs acting on CNS
+00:14 Anti-Epileptic Drugs
+11:15 Psychiatric Drugs
+20:24 Degenerative Disorders
+35:48 Miscellaneous
+41:13 Migraine
+47:25 Sleep disorders
+49:52 Opioids
+55:50 Mx of Dependencies
+59:34 Side Effects of CNS Drugs
+1:10:03 Extrapyramidal Symptoms
+1:13:19 Lithium
+## wor-pharma-08 Antimicrobial Drugs: Part 1
+00:17 Classification
+05:58 Cell Wall Synthesis Inhibitors
+19:25 Protein Synthesis Inhibitors
+32:43 Anti-Folate Drugs
+36:08 Fluoroquinolones
+40:15 Side Effects
+## wor-pharma-09 Antimicrobial Drugs: Part 2
+00:04 Non-retroviral Drugs
+09:54 Antiretroviral Drugs
+20:28 Antifungal Drugs
+28:04 Antihelminthic Drugs
+30:22 Antiprotozoal Drugs
+42:36 Anti tubercular Drugs
+54:26 Antileprosy Drugs
+## wor-pharma-10 Drugs Acting on Endocrine System
+00:10 Antidiabetic Drugs
+17:57 Drugs for Contraception
+18:56 Growth Hormone Related Drugs
+23:00 Drugs Used in Osteoporosis
+28:34 Steroid Hormone Related Drugs
+33:09 Thyroid Related Drugs
+## wor-pharma-11 Autacoids
+00:10 Antihistaminics
+05:41 NSAIDS
+13:24 Prostaglandin Analogs
+15:48 Disease Modifying Anti-Rheumatoid Drugs (DMARDs)
+18:53 Anti-gout Drugs
+## wor-pharma-12 Drugs Acting on RS, GIT and Blood
+00:14 Antiasthmatic Drugs
+05:52 Antitussives
+10:36 Drugs Used in Peptic Ulcer Disease (PUD)
+18:03 Prokinetics
+19:25 Antiemetics
+20:52 Laxatives
+25:01 Anti-Diarrhoeal Agents
+25:54 Antiaggregants
+28:33 Anticoagulants
+39:12 Fibrinolytics/Thrombolytics
+41:45 Hematopoietic Agents
+## wor-pharma-13 Immunomodulators and Anticancer drugs
+00:05 Immunosuppressants
+06:43 Solid Tumors
+14:20 Breast Cancer
+17:32 Leukemia
+22:15 Side Effects and Antidotes of Anti-Cancer Drugs
+28:36 Miscellaneous Anti-Cancer Drugs
+## wor-microb-02 General Microbiology: Part 1
+07:32 Pioneers in Microbiology
+16:45 Morphology & Motility
+34:25 Culture Media (CM)
+52:24 Biochemical Tests
+56:40 Molecular Methods
+1:05:30 Immunological Methods
+1:09:00 Antimicrobial Susceptibility Test
+## wor-microb-03 General Microbiology: Part 2
+00:26 General Bacteriology
+29:21 General Mycology
+## wor-microb-04 General Microbiology: Part 3
+00:15 General Virology
+48:37 General Parasitology
+## wor-microb-05 Hospital Infection Control
+01:01 Hand Hygiene & PPE
+10:16 Biomedical Waste Management (BMW)
+21:23 Sterilization
+30:57 Disinfection
+## wor-microb-06 Immunology
+01:35 Immunity
+17:55 Antigen
+21:47 Antibody
+33:17 Hypersensitivity Reactions
+40:24 Transplant Immunology
+44:37 Immunodeficiency Disorders (IDD)
+55:14 Complement Deficiency Disorders (CDD)
+## wor-microb-07 Central Nervous System
+02:05 Bacterial Meningitis
+26:08 Viral Encephalitis
+41:37 Parasitic Encephalitis
+51:37 Viral Myelitis
+56:11 Bacterial Neurotoxin Related Diseases
+## wor-microb-08 Cardiovascular System: Infections of Heart
+02:01 Infective Endocarditis
+17:08 Acute Rheumatic Fever (ARF)
+## wor-microb-09 Cardiovascular System: Bloodstream and Lymphatic Infections
+00:39 HIV
+18:05 Viral Hemorrhagic Fever (VHF)
+30:19 Blood and Tissue Flagellates
+40:41 Blood and Tissue Sporozoa
+1:00:39 Helminths
+## wor-microb-10 Respiratory System
+01:56 Diphtheria, Pertussis and TB
+20:00 Typical/Lobar Pneumonia
+36:26 Atypical/Interstitial Pneumonia: Bacterial, Viral, Parasitic
+53:30 Fungal Atypical Pneumonia
+## wor-microb-11 Gastrointestinal and Hepatobiliary System
+00:56 Peptic Ulcer Disease
+04:12 Bacterial Gastroenteritis
+15:23 Viral Gastroenteritis
+18:40 Parasitic Gastroenteritis
+27:35 Helminthic Gastroenteritis
+44:50 Viral Hepatitis
+52:07 Parasitic Hepatitis
+54:00 Hydatid Cystic Disease
+## wor-microb-12 Genitourinary System
+01:22 Diseases of Genital System
+10:30 Diseases of Urinary System
+## wor-microb-13 Skin, Subcutaneous and Musculoskeletal System
+01:18 Bacterial Infections
+23:35 DNA Viruses
+37:35 RNA Viruses
+40:35 Superficial Fungal Infections
+1:01:20 Parasitic Infections
+## wor-microb-14 Miscellaneous Infections
+00:52 Bacterial Toxin Related Diseases
+08:38 Bacterial Zoonotic Diseases
+11:39 Bacterial Vector Transmitted Diseases
+22:01 Congenital Infections
+24:33 Prion Disease
+28:47 Bioterrorism Agents & Biosafety Levels
+## wor-pathol-01 Haematology: WBC Disorders and Leukemias
+01:36 White Blood Cells
+10:10 WBC Disorders
+24:50 ALL
+36:20 AML
+45:32 CML
+52:40 CLL
+56:28 Summary
+## wor-pathol-02 Haematology: Myeloid Disorders, Lymphomas and Miscellaneous
+00:30 Myeloproliferative Neoplasms
+10:00 Lymphoma
+11:32 Hodgkin's Lymphoma
+22:34 Non-Hodgkin's Lymphoma
+36:04 Plasma Cell Disorders
+47:46 Langerhans Cell Histiocytosis (LCH)
+50:34 Summary
+## wor-pathol-03 Haematology: RBC Disorders
+00:54 RBC
+07:54 Peripheral Smear
+22:28 RBC Indices
+27:50 Anemia
+33:06 Hemolytic Anemia
+49:50 Thalassemia
+59:14 Paroxysmal Nocturnal Hemoglobinuria
+1:02:07 Iron Deficiency Anemia
+1:07:12 Anemia of Chronic Disease & Sideroblastic Anemia
+1:09:34 Summary of Microcytic Hypochromic Anemias
+1:11:28 Megaloblastic Anemia
+1:17:00 Pernicious Anemia
+## wor-pathol-04 Haematology: Haemostasis, Blood Banking and Practical Haematology
+11:28 Disorders of Hemostasis
+38:30 Blood Banking
+55:49 Practical Hematology
+## wor-pathol-05 General Pathology: Cell Adaptations and Cell Injury
+03:30 Cell Adaptations
+15:48 Cell Injury
+20:25 Cell Death
+39:52 Calcification
+44:25 Pigments
+50:10 Cell Ageing
+53:30 Stains
+## wor-pathol-06 General Pathology: Inflammation
+01:10 Inflammation
+03:50 Acute Inflammation
+17:25 Leukocyte Function Defects
+23:20 Neutrophil Extracellular Traps & Emperipolesis
+26:10 Inflammatory Mediators
+42:20 Chronic Inflammation: Granulomas
+53:20 Wound Healing
+## wor-pathol-07 General Pathology: Neoplasia and Immunity
+00:45 Properties of Neoplasia
+07:43 Markers of Carcinogenesis
+27:50 Paraneoplastic Syndromes
+37:14 Cell Cycle
+39:00 Hypersensitivity Reactions
+46:30 Transplant Pathology
+52:48 Antibodies
+56:10 Immunodeficiency Disorder
+1:01:05 Amyloidosis
+## wor-pathol-08 General Pathology: Genetics
+01:25 Diseases of Autosomal Inheritance
+15:25 Diseases of X-Linked Inheritance
+22:17 Non-Mendelian Modes of Inheritance
+35:15 Pedigree Analysis
+38:00 Chromosomal Disorders
+48:55 Genetic Techniques
+## wor-pathol-09 Systemic Pathology: Blood Vessels and Heart
+02:00 Sclerosis
+09:14 Vasculitis
+27:42 Vascular Tumors
+31:00 CVS: Myocardial Infarction
+37:00 CVS: Rheumatic Heart Disease
+41:56 CVS: Cardiomyopathies
+46:50 CVS: Tumors
+48:50 Miscellaneous
+## wor-pathol-10 Systemic Pathology: Respiratory System
+00:52 Histology
+03:25 Emphysema
+08:40 Chronic Bronchitis
+10:15 Bronchial Asthma
+13:50 Bronchiectasis
+16:05 Pneumoconiosis
+24:13 Cryptogenic Organising Pneumonia
+25:15 Sarcoidosis
+29:10 Lung Infections
+31:50 Lung Tumors
+## wor-pathol-11 Systemic Pathology: Gastrointestinal, Endocrine and Musculoskeletal System
+01:10 GERD and H. pylori
+06:02 Gastric Tumors
+12:30 Inflammatory Bowel Disease
+20:49 Malabsorption Diseases
+28:54 Intestinal Polyps
+34:10 Adenocarcinoma Colon
+37:36 Pheochromocytoma
+40:32 Neuroblastoma
+42:30 Hashimoto's Thyroiditis/Struma Lymphomatosum
+47:22 Thyroid Malignancies
+57:54 Bone & Soft Tissues
+## wor-pathol-12 Systemic Pathology: Kidney and Liver
+00:24 Urine Microscopy
+03:56 Kidney Biopsy
+11:00 Nephrotic Syndromes
+18:54 Nephritic Syndromes
+26:36 Diabetic Nephropathy
+29:32 Lupus Nephritis
+31:38 Malakoplakia
+34:29 Renal Tumors
+42:48 Liver Architecture
+44:08 Liver Cirrhosis
+46:18 Alcoholic Liver Disease
+49:24 Reye's Syndrome
+49:58 Metabolic Liver Disease
+54:50 Hepatitis
+? Bile Duct Disorders
+## wor-pathol-13 Systemic Pathology: Male and Female Genital Tract & Breast
+00:35 Condyloma Acuminata
+04:20 Ovarian Tumors
+34:10 Prostatic Adenocarcinoma
+40:10 Breast
+44:30 Non Invasive Breast Cancer
+49:58 Invasive Breast Cancer
+1:00:39 Molecular Classification of CA Breast
+## wor-pathol-14 Systemic Pathology: Central Nervous System & Skin
+01:00 CNS Non-Neoplastic Conditions
+09:00 CNS Tumors
+26:40 Anatomy of Skin
+27:41 Molluscum Contagiosum
+29:05 Skin Malignancies
+35:27 Bullous Disorders
+## wor-commun-02 Demography
+00:45 Demographic Stages/Phases
+15:35 Fertility Indicators
+25:55 Survey Methods
+33:35 Demographic Variables & Statistics
+## wor-commun-03 Contraception and Family Welfare Program
+00:36 Family Planning Methods (FPM)/Contraception
+07:03 Natural Methods & Barriers
+12:11 Intrauterine Devices
+24:37 Oral Contraceptive Pills (OCPs)
+28:41 Other Temporary Methods
+35:22 Tubectomy & Vasectomy
+39:03 Contraceptive of Choice (CoC)
+45:44 Recent Advances
+## wor-commun-04 Health Care System in India
+01:43 National Health Mission
+20:40 Types of Centres
+27:24 Integrated Child Development Services Scheme
+34:37 Ayushman Bharat
+39:24 Miscellaneous
+## wor-commun-05 Preventive Obstetrics
+00:20 MCH Indicators
+18:40 RMNCAH+N
+30:10 Maternal Health Interventions
+## wor-commun-06 Preventive Paediatrics
+00:24 Mission Indradhanush
+20:30 Vaccine Storage & Viability
+35:35 Immunization Status
+45:30 Malnutrition Indicators
+52:50 Nutritional Rehabilitation Centres (NRC)
+56:42 Growth Charts
+1:01:15 Mother & Child Services
+## wor-commun-07 NTEP and NACP
+00:10 NTEP: Key Components
+08:35 Diagnosis under NTEP
+18:43 Management under NTEP
+34:23 NTEP: Framework
+39:21 Tuberculin skin testing and BCG vaccination
+43:59 NACO: Key Components
+46:39 Diagnosis under NACO
+52:53 Treatment under NACO
+1:05:46 NACO: Framework
+## wor-commun-08 National Vector Borne Disease Control Programme
+00:17 Entomology
+10:43 Integrated Vector Management
+15:48 NVBDCP 2002
+18:42 Malaria
+36:07 Japanese Encephalitis
+42:05 Kala Azar
+45:14 Lymphatic Filariasis
+52:20 Dengue
+## wor-commun-09 Other National Health Programmes
+01:40 National Polio Surveillance Program (NPSP)
+13:40 National Program for Control of Blindness & Visual Impairment (NPCBVI)
+22:40 National Leprosy Eradication Program (NLEP)
+37:30 National Iodine Deficiency Disorder Control Program (NIDDCP)
+43:25 Integrated Disease Surveillance Program (IDSP)
+46:10 Non-Communicable Diseases (NCD) Program
+52:21 School Health Services
+54:20 POSHAN Programs
+## wor-commun-10 Epidemiology
+00:52 Basics
+15:30 Observational Studies
+42:09 Experimental/Interventional Studies
+45:16 Evidence Based Medicine
+47:44 Clinical Trials, Levels of Evidence
+49:40 Errors in Epidemiology
+1:00:56 Miscellaneous
+## wor-commun-11 Screening of Disease
+01:10 Types of Screening
+04:55 Properties of Screening Tests
+## wor-commun-12 Biostatistics
+00:58 Data
+15:53 Distribution Curves
+20:43 P-value, Errors & Test of Significance
+37:07 Sampling Methods
+43:15 Graphical Presentations
+## wor-commun-13 Infectious Disease Epidemiology
+00:40 Basics of Epidemiology
+11:40 Infection Time Variables
+15:30 Source Variables
+19:02 Cases & Carriers
+26:10 Mode of Transmission & Precautions
+36:45 Epidemic Variables
+## wor-commun-14 Communicable Diseases
+00:35 Chicken Pox And Measles
+14:50 Rubella
+19:16 Diphtheria
+23:22 Hepatitis B
+33:55 Soil Transmitted Helminthic Infections
+36:43 Rabies
+47:37 Tetanus and Rickettsia
+52:28 Naegleria Fowleri
+## wor-commun-15 Nutrition
+00:51 Nutritional Requirements
+12:00 Proteins
+19:41 Fatty Acids (FA)
+24:35 Vitamins & Minerals
+36:27 Eggs and Milk
+45:59 Food Intoxicants
+55:35 Food Legislation & Guidelines
+## wor-commun-16 Environment
+00:26 Air Pollution
+07:47 Water Quality
+17:26 Sand Filter
+19:55 Housing & Light
+21:27 Sewage & Waste
+32:03 Bio Medical Waste (BMW) Management
+41:18 Occupational Health
+49:01 Employee State Insurance Scheme (ESI)
+55:54 Factories Act (1948)
+## wor-commun-17 Miscellaneous Topics in Community Medicine
+00:31 Health Indicators
+08:24 Disability Indicators
+17:10 Healthcare, Socio-economic Indicators & Utilization Rates
+19:45 Health Communication
+27:10 Family, Socio-economic Scales & Social Medicine
+35:34 Disaster Medicine
+## wor-commun-18 Recent Updates in Community Medicine and Health Care Planning
+00:25 Management Designs
+06:44 Health Care Planning
+13:44 Legislative Lists
+15:02 International Health Agencies
+20:14 Newer Policies by GoI
+25:20 Miscellaneous Topics
+## wor-forens-02 Traumatology
+01:14 Abrasion
+05:44 Contusion/Bruise
+12:43 Laceration, Incision & Stab Wound
+24:43 Chop Wound & Defence injuries
+26:42 Regional Injuries
+33:40 Intracranial Hemorrhages (ICH)
+39:29 Transportation Injuries
+44:44 Thermal Injuries
+49:52 Burns
+1:00:43 Electrical & Lightning Injuries
+1:04:23 Torture Methods
+1:06:37 Explosion Injuries
+## wor-forens-03 Forensic Ballistics
+00:10 Basics of Firearm
+05:57 Ammunition
+16:52 Gun Ranges
+30:01 Bullet Fingerprinting & Atypical Bullets
+37:42 Gunshot Wound on the Skull
+## wor-forens-04 Medical Jurisprudence
+00:56 Inquest
+03:43 Indian Legal System
+07:44 Evidence & Witness
+10:53 Summons
+13:49 Court Proceedings
+20:58 Medical Ethics
+28:24 Medical Negligence/Professional Malpractices
+36:51 Consent
+## wor-forens-05 Autopsy Techniques and Thanatology
+00:12 Autopsy: Types
+03:03 Autopsy: Sequence, Incision, Techniques
+12:39 Thanatology
+16:40 Early Changes
+30:51 Late Changes (Putrefaction)
+40:53 Viscera Preservation for Chemical Analysis
+## wor-forens-06 Human Identification
+00:56 Identification of Race, Sex and Age
+17:31 Ossification Centres
+30:10 Dentition
+42:37 Stature
+44:49 Dactylography and Other Methods
+## wor-forens-07 Asphyxial Deaths
+04:21 Hanging
+12:41 Strangulation
+15:13 Suffocation
+20:09 Drowning
+## wor-forens-08 Sexual Jurisprudence and Trace Evidence
+01:10 Hymen & Terminologies Related to Pregnancy
+06:16 Surrogacy Regulation Act
+08:31 Medical Termination of Pregnancy (Amendment) Act 2021
+12:08 Infant Death
+17:19 Child Abuse
+19:36 Sudden Infant Death Syndrome (SIDS)/Cot Death/Crib Death
+20:26 Sexual Offences
+33:16 Evidence Collection
+## wor-forens-09 Toxicology
+00:29 Identification of Poisons
+05:52 Duties of a Doctor in Poisoning Cases
+12:15 Antidotes
+19:00 Corrosives
+23:45 Metallic Irritants
+39:08 Non-Metallic Irritants
+41:21 Plant Irritants
+58:07 Inebriants
+1:06:02 Spinal And Cardiac Poisons
+1:11:17 Asphyxiants
+1:19:12 Adulterated Toxins
+1:19:56 Snake Venom
+1:32:30 Scorpion & Spanish Fly
+1:35:10 Organophosphorous (OP) Poisoning
+## wor-forens-10 Forensic Psychiatry and Legal Sections
+00:16 Symptoms of Psychiatric Disorders
+05:20 Civil & Criminal Responsibilities of Insane
+08:27 BNS (Bharatiya Nyaya Sanhita)
+16:42 Transplantation of Human Organs Act 1994 (2014)
+19:58 Protection of Children from Sexual Offences (POCSO) Act 2012
+## wor-ophtha-02 Basic Anatomy of the Eye
+00:20 General Features
+02:36 Routes of Local Anaesthesia & Drug Administration
+10:50 Layers of the Eyeball
+19:45 Horner's Syndrome
+25:35 Cross-Section of Eyeball
+## wor-ophtha-03 Cornea and Sclera
+00:55 Anatomy of Cornea
+16:16 Special Investigations for Cornea
+25:22 Corneal Ulcer
+47:10 Corneal Dystrophies
+50:40 Keratoconus
+56:55 Keratoplasty
+1:01:05 Miscellaneous
+1:02:05 Sclera
+## wor-ophtha-04 Neuro-Ophthalmology
+01:11 Visual Pathway
+05:48 Visual Field Defects
+25:49 Pupillary Reflex
+31:13 Lesions of Pupillary Pathway
+42:10 Colour Blindness
+49:10 Optic Atrophy
+52:08 Optic Neuritis, Papilledema & Miscellaneous Conditions
+## wor-ophtha-05 Squint
+00:57 Extra ocular Muscles (EOM)
+17:52 Directions of Deviation
+20:38 Types of Squint
+25:49 Investigations
+48:27 Paralytic Squint
+59:26 Horizontal Gaze
+1:05:25 Restrictive Squint
+1:08:35 Comitant Squint
+1:13:01 Myasthenia Gravis
+## wor-ophtha-06 Lens and Blunt Trauma
+01:23 Anatomy & Metabolism of Lens
+08:50 Metabolic Cataract
+14:29 Traumatic Cataract
+24:25 Complicated Cataract
+25:45 Senile Cataract
+36:48 Surgical Management of Cataract
+45:36 Complications of Cataract Surgery
+54:23 Congenital Cataract
+58:41 Miscellaneous
+## wor-ophtha-07 Uvea
+01:47 Anterior Uveitis
+09:15 Intermediate Uveitis
+11:09 Posterior Uveitis
+12:15 Panuveitis
+## wor-ophtha-08 Glaucoma
+01:05 Pathophysiology & Types
+07:03 Investigations
+23:53 Primary Open Angle Glaucoma (POAG)
+40:00 Primary Angle Closure Glaucoma (PACG)
+50:14 Congenital Glaucoma
+53:05 Secondary Glaucoma
+## wor-ophtha-09 Optics, Refraction and Accommodation
+00:55 Tests for Vision
+12:07 Normal Optics Of Eye
+15:06 Refractory Errors
+19:54 Myopia
+25:56 Astigmatism
+30:25 Correction of Refractory Errors
+43:25 Accommodation
+## wor-ophtha-10 Retina
+01:00 Anatomy
+07:46 Investigations
+20:53 Retinoblastoma
+27:23 Macular Disorders
+38:11 Fundus Dystrophies
+44:51 Vascular Disorders
+1:00:22 Retinal Detachment
+## wor-ophtha-11 Eyelids and Orbit
+00:20 Anatomy of Eyelids
+02:25 Eyelid Pathologies
+05:12 Eyelash Pathologies
+07:35 Lid Margin Pathologies
+09:37 Ptosis
+12:18 Orbital Pathologies
+## wor-ophtha-12 Conjunctiva
+01:58 Tear Film
+03:42 Conjunctivitis/Eye Flu
+05:24 Bacterial & Viral Conjunctivitis
+08:53 Chlamydial Conjunctivitis
+12:39 Allergic Conjunctivitis
+16:09 Pterygium
+## wor-ent-02 Ear: Part 1
+01:03 Embryology
+10:56 Anatomy of Inner Ear
+33:19 Overview: Inner Ear
+## wor-ent-03 Ear: Part 2
+00:54 Anatomy of Middle Ear
+06:44 Medial Wall of Middle Ear
+16:51 Posterior Wall of Middle Ear
+30:44 Anterior Wall of Middle Ear
+32:47 Floor & Roof of Middle Ear
+39:32 Cavity of Middle Ear
+45:55 Semicircular Canals (SCC)
+50:56 Nerve Supply of the Ear
+## wor-ent-04 Ear: Part 3
+00:58 Physiology of Hearing & Hearing Loss
+08:13 Tuning Fork Tests (TFT)
+36:30 Pure Tone Audiometry (PTA)
+43:49 Audiograms in Different Conditions
+55:56 Grading of HL
+## wor-ent-05 Ear: Part 4
+00:22 Tympanometry
+08:20 Brainstem Evoked Response Audiometry (BERA)
+18:13 Otoacoustic Emissions (OAE)
+31:29 Behavioural Observation Audiometry
+35:37 Electrocochleography
+38:07 Speech Audiometry
+40:03 Auditory Neuropathy Spectrum Disorder
+## wor-ent-06 Ear: Part 5
+00:32 Acute Otitis Media
+08:35 Bullous Myringitis
+10:45 Tympanic Membrane Perforation
+13:45 Chronic Otitis Media/Chronic Suppurative Otitis Media (CSOM)
+15:00 Chronic Mucosal Otitis Media
+23:00 Tympanoplasty & Myringoplasty
+38:16 Chronic Squamous Otitis Media (CSOM)
+1:01:09 Complications of Otitis Media
+1:20:34 Tubercular Otitis Media
+1:21:38 Conditions of EAC
+## wor-ent-07 Ear: Part 6
+00:55 Serous Otitis Media (SOM)
+14:03 Retraction of TM: Classifications
+24:56 Otosclerosis/Otospongiosis
+## wor-ent-08 Ear: Part 7
+01:22 Benign Paroxysmal Positional Vertigo (BPPV)
+10:20 Vestibular Neuritis
+26:40 Meniere's Disease
+40:58 Superior Semicircular Canal Dehiscence (SSCD)
+## wor-ent-09 Ear: Part 8
+00:30 Glomus Tumor
+11:20 Acoustic Neuroma/Vestibular Schwannoma
+23:26 Facial Nerve
+38:15 Hearing Rehabilitation
+## wor-ent-10 Nose: Part 1
+00:53 Anatomy of External Nose
+02:06 Anatomy of Lateral Wall of Nose
+09:22 Middle Meatus
+18:42 Variations in Turbinate Appearance
+21:49 Paranasal Sinuses
+37:49 X-ray Views for Sinuses
+41:55 Rhinosinusitis
+56:40 Fungal Sinusitis
+1:08:11 Polyps
+## wor-ent-11 Nose: Part 2
+00:20 Nerve Supply of Nose
+19:23 Rhinitis
+23:19 Arterial Supply of the Nose
+30:20 Epistaxis
+34:53 Rhinosporidiosis
+38:02 Atrophic rhinitis/Ozaena
+41:51 Rhinoscleroma
+43:38 Fractures of Face
+54:10 CSF Rhinorrhea
+58:38 Inverted Papilloma
+1:00:52 Carcinoma of Nose & PNS
+## wor-ent-12 Pharynx: Part 1
+00:52 Nerve Supply of Tongue
+03:50 Anatomy of Pharynx
+12:00 Pharyngeal Constrictors
+24:10 Posterior Pharyngeal Spaces
+34:42 Lateral Pharyngeal Spaces
+41:00 Peritonsillar vs Parapharyngeal Abscess
+48:57 Submandibular Space
+## wor-ent-13 Pharynx: Part 2
+00:25 Anatomy of Nasopharynx
+07:35 Adenoid Hypertrophy
+11:30 Angiofibroma
+20:00 Nasopharyngeal Carcinoma
+25:30 Oropharynx and Tonsils
+28:10 Acute Tonsillitis
+37:47 Laryngo/Hypopharynx
+## wor-ent-14 Larynx: Part 1
+00:40 Cartilages & Membranes
+05:40 Divisions
+10:05 Muscles
+14:11 Adult vs Child Larynx
+16:12 Infections
+28:00 Congenital Conditions
+41:02 Structural Disorders of Glottis
+44:00 Larynx Examination: Instruments & Positions
+## wor-ent-15 Larynx: Part 2
+00:33 Nerve Supply of Larynx
+08:23 Positions of Vocal Cords
+10:15 Vocal Cord Palsy
+25:40 Vocal Cord Dysfunction
+29:40 Carcinoma Larynx
+43:55 Newer Techniques in Laryngeal Endoscopy
+45:05 Tracheostomy
+51:30 Foreign Body
+1:01:10 Pathological Breath Sounds
+## wor-anaest-02 Pre-Anaesthetic Check-up
+02:00 Co-Morbidities & their Anaesthetic Implications
+26:48 Personal, Family and Allergy History
+42:34 Airway Examination
+51:02 American Society of Anaesthesiologists (ASA) Grading
+55:22 Investigations
+1:00:18 CVS & RS Guidelines
+1:08:20 Pre-Operative Medications
+## wor-anaest-03 Monitoring under Anaesthesia
+00:40 CNS Monitoring
+03:16 Cardiac Monitoring
+19:54 Respiratory System Monitoring
+41:34 Neuromuscular Monitoring ROW
+46:54 nail.com Temperature Monitoring
+## wor-anaest-04 Local Anaesthetics
+00:31 Classification
+02:44 Mechanism of Action
+11:47 Pharmacokinetics
+18:07 Sequence of Blockade
+20:44 Dosage & Toxicity
+25:25 Clinical Applications
+## wor-anaest-05 IV and Inhalational Induction Agents
+03:58 Barbiturates
+17:25 Propofol
+25:42 Etomidate
+28:50 Ketamine
+37:48 Inhalational Anesthetic Agents-General Characteristics
+48:27 Factors Affecting Onset & Recovery
+1:04:00 Systemic Effects
+1:19:39 Nitrous Oxide (N2O)
+## wor-anaest-06 Muscle Relaxants
+00:45 Neuromuscular Physiology
+03:19 Depolarizing Muscle Relaxants
+26:31 Non-depolarizing Muscle Relaxants
+49:44 Signs of Adequate Reversal
+## wor-anaest-07 Airway Management
+03:28 Intubation
+13:26 Laryngoscopy
+21:25 Endotracheal Tubes
+29:36 Difficult Airway Management
+50:00 Oxygen Delivery Devices
+## wor-anaest-08 Regional Anaesthesia, Anaesthesia Machines and Circuits, and Day Care Surgery
+01:27 Spinal Anaesthesia/Sub-Arachnoid Block
+29:02 Epidural Anaesthesia
+38:18 Caudal Anaesthesia
+41:20 Peripheral Nerve Block
+51:42 Anaesthesia Machines
+53:22 Cylinders
+1:02:56 Pipelines
+1:06:24 Flowmeters
+1:10:25 Breathing Systems: Semi closed/Mapleson System
+1:14:34 Breathing Systems: Closed Circuits
+1:22:07 Day Care Surgery
+## wor-anaest-09 BLS and ACLS: Recent Updates
+02:08 Basic Life Support (BLS)
+17:18 Advanced Cardiac Life Support (ACLS)
+24:01 Adult Tachyarrhythmia with Pulse Algorithm
+32:04 Adult Bradycardia with Pulse Algorithm
+34:56 Adult Post Cardiac Arrest Care Algorithm
+45:30 Adult and Pediatric Durable LVAD Algorithm
+46:46 Cardiac Arrest in Pregnancy Algorithm
+## wor-dermat-02 Dermatology Revision: Part 1
+00:17 Structure of Skin
+09:44 Dermato-Pathological Terms
+13:22 Lines in Dermatology
+15:10 Dermatological Investigations
+17:26 Dermatological Therapy
+18:35 Appendages & Disorders
+19:40 Alopecia
+29:33 Disorders of Sweat Glands & Sebaceous Glands
+31:15 Acne Vulgaris & Rosacea
+36:45 Nail Disorders
+37:40 Disorders of Hyperpigmentation
+42:00 Disorders of Hypo/ Depigmentation
+## wor-dermat-03 Dermatology Revision: Part 2
+00:20 Psoriasis
+14:00 Lichen Planus
+18:26 Pityriasis Rosea
+19:31 Pityriasis Rubra Pilaris
+20:58 Vesiculo-Bullous Diseases
+22:10 Pemphigus Group
+31:41 Sub-Epidermal Blistering Disorders
+39:58 Mechano Bullous Disorder
+## wor-dermat-04 Dermatology Revision: Part 3
+00:16 Leprosy
+25:58 Cutaneous TB
+29:53 Atypical Mycobacterial Infections
+31:00 Bacterial Infections
+## wor-dermat-05 Dermatology Revision: Part 4
+00:20 Viral Infections: Herpes Viruses
+04:02 Viral Infections: Non-Herpetic
+11:16 Fungal Infections: Superficial Mycosis
+20:20 Fungal Infections: Subcutaneous Mycosis
+26:04 Protozoal Infections
+28:40 Arthropod Infections
+34:20 Parasitic Infections
+## wor-dermat-06 Dermatology Revision: Part 5
+00:16 Sexually Transmitted Infections
+09:22 Syphilis
+16:47 Other Sexually Transmitted Diseases
+24:29 Approach to Genital Ulcer Disease
+27:15 Syndromic Management of STDs
+32:16 Allergic Disorders
+35:48 Eczema
+41:42 Atopic Dermatitis
+## wor-dermat-07 Dermatology Revision: Part 6
+00:26 Cutaneous Adverse Drug Reactions
+04:45 Genodermatoses
+09:43 Ichthyosis
+12:17 Disorders of DNA repair
+14:41 Nutritional Dermatoses
+18:21 Skin in Connective Tissue Diseases
+26:43 Skin and Systems
+30:12 Skin Tumors
+32:52 Miscellaneous
+## wor-psychi-02 Psychosis related Disorders
+00:36 Psychotic Disorders
+06:31 Schizophrenia: Introduction
+11:46 Schizophrenia: C/F
+31:20 Schizophrenia: Prognostic Factors
+32:43 Antipsychotics
+42:42 Extrapyramidal Symptoms (EPS)
+## wor-psychi-03 Mood related Disorders
+00:56 Depression
+09:20 Bipolar Disorder
+18:04 Persistent Mood Disorders
+22:28 Postpartum Mood Disorders
+27:15 Suicidal Behaviour
+35:52 Treatment Resistant Depression
+38:22 Pharmacological Management of Bipolar Disorder
+41:13 Lithium Therapy
+## wor-psychi-04 Anxiety, Stress and Other Disorders
+00:34 Anxiety Disorders
+03:58 Panic Attack vs Panic Disorders
+07:03 Phobia
+10:36 Grief
+14:15 Traumatic Disorders
+24:18 Obsessive, Compulsive & Related Disorders
+34:15 Somatization, Dissociation and Conversion Disorders
+46:04 Factitious Disorders
+## wor-psychi-05 Eating, Sleep and Other Disorders
+00:32 Eating Disorders
+09:53 EEG Waves
+15:53 Sleep Disorders
+23:24 Personality Disorders
+30:14 Sexual Disorders
+39:40 Substance Use Disorders
+## wor-psychi-06 Neurocognitive, Neurodevelopmental and Other Disorders
+00:39 Delirium
+09:42 Dementia
+19:23 Neuro developmental Disorders
+35:38 Concepts Related to Mind
+51:55 Mental Health Care Act (MHCA) 2017
+## wor-radiol-02 Fundamentals of Radiology
+06:35 X-Rays
+18:26 Effects of Radiation
+29:41 Radiation Exposure
+38:05 Radiation Units, Exposure Factors and TLD Badge
+46:42 CT Scan
+56:30 Ultrasonography
+1:00:13 MRI
+1:07:06 Contrast Media
+1:11:32 Iodinated Contrast
+1:20:47 MRI and USG Contrast Agents
+## wor-radiol-03 Neurological Imaging
+05:45 Stroke Imaging
+27:32 SAH (Subarachnoid Hemorrhage)
+31:09 CNS Spotters
+33:00 Head Trauma CT Imaging
+49:01 Brain Tumors CT Imaging
+1:02:17 Ring Enhancing Lesions
+1:07:59 Other Neurological Lesions
+1:13:00 Circle of Willis and ECA
+1:15:30 Carotid Body Tumor/Paraganglioma/Chemodectoma
+## wor-radiol-04 Respiratory Imaging
+01:10 Chest X-ray Views
+10:55 Normal CXR Findings
+25:47 Incidental Findings on CXR
+29:00 Silhouette Sign
+40:49 Pulmonary Infections
+47:24 Paediatric Imaging
+49:40 Tuberculosis
+57:26 Pleural Effusion
+1:03:50 Pneumothorax
+1:11:52 Mediastinal Imaging
+1:16:02 Lung Lesions
+1:16:55 Lung Tumors
+1:18:45 Bronchiectasis and Sarcoidosis
+1:20:45 Foreign Body Aspiration
+## wor-radiol-05 Cardiovascular Imaging
+00:33 Congenital Heart Diseases
+04:36 Pericardial Effusion
+05:55 Mitral Stenosis
+08:09 Congestive Heart Failure
+11:16 Aortic Dissection
+14:19 Aortic Aneurysm
+16:59 Constrictive Pericarditis
+17:35 Pulmonary Embolism
+## wor-radiol-06 Gastrointestinal Tract Imaging
+01:06 Acute Abdomen: Pneumoperitoneum
+06:07 Acute Abdomen: Bowel Obstruction
+12:24 Bowel Obstruction: Differentials
+27:25 FAST
+33:00 Barium Spotters
+43:40 Defecography
+46:20 Hepatic Imaging
+52:44 Gall Bladder Imaging
+57:03 Biliary Tree Imaging
+59:53 Pancreas Imaging & Hydatid Cyst
+## wor-radiol-07 Genitourinary Tract and Women's Imaging
+01:09 Renal Abnormalities
+16:10 Intravenous Urography/Pyelography
+25:48 Urethral Abnormalities
+28:27 Breast Imaging
+38:45 OBG Imaging
+46:33 Fetal Anomalies
+## wor-radiol-08 Musculoskeletal Imaging
+00:14 Vitamin Deficiencies
+03:24 Hyperparathyroidism
+04:26 Bone Tumors
+11:19 Ankylosing Spondylitis
+13:27 Osteomyelitis
+15:20 Skeletal TB
+16:08 Sacral Insufficiency Fractures
+17:51 Pediatric Hip Disorders
+19:46 Spondylolisthesis
+## wor-radiol-09 Radiotherapy and Nuclear Medicine
+00:07 Basis of Nuclear Medicine
+02:06 Positron Emission Tomography (PET) Scan
+08:56 Technetium-99m
+10:26 Applications of Radionuclide Scans
+19:17 Components of Radiotherapy
+23:20 Fractionated Radiotherapy
+26:37 Types of Radiotherapy
+31:46 Specialized Types of Radiotherapy
+## wor-medici-02 Basics of Pituitary Gland
+01:54 Anatomy of Pituitary Gland
+05:34 Pituitary Cells And Hormones
+20:30 Hypothalamo-Hypophyseal System
+29:28 Pituitary Imaging and Relations
+## wor-medici-03 Anterior Pituitary Disorders: Part 1
+00:29 Prolactin
+13:39 Pituitary Adenoma
+18:49 Prolactinoma
+39:51 Growth Hormone
+53:12 Acromegaly
+## wor-medici-04 Anterior Pituitary Disorders: Part 2
+00:35 Non-functional Tumors
+08:22 Acquired Hypopituitarism
+18:09 Pituitary Apoplexy
+20:46 Sheehan Syndrome vs Lymphocytic Hypophysitis
+## wor-medici-05 Posterior Pituitary Disorders
+02:49 Anti-diuretic Hormone (ADH)/AVP
+14:23 AVP Deficiency/Central DI
+26:23 Polyuria
+30:38 AVP Resistance/Nephrogenic DI
+34:11 Management of DI
+45:59 Anti diuretic Hormone (ADH)
+56:26 Hyponatremia
+1:03:31 SIADH
+## wor-medici-06 Adrenal Cortex
+00:20 Anatomy of Cortex
+11:06 Synthesis of Hormones
+23:18 Primary Hyperaldosteronism (PHA)
+42:36 Adrenal Insufficiency (AI)
+56:29 Cushing's Syndrome
+## wor-medici-07 Adrenal Medulla
+00:05 Physiology of Adrenal Medulla
+06:00 Pheochromocytoma
+19:00 Multiple Endocrine Neoplasia (MEN) Syndromes
+28:40 Multiple Endocrine & Other Organ Neoplasia Syndromes
+31:33 Autoimmune Polyendocrine Syndromes (APS)
+## wor-medici-08 Diabetes Mellitus
+00:42 Acute Complications: DKA & HHS
+08:58 Management of DIabetes Mellitus
+16:00 Classification of Diabetes
+21:40 Type 2 DM
+26:34 Diagnosis
+34:20 LADA, KPD and MODY
+36:34 Type 1 vs Type 2 DM
+37:25 Metabolic Syndrome
+40:02 Effect of Incretins
+## wor-medici-09 Calcium Metabolism and Thyroid Disorders
+00:40 Calcium
+07:26 Hypercalcemia
+17:43 Hypocalcemia
+22:57 Phosphorous
+24:32 Thyroid Hormone Synthesis
+35:04 Thyroid Disorders
+42:10 Clinical Presentation of Thyroid Disorders
+## wor-medici-10 Pericarditis and Cardiac Tamponade
+00:31 Constrictive Pericarditis vs Restrictive Cardiomyopathy vs: Tamponade
+## wor-medici-11 Heart Failure and Cardiomyopathies
+00:10 Heart Failure
+07:50 Presentation
+20:20 Causes & Response Mechanisms
+26:10 Treatment
+33:50 Cardiomyopathies
+36:25 Dilated Cardiomyopathy
+48:40 Hypertrophic Cardiomyopathy
+1:22:34 Restrictive Cardiomyopathy
+1:30:00 Takotsubo Cardiomyopathy
+## wor-medici-12 Arterial Pulses, JVP and Heart Sounds
+00:23 Arterial Pulse
+05:05 Abnormalities of Pulse
+13:02 Jugular Venous Pulse
+18:45 Abnormalities
+24:56 Valvular Heart Disease: Findings
+26:40 Heart Sounds
+30:30 First Heart Sound (S1)
+41:00 Second Heart Sound (S2)
+49:08 Diastolic Added Sounds
+57:27 Systolic Added Sounds
+## wor-medici-13 Valvular Heart Diseases
+00:47 Comparison of Valvular Diseases
+39:52 Mitral Valve Prolapse (MVP)
+## wor-medici-14 ECG Revision
+01:28 ACS
+05:17 IWMI
+23:42 AWMI
+28:42 Tachyarrhythmia
+37:02 Atrial Fibrillation
+## wor-medici-15 Gastrointestinal Disorders
+01:25 Inflammatory Bowel Disease
+08:08 Ulcerative Colitis vs Crohn's Disease
+50:28 Malabsorption
+57:00 Pseudomembranous Enterocolitis
+1:00:40 Celiac Disease
+1:12:35 Whipple's Disease
+1:18:01 Tropical Sprue
+1:21:20 Irritable Bowel Syndrome (IBS)
+## wor-medici-16 Hepatic Disorders
+00:20 Anatomy
+09:20 Cirrhosis
+13:52 Acute Hepatitis
+23:30 Hepatic Failure
+29:20 Chronic Hepatitis
+37:04 Portal Hypertension
+56:22 Ascites
+1:09:34 Hepatic Encephalopathy
+1:18:00 Hepatitis B
+1:32:58 Hepatitis C
+1:36:10 Autoimmune Hepatitis
+1:38:04 PBC vs PSC
+1:40:22 Haemochromatosis & Wilson's Disease
+## wor-medici-17 Basics of Pulmonology: Structure, Mechanics and PFT
+06:55 Bronchi vs Bronchiole
+10:14 Major Lung Diseases
+17:00 Alveoli
+20:15 Classification of Lung Diseases
+23:02 Mechanics of Breathing
+41:25 Obstructive Lung Diseases
+48:25 Restrictive Lung Diseases
+52:15 Approach to Lung Disorders
+## wor-medici-18 Vascular Disorders of Lung
+00:15 Venous Thromboembolism/Pulmonary Thromboembolism
+13:38 Pulmonary Hypertension
+## wor-medici-19 Obstructive Lung Diseases
+00:13 Bronchiectasis
+13:09 Pulmonary Eosinophilia (Eosinophilic Lung Disease)
+18:25 ABPA
+26:19 Hypersensitivity Pneumonitis (HP)
+34:40 Bronchial Asthma
+39:10 Management
+45:20 COPD
+46:34 Chronic Bronchitis vs Emphysema
+53:35 Types of Respiratory Failure
+58:11 Management of cop D
+## wor-medici-20 Restrictive Lung Diseases
+00:52 Classification
+06:52 Features
+11:02 Management
+18:30 Types of Pneumoconiosis
+19:47 Chronic Silicosis, CWP & Asbestosis
+## wor-medici-21 ARDS, Pneumonia and Pleural Effusion
+00:15 Acute Respiratory Distress Syndrome (ARDS)
+05:12 Management of Pneumonia
+10:28 Pleural Effusion
+## wor-medici-22 Cortical and Subcortical Lesions
+02:57 Frontal Lobe Lesions
+21:10 Parietal Lobe Lesions
+33:02 Temporal Lobe Lesions
+38:00 Occipital Lobe Lesions
+40:05 Dementia
+47:40 Alzheimer's Disease (AD)
+55:25 Other Dementias
+1:10:04 Subcortex
+1:15:04 Parkinson's Disease
+1:23:30 Parkinson's Plus Syndrome
+## wor-medici-23 Neuropathies
+00:06 LMN
+03:47 Radiculopathy, Plexopathy & Ganglionopathy
+09:20 Types of Neuropathies
+27:08 Charcot Marie Tooth Disease: Type 1
+30:22 Guillain-Barre Syndrome (GBS)
+## wor-medici-24 Headache and Seizures
+00:55 Headache
+08:15 Tension Type Headache and Migraine
+18:33 Trigeminal Autonomic Cephalgias
+26:00 Trigeminal Neuralgia
+28:58 Seizure: Focal
+38:01 Generalized Seizure
+46:44 Status Epilepticus (SE)
+## wor-medici-25 Approach to Stroke
+13:27 MCA Lesion
+18:55 PCA and ACA Lesions
+24:50 Stroke and TIA
+29:25 Management of Stroke
+34:54 Brainstem Lesions
+## wor-medici-26 Neuromuscular Dysfunction and Spinal Cord Diseases
+00:06 LMN: Pure Motor Presentation
+03:02 Myasthenia Gravis
+14:30 Motor Neuron Disease (MND)
+21:23 Spinal Cord (SC)
+28:57 Myelopathy
+## wor-medici-27 Basics of Haematology
+01:00 Stem Cells
+07:35 Hematopoiesis
+18:55 Evaluation of Anemia
+## wor-medici-28 Approach to Anemia: Part 1
+04:48 Iron-Absorption, RDA and Distribution
+17:45 Anaemia of Chronic Disease
+22:50 Comparison of Anaemias
+32:23 IDA
+34:43 Sideroblastic Anaemia
+44:33 Macrocytic Anemia
+45:35 Non-Megaloblastic Macrocytic Anemia
+48:40 Megaloblastic Macrocytic Anemia
+55:30 Vitamin B12 Deficiency
+1:02:02 Folic Acid (FA) Deficiency
+## wor-medici-29 Approach to Anemia: Part 2
+00:47 Hemolysis
+10:20 Immune Hemolysis
+20:20 Enzymopathies
+23:45 Paroxysmal Nocturnal Hemoglobinuria
+28:03 Fragmentation Hemolysis
+37:00 Bone Marrow Failure Syndromes
+## wor-medici-30 Myeloproliferative Neoplasm
+02:25 Features and Types
+08:02 Approach to Polycythemia
+10:09 Polycythemia Rubra Vera (PCRV)
+15:18 Primary Myelofibrosis
+19:19 Essential Thrombocytosis
+22:53 Chronic Myeloid Leukemia (CML)
+## wor-medici-31 Acute Myeloid Leukemia
+00:45 Basics of AML
+12:17 Classification and Diagnosis
+22:07 Management
+24:07 Acute Promyelocytic Leukemia (APML)
+## wor-medici-32 Lymphoid Series Neoplasm
+00:44 B-Cell Maturation & Neoplasms
+21:57 T-cell Neoplasms
+24:43 Virus Associationsof Lymphomas
+29:10 Acute Lymphoblastic Leukemia (ALL)
+37:50 Chronic Lymphocytic Leukemia (CLL)
+44:23 Lymphomas
+46:16 Non Hodgkin Lymphoma (NHL)
+59:31 Memory B-Cell Disorders
+## wor-medici-33 Plasma Cell Disorders
+01:25 Multiple Myeloma
+17:27 Waldenstrom Macroglobulinemia and POEMS Syndrome
+## wor-medici-34 Chronic Kidney Disease
+00:55 Anatomy of Kidneys
+08:30 Etiopathogenesis of CKD
+18:55 Staging and Diagnosis
+## wor-medici-35 Tubular Disorders
+03:50 Type 2 RTA
+15:45 Type 1 RTA
+24:53 Type 4 RTA
+36:00 Bartter Syndrome
+41:20 Gitelman Syndrome
+45:25 Hypo & Hyperkalemia
+## wor-medici-36 Glomerular Disorders
+01:58 Clinical Presentation
+09:42 Nephrotic Syndrome (NS)
+19:15 Acute Glomerulonephritis (GN)
+22:40 Podocytopathy
+27:10 Glomerulonephropathy
+30:42 RPGN
+## wor-medici-37 Approach to Renal Failure and Acute Kidney Injury
+06:55 Secondary Hypertension
+14:24 Vascular Kidney Disease
+24:34 Pre-renal AKI vs ATN
+31:00 Drugs causing AKI
+## wor-medici-38 Connective Tissue Diseases: Part 1
+03:30 Sjogren's Syndrome
+27:31 Extraglandular Sjogren's Manifestations
+## wor-medici-39 Connective Tissue Diseases: Part 2
+00:16 IgG4 Related Diseases
+16:14 Sarcoidosis
+39:00 Behcet's Disease
+## wor-medici-40 Rheumatoid Arthritis and Systemic Lupus Erythematosis
+03:28 Rheumatoid Arthritis (RA)
+14:00 Systemic Lupus Erythematosus (SLE)
+19:40 Systemic Manifestations of SLE and RA
+33:25 Management
+34:27 IF Patterns in Autoimmune Diseases
+## wor-medici-41 Systemic Sclerosis and Inflammatory Muscle Disease
+00:50 Types of SSc
+06:27 Raynaud's Phenomenon
+25:15 Treatment
+26:26 Inflammatory Muscle Disease
+32:24 Dermatomyositis & Polymyositis
+43:24 Skin Manifestations in Dermatomyositis
+## wor-medici-42 Vasculitis
+00:58 Classification of Vasculitis
+09:45 Large Vessel Vasculitis
+22:47 ANCA Mediated Small Vessel Vasculitis
+35:37 GPA vs MPA vs EGPA vs PAN
+54:26 Immune Complex Mediated Small Vessel Vasculitis
+## wor-medici-43 Spondyloarthropathies
+00:33 Axial Predominant SpA
+04:23 Peripheral Predominant SpA
+15:21 Crystal Arthropathies
+## wor-surger-02 General Surgery
+00:45 Day Care Surgery
+05:28 Patient Safety, OT Zones and Surgical Procedures
+13:10 Surgical Blades, Cautery and Harmonic Scalpel
+17:40 Drains, Sutures and Knots
+28:30 Bowel Anastomosis & Staplers
+29:40 Post Operative Complications
+36:08 Wounds
+43:17 Surgical Nutrition
+44:32 Enteral Nutrition
+48:31 Parenteral Nutrition
+57:33 Hypovolemic/Hemorrhagic Shock
+1:09:12 Blood Transfusion
+1:13:24 Types of Shock
+1:18:37 Sepsis and Septic Shock
+## wor-surger-03 Breast
+01:04 Workup of Breast Disorders
+12:28 Breast Cancer
+25:10 Breast Cancer Management: Surgery
+37:18 Chemotherapy, Radiotherapy and Hormonal Therapy
+42:56 Special Breast Neoplasms
+47:56 Benign Breast Conditions
+53:24 Nipple Discharge
+## wor-surger-04 Endocrine Surgery
+00:27 Thyroid Gland: Surgical Anatomy & Investigations
+06:55 Thyroglossal Cyst
+08:06 Thyroidectomy
+14:48 Thyroid Cancers
+25:46 MEN Syndromes
+28:33 Hyperthyroidism
+33:30 Hypothyroidism
+36:55 Goitre
+38:53 Hyperparathyroidism
+43:53 Adrenal Incidentaloma
+45:29 Phaeochromocytoma
+48:09 Neuroblastoma
+49:32 Carcinoids
+## wor-surger-05 Oral Cancer and Salivary Glands
+00:40 Oral Cancers
+06:46 Management of Oral Cancers
+13:04 Benign Conditions of Salivary Glands
+17:24 Salivary Gland Tumors
+19:12 Parotid Tumors
+26:12 Submandibular Tumors
+27:30 Neck Swelling
+## wor-surger-06 Gastrointestinal Surgery: Part 1
+01:18 Esophagus: Foreign Body & Corrosive Injury
+03:52 Tracheoesophageal Fistula (TEF)
+06:38 GERD
+11:14 Barrett's Esophagus
+14:56 Esophageal Cancer
+19:24 Esophageal Leiomyoma
+20:02 Zenker's Diverticulum
+22:24 Hiatal Hernia
+24:20 Esophageal Perforation
+27:50 Other Benign Esophageal Conditions
+30:39 Achalasia Cardia
+35:42 Distal Esophageal Spasm
+36:54 Congenital Hypertrophic Pyloric Stenosis (CHPS)
+39:16 Peptic Ulcer Disease
+## wor-surger-07 Gastrointestinal Surgery: Part 2
+00:50 Bariatric Surgery
+07:24 Mesenteric Cyst
+08:50 Upper GI Hemorrhage
+12:22 Portal Hypertension
+20:04 Bowel Obstruction
+35:30 Hirschsprung's Disease & Paralytic Ileus
+38:10 Mesenteric Ischemia
+40:12 Appendicitis
+45:16 Appendicectomy
+47:33 Other Conditions Of Appendix
+## wor-surger-08 Gastrointestinal Surgery: Part 3
+00:50 Ileostomy & Colostomy
+03:10 Faecal Fistula
+04:52 Short Bowel Syndrome
+06:48 Diverticular Disease
+09:38 Angiodysplasia
+10:44 Inflammatory Bowel Disease
+17:00 Colorectal Polyps
+23:12 Colorectal Cancers (CRC)
+32:20 Pilonidal Sinus
+33:00 Hemorrhoids/Piles
+36:28 Anal Fissure
+37:50 Rectal Prolapse
+39:40 Anorectal Abscess & Fistula
+43:22 Anorectal Malformations
+## wor-surger-09 Hepatobiliary and Minimally Invasive Surgery
+00:40 Surgical Anatomy of Liver
+04:05 Liver Abscess
+06:55 Hydatid Disease
+10:22 Benign Liver Tumours
+12:25 Hepatocellular Carcinoma
+19:05 Surgical Anatomy of Gall Bladder (GB)
+22:35 Gall Stones
+40:12 Extrahepatic Biliary Atresia (EHBA)
+43:10 Choledochal Cysts
+45:30 Pancreatic Malformations
+47:40 Acute Pancreatitis
+52:50 Pseudocyst
+55:10 Chronic Pancreatitis
+58:40 Endocrine Tumors of Pancreas
+## wor-surger-10 Urology: Part 1
+00:46 Kidney Disorders
+09:55 Renal Stones
+18:19 Bladder Stones & VUR
+20:44 Renal Infections
+25:37 Benign Renal Tumours
+30:18 Malignant Renal Tumors
+## wor-surger-11 Urology: Part 2
+00:42 Prostate
+03:57 Benign Prostatic Hyperplasia (BPH)
+09:47 Prostatic Cancer
+15:28 Foley's Catheter & Bladder Trauma
+18:37 Bladder Cancer
+23:19 Hypospadias & Ectopia Vesicae
+27:49 Urethral Trauma
+32:02 Posterior Urethral Valve
+33:21 Phimosis, Paraphimosis, Peyronie's Disease & Priapism
+36:49 Penile Cancer
+40:21 Undescended Testis
+46:53 Testicular Torsion
+48:51 Hydrocele & Varicocele
+52:30 Fournier's Gangrene
+## wor-surger-12 Trauma and Burns
+00:50 Basics of Trauma Management
+04:45 Advanced Trauma Life Support (ATLS)
+15:28 Abdominal Trauma
+31:03 Thoracic Trauma
+44:00 Neck Trauma
+45:09 Head Trauma
+59:33 Thermal Injury/Burns
+## wor-surger-13 Hernia, Thorax and Skin
+00:55 Hernia: Types and Surgeries
+05:30 Inguinal Hernia
+12:24 Other Hernias
+20:48 Congenital Diaphragmatic Hernia
+22:37 Thorax
+24:35 Lung Cancer
+28:50 Mediastinal Tumors
+31:00 Skin Lesions
+34:57 Soft Tissue Sarcoma
+## wor-surger-14 Vascular Surgery
+01:13 Deep Vein Thrombosis (DVT)
+08:55 Varicose Veins
+18:47 Ulcers
+22:46 Arterial Occlusion
+30:58 Buerger's Disease and Gangrene
+35:55 Aortic Aneurysm
+42:40 Aortic Dissection
+47:15 Raynaud's Phenomenon
+48:40 Subclavian Steal Syndrome and Carotid Artery Stenosis
+50:12 Thoracic Outlet Syndrome
+51:58 AV Fistulae
+53:43 Cystic Hygroma
+54:15 Lymphedema
+## wor-surger-15 Speciality Surgery
+00:43 Skin Grafts
+05:38 Flaps
+10:52 Bed Sores
+14:35 Wound Healing
+17:47 Cleft Lip/Palate
+20:12 Transplant Surgery
+24:16 Renal Transplant
+27:53 Liver Transplant
+31:34 Berry Aneurysms
+32:54 CNS Tumors
+## wor-orthop-02 Basics of Orthopaedics and Trauma
+01:50 Anatomy of Bone
+06:39 Fractures
+13:33 Fracture Displacement & Healing
+20:10 Malunion & Non-Union
+24:14 Management of Fractures
+33:13 Open Fractures
+40:33 Amputation
+43:08 Avascular Necrosis (AVN)/Osteonecrosis
+48:53 Instruments
+## wor-orthop-03 Upper Limb Trauma
+00:07 Clavicle Fracture
+03:18 Shoulder Dislocations
+11:58 Posterior & Inferior Shoulder Dislocation
+14:55 Shaft of Humerus Fracture
+17:03 Supracondylar Humerus Fracture
+31:07 Lateral Condylar & Olecranon Fracture
+33:59 Elbow Dislocation & Pulled Elbow
+36:16 Forearm Fractures
+43:12 Fractures Involving Distal Radius
+53:40 Fractures of Hand
+## wor-orthop-04 Lower Limb Trauma
+00:07 Hip
+06:48 Hip Dislocation
+11:08 Proximal Femur Fractures
+23:24 Shaft of Femur Fracture
+25:52 Leg Injuries
+28:08 Ankle
+32:00 Foot Fractures
+## wor-orthop-05 Metabolic Disorders of Bone
+00:20 Calcium Homeostasis
+04:00 Metabolic Bone Disorders: Classification
+09:25 Rickets & Osteomalacia
+14:30 Scurvy
+15:46 Primary Hyperparathyroidism
+19:54 Renal Osteodystrophy
+23:17 Osteoporosis
+31:27 Paget's Disease/Osteitis Deformans
+35:29 Osteogenesis Imperfecta
+36:50 Summary
+## wor-orthop-06 Orthopaedic Oncology
+01:07 Approach to Bone Tumors
+08:29 Fibrous Dysplasia
+10:48 Bone Cysts
+14:02 Osteochondroma/Exostosis
+17:10 Enchondroma
+18:07 Chondroblastoma
+18:42 Osteoid Osteoma
+20:03 Giant Cell Tumor/Osteoclastoma
+23:57 Hemangioma
+24:49 Osteosarcoma
+26:58 Ewing's Sarcoma
+## wor-orthop-07 Nerve Injuries
+01:54 Classification of Nerve Injuries
+07:33 Axillary & Musculocutaneous Nerve Injuries
+08:36 Median Nerve/Labourer's Nerve Injury
+14:31 Ulnar Nerve/Musician's Nerve Injury
+19:13 Radial Nerve Injury
+22:00 Summary of Nerve Function Tests
+22:07 Brachial Plexus Injury
+23:44 Common Peroneal Nerve Injury
+24:56 Entrapment Neuropathies
+27:31 Common Nerve Involvement
+## wor-orthop-08 Joint Disorders
+00:10 Osteoarthritis
+03:24 Rheumatoid Arthritis
+07:29 Spondyloarthropathies (Seronegative)
+12:11 Crystal Deposition Arthropathy
+## wor-orthop-09 Spine: Injuries and Disorders
+00:09 Spinal Fractures
+03:16 Prolapsed Intervertebral Disc
+08:33 Lumbar Canal Stenosis/Neurogenic Claudication
+11:26 Spondylolysis & Spondylolisthesis
+13:45 Scoliosis
+## wor-orthop-10 Infections of Bone and Joint
+00:18 Osteomyelitis
+09:07 Septic Arthritis
+12:17 TB Spine (TB Spondylitis)
+## wor-orthop-11 Paediatric Orthopaedics
+00:06 Fractures
+00:58 Growth Plate
+04:43 Congenital Deformities
+05:11 Osteochondritis
+07:06 Slipped Capital Femoral Epiphysis (SCFE)
+08:38 Developmental Dysplasia of Hip (DDH)
+10:00 Terminologyof Deformities
+11:47 Congenital Talipes Equinus Varus (CTEV)
+## wor-orthop-12 Cumulative Trauma and Sports Injuries
+00:06 Cumulative Trauma Disorders/Repetitive Strain Injuries
+06:17 Bursitis
+07:12 Thoracic Outlet Syndrome
+08:30 Anatomy of Knee Joint
+09:09 Injury to Collateral Ligaments
+09:44 Injury to Menisci
+10:43 Injury to Cruciate Ligaments
+12:06 Summary of Structures in the Knee
+12:27 Ankle Sprains
+14:26 Summary of Tests
+## wor-paedia-02 Neonatology: Part 1
+01:00 Normal Newborn
+09:46 Growth Abnormalities & Hypoglycemia
+21:20 Gestational Age
+29:30 Normal Parameters in Newborn
+38:19 Hypothermia
+45:00 Normal Observations in Newborn
+54:18 Head Swellings in Newborn
+58:10 Neonatal Reflexes
+1:03:39 Neonatal Resuscitation
+## wor-paedia-03 Neonatology: Part 2
+00:15 Fluid Requirement and APGAR Score
+07:00 Birth Asphyxia and HIE
+15:45 Neonatal Seizures
+20:00 Neonatal Sepsis
+28:44 Ophthalmia Neonatorum
+33:06 Necrotizing Enterocolitis (NEC)
+40:34 Respiratory Distress Syndrome (RDS)
+1:02:43 Transient Tachypnea of Newborn (TTNB)
+1:07:02 Congenital Diaphragmatic Hernia (CDH)
+## wor-paedia-04 Neonatology: Part 3
+00:10 Neonatal Jaundice
+05:44 Physiological Jaundice
+13:56 Pathological Jaundice
+40:16 Miscellaneous Conditions
+## wor-paedia-05 General Paediatrics: Growth
+04:12 Anthropometry
+18:06 Growth Charts
+25:07 Puberty
+34:18 Short Stature
+42:26 Tall Stature
+47:09 Microcephaly
+55:18 Congenital Hydrocephalus
+## wor-paedia-06 Development
+02:27 Gross Motor Milestones
+10:51 Fine Motor Milestones
+23:00 Language Milestones
+27:35 Social Milestones
+34:42 Special Milestones
+38:06 Red Flag Signs and Developmental Delay
+41:12 Nocturnal Enuresis
+## wor-paedia-07 General Paediatrics: Nutrition
+00:15 Breast Feeding
+25:38 Kwashiorkor & Marasmus
+37:45 Severe Acute Malnutrition (SAM)
+1:00:43 Rickets
+1:23:14 Miscellaneous Deficiencies
+## wor-paedia-08 Childhood Infections
+00:10 Measles
+09:59 Hand, Foot & Mouth Disease (HFMD)
+11:37 Erythema Infectiosum/5th Disease
+14:42 Varicella/Chicken Pox
+19:02 Diphtheria
+27:27 Pertussis/Whooping Cough
+33:01 COVID-19 in Children
+35:03 TORCH Infections
+## wor-paedia-09 General Paediatrics: Genetics
+01:39 Mendelian Modes of Inheritance
+22:26 Mitochondrial Inheritance
+27:07 Down Syndrome
+41:10 Edward Syndrome & Patau Syndrome
+46:57 Klinefelter Syndrome
+50:20 Turner Syndrome
+54:50 Di George Syndrome
+## wor-paedia-10 Metabolic Disorders
+00:15 Carbohydrate Metabolism Related Disorders
+14:36 Amino Acid Metabolism Disorders
+20:53 Lysosomal Storage Disorder (LSD)
+25:22 Disorders of Copper Metabolism
+## wor-paedia-11 Systemic Paediatrics: Cardiology
+00:10 Fetal Circulation
+03:07 Nada's Criteria and Congenital Heart Block
+05:00 Acyanotic CHD
+20:51 Cyanotic CHD
+42:10 Acute Rheumatic Fever
+53:27 Kawasaki Disease
+1:00:39 Paediatric Resuscitation
+## wor-paedia-12 Systemic Paediatrics: Pulmonology
+00:07 Respiratory Infections
+12:50 Foreign Bodies in Airway
+19:56 Asthma
+29:10 Cystic Fibrosis (CF)
+## wor-paedia-13 Systemic Paediatrics: Gastroenterology
+00:10 Esophageal Disorders
+16:25 Idiopathic Hypertrophic Pyloric Stenosis (IHPS)
+23:50 Hirschsprung Disease
+28:05 Celiac Disease
+36:00 Acute Diarrhoea
+## wor-paedia-14 Systemic Paediatrics: Neurology
+00:26 Neural Tube Defects (NTD)
+10:04 Febrile Seizure
+19:02 Epilepsy Syndromes
+26:50 Meningitis
+36:30 Cerebral Palsy
+43:30 Duchenne Muscular Dystrophy (DMD)
+51:52 Miscellaneous Conditions
+## wor-paedia-15 Systemic Paediatrics: Nephrology
+00:10 Congenital Abnormalities
+07:22 UTI
+12:30 Nephrotic Syndrome
+22:32 Glomerulonephritis
+37:10 Hemolytic Uremic Syndrome
+42:10 KDIGO Criteria
+## wor-paedia-16 Systemic Paediatrics: Endocrinology
+00:11 Congenital Hypothyroidism
+09:10 Congenital Adrenal Hyperplasia (CAH)
+## wor-obstet-02 Gynaecology Revision: Part 1
+00:42 Anatomy of Uterus
+17:56 Anatomy of Cervix
+23:34 Pain Management & Instruments
+29:54 Anatomy of Vagina
+42:07 Anatomy of Fallopian Tube
+51:20 Gonads and External Genitalia
+1:03:18 Vulval Cancer
+## wor-obstet-03 Gynaecology Revision: Part 2
+01:43 Mullerian Malformations
+21:01 Prolapse
+34:10 SUI & Urinary Fistula
+44:48 Puberty
+## wor-obstet-04 Gynaecology Revision: Part 3
+00:25 Menstrual Cycle
+16:05 Hormones in Gynaecology
+35:58 Drugs in Gynaecology
+41:00 Abnormal Uterine Bleeding (AUB)
+58:55 Management of Peri menopausal Bleeding
+1:09:50 Endometrial Cancer
+1:31:58 Post Menopausal Bleeding
+## wor-obstet-05 Gynaecology Revision: Part 4
+00:20 PCOS
+21:00 Hirsutism
+27:22 Ovarian Hyper stimulation Syndrome
+36:12 Menopause
+42:10 HRT
+47:56 AMH, POI & SERM
+55:24 Asherman Syndrome
+1:02:54 Secondary Amenorrhea
+## wor-obstet-06 Gynaecology Revision: Part 5
+01:02 Disorders of Sexual Development
+19:02 Congenital Adrenal Hyperplasia (CAH)
+29:44 Disorders of Development in 46XY
+53:23 Primary Amenorrhoea
+1:02:01 Primary Amenorrhea with Uterus Present
+1:19:02 Primary Amenorrhea with Uterus Absent
+## wor-obstet-07 Gynaecology Revision: Part 6
+00:46 Endometriosis & Dysmenorrhea
+23:35 Fibroid
+39:40 Fibroid vs Polyp vs Adenomyosis
+58:17 Genital TB & Hysterosalpingograms (HSGs)
+1:08:22 Vaginitis
+1:18:00 PID
+1:26:00 Syndromic Mx of Infections
+## wor-obstet-08 Gynaecology Revision: Part 7
+00:20 Carcinoma in-situ
+11:24 HPV
+18:18 Screening for Cancer Cervix
+32:24 Ca Cervix
+40:04 Management of Cancer Cervix
+58:05 Adnexal Mass
+1:06:45 Ovarian Cancer: Types & Risk Factors
+1:22:00 Ovarian Cancer: Management
+1:32:12 Ovarian Cancers: Appearance & Findings
+## wor-obstet-09 Gynaecology Revision: Part 8
+00:22 Female Infertility
+05:10 Tests for Anovulation
+10:45 Other Causes of Female Infertility
+22:24 Management of Infertility
+32:13 Male Infertility
+46:58 Assisted Reproductive Technique (ART)
+54:24 Contraception: Part 1
+1:01:18 Missed Pills & DMPA Injection
+1:07:11 Missing Cu TThread & IUc D with Pregnancy
+1:09:42 Contraception: Part 2
+1:19:36 Emergency Contraception
+## wor-obstet-10 Obstetrics Revision: Part 1
+00:31 Spermatogenesis
+04:08 Oogenesis
+11:54 Fertilization & Implantation
+20:46 Post Implantation Changes
+25:40 Signs in Pregnancy
+34:10 Pregnancy Dating
+## wor-obstet-11 Obstetrics Revision: Part 2
+00:08 Antenatal Care in Pregnancy
+05:36 Antenatal Care: Vaccines and Tests
+10:49 USG in Pregnancy: Part 1
+20:32 Neural Tube Defects (NTD)
+26:22 Aneuploidy Screening
+39:53 USG in Pregnancy: Part 2
+51:00 Teratogens
+1:07:07 Drug in Pregnancy
+1:15:02 Thyroid Disorders in Pregnancy
+1:18:18 Infections in Pregnancy
+## wor-obstet-12 Obstetrics Revision: Part 3
+00:20 Hematological Changes in Pregnancy
+04:46 Anemia in Pregnancy
+21:42 Renal & Respiratory Changes in Pregnancy
+25:38 Cardiovascular Changes and Heart Disease in Pregnancy
+47:31 Twin Pregnancy
+1:11:33 Hyperemesis Gravidarum
+1:14:05 Superfecundation vs Superfetation
+## wor-obstet-13 Obstetrics Revision: Part 4
+00:31 Placenta
+19:04 Hypertension in Pregnancy
+50:00 Jaundice in Pregnancy
+1:01:59 Intrauterine Growth Restriction (IUGR)
+1:12:00 Preterm Labor (PTL)
+1:27:20 PROM vs PPROM
+1:30:19 Cord Prolapse
+## wor-obstet-14 Obstetrics Revision: Part 5
+00:28 Amniotic Fluid Disorders
+16:36 Diabetes in Pregnancy
+22:08 Management of DIabetes in Pregnancy
+29:07 Complications of Diabetes in Pregnancy
+47:51 Rh Negative Pregnancy
+## wor-obstet-15 Obstetrics Revision: Part 6
+00:27 Abortions
+07:10 Cervical Insufficiency/Incompetent Os
+17:52 Anti phospholipid Antibody (APLA) Syndrome
+26:46 Diagnostic Flow Chart for Abortions
+30:10 Medical Termination of Pregnancy
+40:40 Ectopic Pregnancy
+58:39 Molar Pregnancy
+## wor-obstet-16 Obstetrics Revision: Part 7
+00:22 Placenta Previa: Classification & Clinical Features
+06:15 Placenta Previa: Risk Factors & Management
+12:51 APH: Diagnostic Algorithm
+15:10 Abruptio Placenta
+27:04 Obstetric Formulae
+31:40 Antepartum Fetal Monitoring: NST & BPP
+40:29 Intrapartum Fetal Monitoring: CTG
+## wor-obstet-17 Obstetrics Revision: Part 8
+00:40 Maternal Pelvis
+11:52 Fetal Skull
+16:51 Terminology Related to Labour
+26:02 1st & 2nd Stages of Labour
+32:20 Obstructed Labour
+36:36 Uterine Contractions
+39:52 Partogram
+51:00 3rd Stage of Labour
+## wor-obstet-18 Obstetrics Revision: Part 9
+00:36 Malpresentation and Malposition
+05:13 Breech
+16:43 Induction of Labour
+24:06 Instrumental Delivery
+31:40 VBAC/TOLAC
+42:47 Postpartum Hemorrhage
+54:31 Postpartum Collapse
+1:03:31 Episiotomy
+1:07:58 Puerperium

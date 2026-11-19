@@ -1,6 +1,6 @@
 import {
   today, S, VIDS, BY, PASSES, prog, metrics, forecast, currentPhase, isRest, addDays, weekStart, parse, DOW,
-  h, mins, hrs, sp, pct, fmtDay, fmtDayLong, fmtDayYear, subjDot, subjHue, ankiQuery, REASONS, plural,
+  h, mins, hrs, sp, pct, fmtDay, fmtDayLong, fmtDayYear, subjDot, subjHue, ankiQuery, vTags, ANKI, ankiOf, REASONS, plural,
 } from '../core.js';
 import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
 import { focusPill } from './focus.js';
@@ -110,7 +110,7 @@ export function view() {
 
   const doneToday = VIDS.filter(v => PASSES.some(k => prog(v.id)[k]?.d === m.t));
   const frTodayVids = doneToday.filter(v => prog(v.id).fr?.d === m.t);
-  const tagsToday = [...new Set(frTodayVids.flatMap(v => v.tags))];
+  const tagsToday = [...new Set(frTodayVids.flatMap(v => vTags(v)))];
   const openMistakes = S.mistakes.filter(x => !x.done);
   const reason = Object.fromEntries(REASONS);
   const lastTest = [...S.tests].sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -178,7 +178,7 @@ export function view() {
       <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.target)} it needs`}</span></span>
     <span class="faint">${ICON.chev}</span>
   </button>
-  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => BY[id].tags))], true))}">${ICON.copy}Copy tomorrow's Anki cards (suspended)</button>` : ''}` : ''}
+  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], true))}">${ICON.copy}Copy tomorrow's Anki cards (suspended)</button>` : ''}` : ''}
 
   ${openMistakes.length ? `
   ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}
@@ -193,7 +193,7 @@ export function view() {
   <ul class="card flush list">${doneToday.map(v => videoItem(v)).join('')}</ul>` : ''}
 
   ${frTodayVids.length ? `
-  ${sectionH("Anki for today's videos", plural(tagsToday.length, 'tag'))}
+  ${sectionH("Anki for today's videos", ANKI ? plural(frTodayVids.reduce((a, v) => a + (ankiOf(v)?.c || 0), 0), 'card') : plural(tagsToday.length, 'tag'))}
   <section class="card">
     <p class="small muted" style="margin:0 0 12px">Paste into the Anki browser search, select all, then unsuspend (Ctrl/⌘+J on desktop).</p>
     <div class="btns">

@@ -395,7 +395,20 @@ export function testScore(t) {
 }
 
 /* ---------- Anki search ---------- */
+// Every video gets its own Anki tag, PG27::01_Anatomy::02_Embryology_Part_1 (added in Anki with
+// tools/anki_apply_tags.py). Until that's done in Anki, searches fall back to the draft tags.
+export const ANKI = window.ANKI || null;
+const tagWord = s => s.replace(/&/g, 'and').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+export function pgTag(v) {
+  const si = D.subjects.indexOf(v.subject) + 1, n = v.id.split('-').pop();
+  return `PG27::${String(si).padStart(2, '0')}_${tagWord(v.subject)}::${n}_${tagWord(v.title)}`;
+}
+const pgPrefix = v => pgTag(v).replace(/::(\d+)_[^:]*$/, '::$1_*');
+export const usePg = () => !!(ANKI && S.settings.ankiTagged);
+export const vTags = v => usePg() ? [pgPrefix(v)] : v.tags;
+export const ankiOf = v => ANKI?.videos[v.id] || null;
 export const ankiQuery = (tags, onlySuspended) => {
+  tags = tags.flatMap(t => typeof t === 'string' ? [t] : vTags(t));
   if (!tags.length) return '';
   const q = tags.map(t => `"tag:${t.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`).join(' OR ');
   return onlySuspended ? `(${q}) is:suspended` : q;

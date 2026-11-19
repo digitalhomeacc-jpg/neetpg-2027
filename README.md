@@ -26,6 +26,8 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 - **Breaks:** timers count only studied time, but record start-to-finish time and breaks too.
 - **Revisions screen:** R1–R5 tabs, each video with its due or done date, time limit and time taken, plus total time limit and total time taken. Tap a time to enter the real one, including over the limit.
 - **Backlogs and self-improvement:** what skipping today does to the target, revisions and recall; what skipping 1–3 days a week does to the finish date and later phases; the current backlog with a recovery plan; and patterns from your own data.
+- **Chapters:** every video shows Marrow's own chapter list with start times (read from photos of the Marrow app, `data/chapters_*.txt`, merged with `tools/add_chapters.py`). The recall check uses them as the topic list.
+- **Anki tags:** every video is one tag (`PG27::01_Anatomy::02_…`) with its card count, MCQ count and PYQ-tagged notes from the Anki export. Watching a video marks its tag hit, and Progress → Anki tags shows tags and cards hit per subject. Cards were placed automatically (`tools/anki_map.py`), so some sit under a neighbouring video. `js/data-anki.js` holds only tag names and counts, no card text.
 - **Anki for planned days:** copy the Anki search for a planned day (e.g. tomorrow) to unsuspend its cards ahead of time.
 - **Revision times:** how long the first watch and each of R1–R5 really took, for every video and subject, against each revision's limit. Subjects whose revisions run over get flagged. Each revision ends by confirming its time (from the timer, or edited), and any logged time can be corrected from the video's panel.
 - **Plan:** a timeline of the four phases up to the exam, with goals to tick off. Also a "what if" slider (hours a day → finish date), the revision load for the next 8 weeks, and a day-by-day schedule of revisions and new videos.
@@ -66,7 +68,7 @@ python3 tools/extract_sheet.py EXAM_PREP.xlsx wor.json
 python3 tools/build_data.py wor.json js/data-wor.js
 ```
 
-The Anki tags in it are a **draft**. They'll be replaced once the tag list from the real Anki collection has been mapped.
+Card counts per video are in `js/data-anki.js` (from `tools/anki_map.py`).
 
 When any app file changes, bump `VERSION` in `sw.js` so phones fetch the new version.
 

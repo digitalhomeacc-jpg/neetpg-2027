@@ -105,6 +105,11 @@ export function view() {
 
   <div class="btns"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
   <div class="btns" style="margin-top:8px"><button class="btn" data-act="report">📊 Weekly report</button><button class="btn" data-act="share-card">Share card</button></div>
+  <button class="card tomorrow" data-act="anki">
+    <span class="rbadge" style="--h:200">🗂️</span>
+    <span class="grow"><span class="t">Anki tags</span><span class="s">Which tags and how many cards you've hit, video by video</span></span>
+    <span class="faint">›</span>
+  </button>
   <button class="card tomorrow" data-act="times">
     <span class="rbadge" style="--h:30">⏱️</span>
     <span class="grow"><span class="t">Revision times</span><span class="s">How long your first watch and R1–R5 took for every topic</span></span>

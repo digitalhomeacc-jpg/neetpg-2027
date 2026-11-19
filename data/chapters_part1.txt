@@ -1,0 +1,258 @@
+# Marrow WOR chapters, from screenshots of the Marrow app (Part 1: Anatomy, Biochemistry, Physiology).
+# Format: "## <video title>" then one "mm:ss  Chapter" per line (times are the chapter start; ? = unreadable in the screenshot).
+## Embryology: Part 1
+00:00 Development of Germ Layers
+22:55 Allantois and Vitellointestinal Duct
+28:46 Development of Diaphragm
+34:38 Pharyngeal Arches
+## Embryology: Part 2
+00:40 Development of Heart
+08:55 Arterial Development
+26:08 Venous Development
+? Development of GIT
+57:30 Development of Urogenital System
+## Histology
+01:02 Types of Epithelium
+11:18 Muscles
+17:56 Cartilages
+33:00 Glands
+34:44 Lymphoid System
+## Head, Neck and Face: Part 1
+01:45 Cranial Nerve Nuclei and Columns
+27:54 Mandibular Nerve
+36:20 Facial Nerve
+55:58 Deep Cervical Fascia
+1:10:11 Triangles of Neck
+## Head, Neck and Face: Part 2
+00:45 Pharyngeal Constrictors
+10:07 Laryngeal Muscles
+21:47 TMJ & Muscles of Mastication
+32:09 Innervation of Dura Mater
+36:29 Cavernous Sinus
+40:27 Head & Neck: Osteology
+## Neuroanatomy: Part 1
+01:19 Ascending Tracts
+19:00 Descending Tract
+25:30 Brown-Sequard Syndrome
+37:49 Ventral Aspect of Brainstem
+44:45 Dorsal Aspect of Brainstem
+53:27 Lemnisci
+1:04:35 Brainstem Syndromes
+## Neuroanatomy: Part 2
+01:12 Cerebellar Cortex
+12:45 Cerebellar Peduncles
+18:24 Sections of the Brain
+42:31 White Matter of Cerebrum
+1:04:22 Blood Supply
+1:08:32 Intracranial Hemorrhages
+1:11:40 Thalamic Connections
+## Upper Limb
+01:22 Musculoskeletal Anatomy
+24:43 Muscles of the Hand
+45:35 Nerve Supply
+## Lower Limb
+02:03 Lumbar Plexus
+18:25 Hip Bone, Femur and Iliotibial Band
+30:55 Anterior Compartment of Thigh
+37:48 Gluteal Region and Saphenous Vein
+43:20 Ligaments of Foot and Ankle
+51:20 Sciatic Nerve
+## Thorax
+00:01 Diaphragm
+07:15 Thoracic Wall
+24:00 Bronchopulmonary Segments
+32:28 Pericardial Sinuses & Interior of Heart
+45:20 Coronary Circulation
+## Abdomen
+00:15 Inguinal Canal
+06:30 Peritoneal Folds
+17:50 Perineum
+## Enzymes
+00:20 Basics of Enzymes
+20:48 Classification of Enzymes
+51:34 Enzyme Mechanism of Action
+1:01:20 Enzyme Kinetics
+1:10:32 Enzyme Inhibition
+1:19:34 Regulation of Enzyme Activity
+1:29:15 Clinical Enzymology
+1:36:47 Enzyme Markers
+1:43:55 Serine Proteases
+## Carbohydrates: Introduction
+01:00 Chemistry of Carbohydrates
+10:30 Dietary Fibres
+16:30 Glycosaminoglycans (GAGs) / Mucopolysaccharides
+28:12 Mucopolysaccharidoses (MPS)
+47:00 Glucose Transporters
+## Metabolism of Carbohydrates: Part 1
+00:10 Fed & Fasting State Metabolism
+08:36 Glycolysis: Steps & Energetics
+36:44 Regulation of Glycolysis
+45:23 Metabolism in Cancer Cells
+51:30 Pyruvate Dehydrogenase (PDH)
+## Metabolism of Carbohydrates; Part 2
+00:14 Glycogen Synthesis
+05:27 Glycogenolysis
+15:22 Regulation of Glycogen Metabolism
+22:23 Glycogen Storage Disorders
+51:40 Gluconeogenesis
+1:00:30 Galactose & Fructose Metabolism
+1:11:28 HMP Shunt
+1:20:58 Uronic Acid Pathway
+## Amino Acids: Part 1
+00:35 Classification of Amino Acids
+08:15 Properties of Amino Acids
+18:10 Proteins
+26:20 Collagen
+34:05 Elastin, Keratin & Fibrillin
+36:32 Amino Acid Metabolism
+50:45 Urea Cycle
+54:42 Urea Cycle Disorders
+## Amino Acids: Part 2
+00:25 Phenylalanine & Tyrosine: Metabolism
+02:50 Phenylalanine & Tyrosine: Disorders
+27:28 Derivatives of Tyrosine
+31:44 Tryptophan: Metabolism & Derivatives
+38:38 Tryptophan Metabolism: Associated Disorders
+44:02 Sulphur Containing Amino Acids: Metabolism
+46:03 Sulphur Containing Amino Acids: Disorders & Derivatives
+59:56 Glycine & Serine
+1:02:30 Basic Amino Acids
+1:05:23 Branched Chain Amino Acids
+1:09:00 Overview
+## Metabolism of Lipids
+00:15 Classification of Fatty Acids
+11:44 Phospholipids & Glycolipids
+20:04 Sphingolipidoses
+33:27 Metabolism in Fasting State
+37:58 Beta Oxidation
+50:24 Other Oxidation Pathways & Disorders of Fatty Acid Oxidation
+1:01:54 Ketone Body Synthesis
+1:10:47 Metabolism in Fed State
+1:24:01 Lipoproteins
+1:29:29 Disorders of Lipoproteins
+## Molecular Biology
+00:10 DNA
+10:48 Transcription
+19:04 RNA
+22:31 Mutations and Epigenetics
+26:50 Genomic Analysis
+35:25 Recombinant DNA Technology
+42:04 PCR, Genome Editing and DNA Sequencing
+51:55 Overview of Techniques
+55:32 Nucleotides
+## Vitamins and Minerals
+00:53 Vitamin A vs Vitamin D
+14:55 Vitamin E vs Vitamin K
+21:18 Vitamin B1 vs B2
+24:41 Vitamin B3, B5, B6, B7
+32:49 Folic Acid vs Vitamin B12
+37:37 Vitamin C (Ascorbic Acid)
+39:55 Minerals
+44:25 Miscellaneous Topics on Nutrition
+## Miscellaneous Topics in Biochemistry
+00:06 TCA Cycle
+02:48 Electron Transport Chain
+11:35 Heme Metabolism
+## General and Cellular Physiology: Part 1
+01:51 Homeostasis
+15:24 Cell Membrane
+35:34 Cell Organelles
+56:24 Cytoskeletal Filaments
+1:11:17 Cellular Junctions
+## General and Cellular Physiology: Part 2
+00:06 Cellular Messengers and Receptors
+16:43 Membrane Transport
+34:01 Membrane Potentials
+43:26 Cellular Fluids
+## Nerve Muscle Physiology
+00:27 Nerves
+10:02 Nerve Action Potential
+18:02 Classification of Nerve Fibres & Nerve Injury
+31:30 Skeletal Muscle
+1:05:58 Cardiac & Smooth Muscles
+1:16:22 Synapse
+1:23:32 Neurotransmitters
+## Neurophysiology: Part 1
+01:30 Sensory Physiology
+03:15 Touch Receptors
+08:30 Pain Receptors
+19:51 Somatosensory Pathways
+27:36 Laws in Sensory Physiology
+29:08 Vision
+44:44 Hearing
+## Neurophysiology: Part 2
+00:18 Olfaction
+08:19 Gustation
+14:46 Motor Physiology
+21:32 Motor Tracts
+30:49 Disorders of Motor Pathway
+38:40 Reflexes
+## Neurophysiology: Part 3
+00:30 Cerebellum
+17:34 Basal Ganglia
+34:00 Limbic System
+38:44 Hypothalamus
+41:40 Cerebral Hemispheres
+57:45 Fluid Systems in the Brain
+1:07:04 Sleep
+## Respiratory Physiology: Part 1
+00:36 Airways
+15:04 Surfactant
+22:26 Mechanics of Breathing
+## Respiratory Physiology: Part 2
+00:07 Spirometry
+15:08 Ventilation and Perfusion
+41:11 Diffusion of Gases
+47:11 Oxygen Transport
+56:44 Carbon Dioxide Transport
+## Respiratory Physiology: Part 3
+00:06 Neural Regulation of Respiration
+15:00 Chemical Regulation of Respiration
+29:13 Environmental Physiology
+## Cardiovascular Physiology: Part 1
+01:49 Cardiac Action Potentials
+09:41 Conducting System of Heart
+13:51 ECG & JVP
+29:01 Cardiac Cycle
+50:17 Cardiac Output
+59:35 Coronary Circulation
+1:02:55 Hematopoiesis
+## Cardiovascular Physiology: Part 2
+00:06 Leukopoiesis
+04:00 Thrombopoiesis
+05:20 Blood Grouping Systems
+10:02 Blood Vessels
+28:35 Clotting of Blood
+35:38 Regulation of Blood Pressure
+48:31 Valsalva Maneuver
+52:56 Cardiac Reflexes
+## Gastrointestinal Physiology
+04:25 GIT Secretions
+21:16 GI Hormones
+30:50 Digestion & Absorption
+45:10 GI Motility
+56:31 Defecation
+58:55 Migrating Motor Complex
+## Renal Physiology
+11:11 Regulation of GFR
+21:32 Proximal Convoluted Tubule
+30:31 Loop of Henle
+38:10 Distal Convoluted Tubule
+43:02 Collecting Duct
+50:49 Micturition
+56:30 Acid-Base Balance
+1:05:18 Acid-Base Disorders
+## Endocrine Physiology
+03:42 Pituitary Gland & Hypothalamus
+09:19 Growth Hormone
+19:30 Prolactin
+21:24 Thyroid Gland
+37:23 Endocrine Pancreas
+52:35 Adrenal Gland
+1:08:33 Calcium
+1:11:26 Parathormone, Vitamin D & Calcitonin
+## Reproductive Physiology, Exercise Physiology and Regulation of Body Temperature
+00:17 Male Reproductive System
+16:13 Female Reproductive System
+34:34 Exercise Physiology
+45:00 Regulation of Body Temperature

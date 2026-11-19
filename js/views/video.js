@@ -3,6 +3,7 @@ import { S, BY, PASSES, PLABEL, SPEEDS, REV, prog, save, today, h, mins, sp, fmt
 import { openSheet, closeSheet, toast, seg, clockTime } from '../ui.js';
 import { openMistake } from './tests.js';
 import { pinBox } from './pins.js';
+import { ankiBlock, chaptersList } from './anki.js';
 
 let ctx = null; // { id, kind, speed, date }
 
@@ -47,7 +48,7 @@ function body() {
   const reason = Object.fromEntries(REASONS);
   return `${head}
     ${p.fr ? '' : `<button class="btn primary block" data-act="study-now" data-id="${v.id}" style="margin:0 0 14px">▶ Study now</button>`}
-    ${v.notes ? `<p class="small" style="margin:0 0 4px">${h(v.notes)}</p>` : ''}
+    ${v.chapters?.length ? chaptersList(v) : v.notes ? `<p class="small" style="margin:0 0 4px">${h(v.notes)}</p>` : ''}
     <div class="field"><label for="v-notes">My notes</label>
       <textarea id="v-notes" class="inp" rows="3" placeholder="High-yield points in your own words. They show up in this video's recall check.">${h(S.notes[v.id] || '')}</textarea>
       <p class="hint">Saved as you type. Tip: tap the 🎤 on the keyboard to dictate.</p>
@@ -55,13 +56,7 @@ function body() {
       ${S.pins.filter(x => x.video === v.id).length ? `<button class="link" data-act="pins" style="margin-top:6px">📌 ${S.pins.filter(x => x.video === v.id).length} pinned from this video</button>` : ''}</div>
     <div class="field"><span class="lbl">Passes · each revision gets less time</span><div class="passes">${rows}</div></div>
 
-    <div class="field"><span class="lbl">Anki tags · ${v.tags.length}</span>
-      ${v.tags.length ? `<div class="tags">${v.tags.map(t => `<div class="tag">${h(t)}</div>`).join('')}</div>
-      <div class="btns"><button class="btn primary" data-act="copy" data-q="${h(ankiQuery(v.tags, true))}">Copy suspended</button>
-      <button class="btn" data-act="copy" data-q="${h(ankiQuery(v.tags, false))}">Copy all</button></div>
-      <div class="spacer"></div>` : '<p class="small muted">No tags mapped yet.</p>'}
-      <div class="note"><b>Draft mapping.</b> This gets replaced with your checked tags once your Anki tag list is in.</div>
-    </div>
+    ${ankiBlock(v)}
 
     <p class="hint">Tap a time to correct it, including when a revision ran over its limit.</p>
     ${(() => { const hs = (S.history || []).filter(e => e.key === `video:${v.id}`).slice(0, 5);
