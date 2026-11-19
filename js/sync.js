@@ -110,7 +110,7 @@ export async function syncNow() {
   } catch (e) {
     status.state = 'error';
     status.error = /permission denied for table/i.test(e.message)
-      ? 'The sync table needs access rights. In Supabase, run the last two lines of tools/supabase.sql (the "grant" lines) in the SQL Editor, then tap Sync now.'
+      ? 'The sync table needs access rights. In Supabase (this app\'s project), open SQL Editor and run the "grant" lines at the end of tools/supabase.sql, then tap Sync now.'
       : e.message;
   } finally { busy = false; document.dispatchEvent(new Event('pg27:sync')); }
 }

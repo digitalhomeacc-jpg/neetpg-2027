@@ -20,5 +20,10 @@ create policy "own row: update" on public.pg27_state for update using (auth.uid(
 
 -- Newer Supabase projects don't give the API roles access to tables made in the SQL editor.
 -- Without this, sync fails with "permission denied for table pg27_state".
-grant usage on schema public to authenticated;
-grant select, insert, update on table public.pg27_state to authenticated;
+-- (Row-level security above still limits everyone to their own row.)
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.pg27_state to anon, authenticated;
+notify pgrst, 'reload schema';
+
+-- Check: this should list "authenticated" with SELECT, INSERT, UPDATE and DELETE.
+select grantee, privilege_type from information_schema.role_table_grants where table_name = 'pg27_state' order by 1, 2;
