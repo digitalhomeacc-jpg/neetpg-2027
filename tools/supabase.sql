@@ -17,3 +17,8 @@ drop policy if exists "own row: update" on public.pg27_state;
 create policy "own row: read"   on public.pg27_state for select using (auth.uid() = user_id);
 create policy "own row: insert" on public.pg27_state for insert with check (auth.uid() = user_id);
 create policy "own row: update" on public.pg27_state for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Newer Supabase projects don't give the API roles access to tables made in the SQL editor.
+-- Without this, sync fails with "permission denied for table pg27_state".
+grant usage on schema public to authenticated;
+grant select, insert, update on table public.pg27_state to authenticated;
