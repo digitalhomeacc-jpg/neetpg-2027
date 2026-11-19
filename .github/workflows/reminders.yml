@@ -1,0 +1,28 @@
+name: Daily reminders
+
+# Sends a wake-up push to your phone. The app on the phone fills in what's due.
+# Times are UTC: 01:30 UTC = 7:00 am IST, 15:30 UTC = 9:00 pm IST.
+on:
+  schedule:
+    - cron: '30 1 * * *'
+    - cron: '30 15 * * *'
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 'morning or evening'
+        default: 'morning'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save web-push@3.6.7
+      - run: node tools/send_push.mjs
+        env:
+          KIND: ${{ github.event.inputs.kind || (github.event.schedule == '30 15 * * *' && 'evening' || 'morning') }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}

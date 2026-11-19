@@ -1,0 +1,88 @@
+// Shared bits of UI: rings, list rows, the bottom sheet, toasts.
+import { S, prog, PASSES, h, mins, sp, fmtDay, subjDot } from './core.js';
+
+export const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+export const ICON = {
+  flame: '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3c.5 3-2 4.5-2 7a2 2 0 0 0 4 0c0-.8-.3-1.5-.6-2 2.3 1.2 4.1 3.8 4.1 6.5A5.5 5.5 0 0 1 12 20a5.5 5.5 0 0 1-5.5-5.5C6.5 9.5 11 8 12 3z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" class="ic"><path d="M9 6l6 6-6 6"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M6 18l1.6-1.6M16.4 7.6L18 6"/></svg>',
+  back: '<svg viewBox="0 0 24 24" class="ic"><path d="M15 6l-6 6 6 6"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" class="ic"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>',
+};
+
+export function ring(frac, big, of, size = 116, mark = 0) {
+  const r = 48, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, frac));
+  // `mark` draws a notch on the ring, e.g. where the bare minimum sits.
+  const a = mark * 2 * Math.PI, mx = 58 + r * Math.cos(a), my = 58 + r * Math.sin(a);
+  const notch = mark > 0 && mark < 1 ? `<circle class="notch" cx="${mx}" cy="${my}" r="4"/>` : '';
+  return `<div class="ring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 116 116"><circle class="track" cx="58" cy="58" r="${r}"/>
+    <circle class="bar" cx="58" cy="58" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - f)}"${f === 0 ? ' style="opacity:0"' : ''}/>${notch}</svg>
+    <div class="label"><div class="big num">${big}</div><div class="of">${of}</div></div></div>`;
+}
+export function miniRing(frac, cls = '') {
+  const r = 9, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, frac));
+  return `<svg class="mini ${cls}" viewBox="0 0 24 24"><circle class="track" cx="12" cy="12" r="${r}"/>
+    ${f > 0 ? `<circle class="bar" cx="12" cy="12" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - f)}"/>` : ''}
+    ${f >= 1 ? `<path class="tick" d="M8 12.3l2.6 2.6L16 9.5"/>` : ''}</svg>`;
+}
+
+export function revPill(p) {
+  let n = 0; for (const k of PASSES.slice(1)) if (p[k]) n++; // R1–R5 done
+  return n ? `<span class="pill good">R${n}</span>` : '';
+}
+
+export function videoItem(v, { showSubject = false, showBlock = true, real = null } = {}) {
+  const p = prog(v.id), done = !!p.fr;
+  const bits = [];
+  if (showSubject) bits.push(h(v.subject));
+  if (showBlock) bits.push(`Block ${v.block}`);
+  if (done) bits.push(`${fmtDay(p.fr.d)} at ${sp(p.fr.s)}`);
+  else bits.push(`${mins(v.mins)} · ${mins(real ?? v.mins / S.settings.speed)} at ${sp(S.settings.speed)}`);
+  const open = S.mistakes.filter(x => x.video === v.id && !x.done).length;
+  return `<li class="item${done ? ' done' : ''}">
+    <button class="check${done ? ' on' : ''}" data-act="${done ? 'open-video' : 'mark'}" data-id="${v.id}" aria-label="${done ? 'Watched: open details' : 'Mark watched'}">${CHECK}</button>
+    <button class="open" data-act="open-video" data-id="${v.id}">
+      <div class="t">${h(v.title)}</div>
+      <div class="s num">${showSubject ? subjDot(v.subject) : ''}${bits.join(' · ')}</div></button>
+    <div class="end">${open ? `<span class="pill bad">${open}</span>` : ''}${revPill(p)}</div>
+  </li>`;
+}
+
+/* ---------- bottom sheet ---------- */
+let sheetFn = null;
+export function openSheet(fn) { sheetFn = fn; renderSheet(true); }
+export function closeSheet() { sheetFn = null; document.getElementById('sheet-root').innerHTML = ''; document.body.classList.remove('locked'); }
+export const sheetOpen = () => !!sheetFn;
+export function renderSheet(first = false) {
+  const root = document.getElementById('sheet-root');
+  if (!sheetFn) { root.innerHTML = ''; return; }
+  const old = root.querySelector('.sheet');
+  const scroll = old ? old.scrollTop : 0;
+  root.innerHTML = `<div class="scrim" data-act="close"></div>
+    <div class="sheet${first ? ' enter' : ''}" role="dialog" aria-modal="true"><div class="grab"></div>${sheetFn()}</div>`;
+  root.querySelector('.sheet').scrollTop = scroll;
+  document.body.classList.add('locked');
+}
+
+/* ---------- toast + clipboard ---------- */
+let toastTimer;
+export function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+export async function copy(text, msg = 'Copied. Paste it into Anki search.') {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  }
+  toast(msg);
+}
+
+export const seg = (act, opts, cur, extra = '') =>
+  `<div class="seg">${opts.map(([v, l]) => `<button type="button" data-act="${act}" data-v="${h(v)}" ${extra} aria-pressed="${String(v) === String(cur)}">${l}</button>`).join('')}</div>`;
+
+export const sectionH = (title, aside = '') => `<div class="section-h"><h2>${title}</h2>${aside ? `<span class="aside">${aside}</span>` : ''}</div>`;

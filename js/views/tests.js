@@ -1,0 +1,177 @@
+import {
+  S, VIDS, BY, SUBJECTS, save, today, uid, testScore, TARGET_PCT, REASONS, TEST_TYPES,
+  h, pct, fmtDay, fmtDayYear, subjDot, plural,
+} from '../core.js';
+import { openSheet, closeSheet, toast, seg, sectionH, CHECK, ICON } from '../ui.js';
+
+const typeName = Object.fromEntries(TEST_TYPES);
+const reasonName = Object.fromEntries(REASONS);
+const sorted = () => [...S.tests].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+
+function trend(tests) {
+  const pts = [...tests].reverse().slice(-20);
+  if (pts.length < 2) return '';
+  const W = 360, H = 150, L = 30, R = 8, T = 10, B = 20;
+  const vals = pts.map(t => testScore(t).frac * 100);
+  const lo = Math.max(0, Math.floor(Math.min(...vals, TARGET_PCT * 100) / 10) * 10 - 10), hi = 100;
+  const x = i => L + (i / (pts.length - 1)) * (W - L - R);
+  const y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const grid = [lo, (lo + hi) / 2, hi].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v)}</text>`).join('');
+  const tgt = TARGET_PCT * 100;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Test scores over time">
+    ${grid}<line class="target" x1="${L}" x2="${W - R}" y1="${y(tgt)}" y2="${y(tgt)}"/>
+    <polyline class="actual" points="${vals.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>
+    ${vals.map((v, i) => `<circle class="pt${v >= tgt ? ' hit' : ''}" cx="${x(i)}" cy="${y(v)}" r="3.5"/>`).join('')}
+  </svg>
+  <div class="legend"><span><i></i>Score, % of max</span><span><i class="target"></i>Rank &lt;1,500 zone (~${pct(TARGET_PCT)})</span></div>`;
+}
+
+export function view() {
+  const tests = sorted();
+  const open = S.mistakes.filter(x => !x.done);
+  const recent = tests.slice(0, 3).map(t => testScore(t).frac);
+  const avg3 = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+  const best = tests.length ? Math.max(...tests.map(t => testScore(t).frac)) : null;
+  const gts = tests.filter(t => t.type === 'gt').length;
+
+  const byReason = REASONS.map(([k, l]) => [l, S.mistakes.filter(x => x.reason === k).length]);
+  const bySubject = SUBJECTS.map(s => [s, open.filter(x => x.subject === s).length]).filter(([, n]) => n).sort((a, b) => b[1] - a[1]);
+  const maxR = Math.max(1, ...byReason.map(([, n]) => n));
+
+  const testRows = tests.map(t => {
+    const sc = testScore(t), hit = sc.frac >= TARGET_PCT;
+    return `<li class="item"><button class="open" data-act="edit-test" data-id="${t.id}">
+      <div class="t">${h(t.name)}</div><div class="s num">${typeName[t.type]} · ${fmtDay(t.date)} · ${t.c} right, ${t.w} wrong, ${sc.skipped} skipped${t.rank ? ` · AIR ${h(t.rank)}` : ''}</div></button>
+      <div class="end"><div class="score num">${sc.score}<span class="faint">/${sc.max}</span></div><span class="pill ${hit ? 'good' : sc.frac >= TARGET_PCT - 0.1 ? 'warn' : ''}">${pct(sc.frac)}</span></div></li>`;
+  }).join('');
+
+  const mistakeRows = open.map(x => `<li class="item">
+    <button class="check" data-act="mistake-done" data-id="${x.id}" aria-label="Mark revisited">${CHECK}</button>
+    <button class="open" data-act="edit-mistake" data-id="${x.id}">
+      <div class="t">${h(x.note || (x.video ? BY[x.video]?.title : 'No note'))}</div>
+      <div class="s">${subjDot(x.subject)}${h(x.subject)}${x.video ? ` · ${h(BY[x.video]?.title)}` : ''} · ${fmtDay(x.date)}</div></button>
+    <div class="end"><span class="pill">${reasonName[x.reason]}</span></div></li>`).join('');
+
+  return {
+    title: 'Tests',
+    meta: tests.length ? `${plural(tests.length, 'test')} · ${plural(gts, 'GT')}` : '',
+    html: `
+  <section class="card">
+    <div class="stats" style="margin:0">
+      <div class="stat ${avg3 != null && avg3 >= TARGET_PCT ? 'good' : ''}"><div class="v num">${avg3 != null ? pct(avg3) : '—'}</div><div class="k">last 3 average</div></div>
+      <div class="stat"><div class="v num">${best != null ? pct(best) : '—'}</div><div class="k">best</div></div>
+      <div class="stat"><div class="v num">${pct(TARGET_PCT)}</div><div class="k">rank &lt;1,500 zone</div></div>
+    </div>
+    ${tests.length >= 2 ? `<div class="spacer"></div>${trend(tests)}` : ''}
+    <div class="spacer"></div>
+    <button class="btn primary block" data-act="new-test">${ICON.plus}Log a test</button>
+    <p class="small faint" style="margin:10px 0 0">Zone = about 620/800, which was roughly rank 1,500 in 2025 (third-party estimates, not official). It's an unofficial yardstick, not a rank prediction.</p>
+  </section>
+
+  ${tests.length ? `${sectionH('All tests')}<ul class="card flush list">${testRows}</ul>` : `
+  <section class="card empty"><div class="e1">No tests yet</div>Log grand tests, subject tests or previous-year question sets after you take them. Score, accuracy and trend appear here.</section>`}
+
+  ${sectionH('Mistakes diary', `<button class="link" data-act="new-mistake">+ Add</button>`)}
+  ${S.mistakes.length ? `
+  <section class="card">
+    <div class="small muted" style="margin-bottom:10px">Why you got them wrong (all ${S.mistakes.length})</div>
+    ${byReason.map(([l, n]) => `<div class="hbar"><span class="hl">${l}</span><span class="hb"><i style="width:${(n / maxR) * 100}%"></i></span><span class="hn num">${n}</span></div>`).join('')}
+    ${bySubject.length ? `<div class="small muted" style="margin:14px 0 8px">Open, by subject</div><div class="chips">${bySubject.map(([s, n]) => `<span class="chip">${subjDot(s)}${h(s)} <b class="num">${n}</b></span>`).join('')}</div>` : ''}
+  </section>
+  ${open.length ? `<ul class="card flush list">${mistakeRows}</ul>` : `<section class="card empty"><div class="e1">All revisited</div>New mistakes show up here and on Today until you tick them off.</section>`}
+  ` : `<section class="card empty"><div class="e1">Your mistakes diary</div>After each test, log the questions you got wrong and why. They stay on Today until you've revisited them. AIR 19 in 2025 credited this habit.</section>`}
+  `,
+  };
+}
+
+/* ---------- test form ---------- */
+let tctx = null;
+function testBody() {
+  const t = tctx;
+  const sc = testScore({ n: t.n || 0, c: t.c || 0, w: t.w || 0 });
+  const num = (id, label, val, extra = '') => `<div class="field"><label for="${id}">${label}</label><input id="${id}" class="inp num" type="number" inputmode="numeric" min="0" value="${val ?? ''}" ${extra}></div>`;
+  return `<h3>${t.id ? 'Edit test' : 'Log a test'}</h3><div class="sub">Marks: +4 right, −1 wrong.</div>
+    <div class="field"><label for="t-name">Name</label><input id="t-name" class="inp" type="text" placeholder="e.g. Marrow GT 3" value="${h(t.name || '')}"></div>
+    <div class="field"><span class="lbl">Type</span>${seg('t-type', TEST_TYPES, t.type)}</div>
+    <div class="grid2">
+      <div class="field"><label for="t-date">Date</label><input id="t-date" type="date" value="${t.date}" max="${today()}"></div>
+      ${num('t-n', 'Questions', t.n)}
+      ${num('t-c', 'Right', t.c)}
+      ${num('t-w', 'Wrong', t.w)}
+    </div>
+    <div class="field"><label for="t-rank">Rank in test (optional)</label><input id="t-rank" class="inp" type="text" inputmode="numeric" value="${h(t.rank || '')}"></div>
+    <div class="field"><label for="t-notes">Notes (optional)</label><textarea id="t-notes" class="inp" rows="2" placeholder="Weak areas, timing, what to change">${h(t.notes || '')}</textarea></div>
+    <div class="score-preview num" id="t-preview">${sc.max ? `${sc.score} / ${sc.max} · ${pct(sc.frac)} · ${sc.skipped} skipped` : ''}</div>
+    <button class="btn primary block" data-act="save-test">${t.id ? 'Save' : 'Log test'}</button>
+    ${t.id ? `<div class="btns" style="margin-top:8px"><button class="btn" data-act="new-mistake" data-test="${t.id}">+ Mistake from this test</button>
+      <button class="btn danger" data-act="del-test">Delete</button></div>` : ''}`;
+}
+function readTest() {
+  const g = id => document.getElementById(id)?.value ?? '';
+  return { ...tctx, name: g('t-name').trim(), date: g('t-date') || today(), n: +g('t-n') || 0, c: +g('t-c') || 0, w: +g('t-w') || 0, rank: g('t-rank').trim(), notes: g('t-notes').trim() };
+}
+
+/* ---------- mistake form ---------- */
+let mctx = null;
+function mistakeBody() {
+  const x = mctx;
+  const vids = VIDS.filter(v => v.subject === x.subject);
+  const tests = sorted();
+  return `<h3>${x.id ? 'Edit mistake' : 'Log a mistake'}</h3><div class="sub">What went wrong, and where it lives in your syllabus.</div>
+    <div class="field"><label for="m-note">The point you missed</label><textarea id="m-note" class="inp" rows="2" placeholder="e.g. Drug of choice for absence seizures: ethosuximide">${h(x.note || '')}</textarea></div>
+    <div class="field"><span class="lbl">Why</span>${seg('m-reason', REASONS, x.reason)}</div>
+    <div class="field"><label for="m-subject">Subject</label><select id="m-subject" class="inp">${SUBJECTS.map(s => `<option${s === x.subject ? ' selected' : ''}>${h(s)}</option>`).join('')}</select></div>
+    <div class="field"><label for="m-video">WOR video (optional)</label><select id="m-video" class="inp"><option value="">Not sure</option>${vids.map(v => `<option value="${v.id}"${v.id === x.video ? ' selected' : ''}>${h(v.title)}</option>`).join('')}</select></div>
+    ${tests.length ? `<div class="field"><label for="m-test">From test (optional)</label><select id="m-test" class="inp"><option value="">None</option>${tests.map(t => `<option value="${t.id}"${t.id === x.test ? ' selected' : ''}>${h(t.name)} · ${fmtDay(t.date)}</option>`).join('')}</select></div>` : ''}
+    <button class="btn primary block" data-act="save-mistake">${x.id ? 'Save' : 'Add to diary'}</button>
+    ${x.id ? `<div class="btns" style="margin-top:8px"><button class="btn" data-act="mistake-toggle">${x.done ? 'Mark as open again' : 'Mark revisited'}</button><button class="btn danger" data-act="del-mistake">Delete</button></div>` : ''}`;
+}
+function readMistake() {
+  const g = id => document.getElementById(id)?.value ?? '';
+  return { ...mctx, note: g('m-note').trim(), subject: g('m-subject') || mctx.subject, video: g('m-video') || null, test: g('m-test') || mctx.test || null };
+}
+export function openMistake(pre = {}) {
+  mctx = { reason: 'unknown', subject: SUBJECTS[0], video: null, test: null, ...pre };
+  openSheet(mistakeBody);
+}
+
+export const actions = {
+  'new-test': () => { tctx = { type: 'gt', date: today(), n: S.settings.questions }; openSheet(testBody); },
+  'edit-test': el => { tctx = { ...S.tests.find(t => t.id === el.dataset.id) }; openSheet(testBody); },
+  't-type': el => { tctx = { ...readTest(), type: el.dataset.v }; },
+  'save-test': () => {
+    const t = readTest();
+    if (!t.name) t.name = `${typeName[t.type]} ${fmtDay(t.date)}`;
+    if (!t.n || t.c + t.w > t.n) { toast('Check the numbers: right + wrong can’t be more than questions'); return; }
+    if (t.id) S.tests = S.tests.map(x => x.id === t.id ? t : x); else S.tests.push({ ...t, id: uid() });
+    save(); closeSheet(); toast(`${t.name}: ${testScore(t).score}/${testScore(t).max}`);
+  },
+  'del-test': () => {
+    if (!confirm('Delete this test?')) return;
+    S.tests = S.tests.filter(x => x.id !== tctx.id); save(); closeSheet();
+  },
+  'new-mistake': el => openMistake(el.dataset.test ? { test: el.dataset.test } : {}),
+  'edit-mistake': el => { mctx = { ...S.mistakes.find(x => x.id === el.dataset.id) }; openSheet(mistakeBody); },
+  'm-reason': el => { mctx = { ...readMistake(), reason: el.dataset.v }; },
+  'save-mistake': () => {
+    const x = readMistake();
+    if (!x.note && !x.video) { toast('Add a note or pick a video'); return; }
+    if (x.id) S.mistakes = S.mistakes.map(y => y.id === x.id ? x : y);
+    else S.mistakes.unshift({ ...x, id: uid(), date: today(), done: false });
+    save(); closeSheet(); toast('Added to your mistakes diary');
+  },
+  'mistake-toggle': () => { const x = S.mistakes.find(y => y.id === mctx.id); x.done = !x.done; save(); closeSheet(); },
+  'mistake-done': el => { const x = S.mistakes.find(y => y.id === el.dataset.id); if (x) { x.done = true; save(); toast('Revisited'); } },
+  'del-mistake': () => { S.mistakes = S.mistakes.filter(y => y.id !== mctx.id); save(); closeSheet(); },
+};
+
+export function onChange(e) {
+  if (e.target.id === 'm-subject' && mctx) { mctx = { ...readMistake(), subject: e.target.value, video: null }; return 'sheet'; }
+  return false;
+}
+export function onInput(e) {
+  if (!tctx || !['t-n', 't-c', 't-w'].includes(e.target.id)) return false;
+  const t = readTest(), sc = testScore(t), el = document.getElementById('t-preview');
+  if (el) el.textContent = sc.max ? `${sc.score} / ${sc.max} · ${pct(sc.frac)} · ${sc.skipped} skipped` : '';
+  return true;
+}

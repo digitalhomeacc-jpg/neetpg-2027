@@ -1,0 +1,133 @@
+import {
+  S, VIDS, BY, PASSES, prog, metrics, forecast, currentPhase, isRest, addDays, weekStart, parse, DOW,
+  h, mins, hrs, sp, pct, fmtDay, fmtDayLong, fmtDayYear, subjDot, subjHue, ankiQuery, REASONS, plural,
+} from '../core.js';
+import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
+
+function greeting() {
+  const hr = new Date().getHours();
+  return hr < 5 ? 'Late night' : hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+function weekStrip(m, fc) {
+  const ws = weekStart(m.t);
+  const plan = Object.fromEntries(fc.map(d => [d.date, d.cap]));
+  let cells = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(ws, i), real = m.byDay[d] || 0;
+    const tgt = d === m.t ? m.target : d < m.t ? S.days[d]?.t : plan[d];
+    const rest = isRest(d);
+    const frac = tgt ? real / tgt : real ? 1 : 0;
+    const cls = [d === m.t ? 'now' : '', d > m.t ? 'future' : '', rest ? 'rest' : ''].join(' ');
+    const sub = rest && !real ? 'rest' : d > m.t ? (tgt ? mins(tgt).replace(' min', 'm') : '') : real ? mins(real).replace(' min', 'm') : d < m.t && tgt ? 'missed' : '';
+    cells += `<div class="wd ${cls}"><div class="wl">${DOW[parse(d).getDay()]}</div>${miniRing(frac, rest ? 'restring' : '')}
+      <div class="wn num">${parse(d).getDate()}</div><div class="ws num">${sub}</div></div>`;
+  }
+  return `<section class="card week">${cells}</section>`;
+}
+
+export function view() {
+  const m = metrics(), st = S.settings;
+  const fc = forecast(m);
+  const phase = currentPhase(m.t);
+  let status, line;
+  const goal = m.goal, min = m.minimum, real = m.realToday;
+  const frac = goal ? real / goal : (real ? 1 : 0);
+  const nDue = m.due.length;
+  if (m.remaining <= 0 && !nDue) { status = 'All caught up'; line = 'WOR is watched and no revisions are due today.'; }
+  else if (m.restToday && !nDue) { status = 'Rest day'; line = real ? `You still put in ${mins(real)}.` : 'Nothing due today. Enjoy it.'; }
+  else if (real >= goal) { status = 'Full day done'; line = `${mins(real)} today. Anything extra lowers the days ahead.`; }
+  else if (real >= min) { status = 'Minimum done'; line = `${mins(goal - real)} more for the full day.`; }
+  else if (real > 0) { status = `${mins(min - real)} to your minimum`; line = `Full day is ${mins(goal)}.`; }
+  else { status = `Minimum ${mins(min)}`; line = `Full day ${mins(goal)}: ${nDue ? `${nDue} revision${nDue > 1 ? 's' : ''} + ` : ''}${mins(m.target)} of new videos.`; }
+
+  const behindCls = m.behind > 60 ? 'bad' : m.behind > 0 ? 'warn' : 'good';
+  const behindTxt = m.behind > 0 ? `${hrs(m.behind)}` : `+${hrs(-m.behind)}`;
+
+  const todayPlan = fc[0] && fc[0].date === m.t ? fc[0].items : (fc[0]?.items.slice(0, 2) || []);
+  const bonus = !(fc[0] && fc[0].date === m.t);
+  let nextHtml = '', lastBlock = null, acc = 0;
+  for (const { v, real } of todayPlan) {
+    if (v.block !== lastBlock) { nextHtml += `<li class="group-h">${subjDot(v.subject)}Block ${v.block} · ${h(v.subject)}</li>`; lastBlock = v.block; }
+    nextHtml += videoItem(v, { showBlock: false, real }); acc += real;
+  }
+
+  const doneToday = VIDS.filter(v => PASSES.some(k => prog(v.id)[k]?.d === m.t));
+  const frTodayVids = doneToday.filter(v => prog(v.id).fr?.d === m.t);
+  const tagsToday = [...new Set(frTodayVids.flatMap(v => v.tags))];
+  const openMistakes = S.mistakes.filter(x => !x.done);
+  const reason = Object.fromEntries(REASONS);
+  const lastTest = [...S.tests].sort((a, b) => b.date.localeCompare(a.date))[0];
+
+  return {
+    title: 'Today',
+    meta: fmtDayLong(m.t),
+    html: `
+  <section class="card hero-card">
+    <div class="hero-top">
+      <span class="hello">${greeting()}</span>
+      ${phase ? `<button class="pill accent" data-act="tab" data-v="plan">${h(phase.name)} · until ${fmtDay(phase.end)}</button>` : ''}
+    </div>
+    <div class="hero">
+      ${ring(frac, goal ? pct(Math.min(frac, 9.99)) : mins(real), goal ? `of ${mins(goal)}` : 'today', 116, goal ? min / goal : 0)}
+      <div class="hero-text grow">
+        <p class="status">${status}</p>
+        <p>${line}</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat ${behindCls}"><div class="v num">${m.remaining > 0 ? behindTxt : 'Done'}</div><div class="k">${m.behind > 0 ? 'behind' : 'ahead of'} even pace</div></div>
+      <div class="stat"><div class="v num">${m.daysLeft}</div><div class="k">study days to ${fmtDay(st.target)}</div></div>
+      <div class="stat ${m.streak ? 'good' : ''}"><div class="v num">${ICON.flame}${m.streak}</div><div class="k">day streak</div></div>
+    </div>
+  </section>
+
+  ${weekStrip(m, fc)}
+
+  ${sectionH('Revise today', nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span>` : '')}
+  ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {
+    const extra = i >= m.must.length;
+    return `<li class="item rev${extra ? ' extra' : ''}"><span class="rbadge" style="--h:${subjHue(v.subject)}">${r.k.toUpperCase()}</span>
+      <button class="open" data-act="revise" data-id="${v.id}"><div class="t">${h(v.title)}</div>
+      <div class="s num">${subjDot(v.subject)}${mins(r.budget)} limit · ${r.overdue > 0 ? `<span class="bad-t">${r.overdue}d overdue</span>` : 'due today'}${r.pulled ? ' · from a mistake' : ''}${extra ? ' · if you have time' : ''}</div></button>
+      <button class="btn small-btn" data-act="revise" data-id="${v.id}">Start</button></li>`;
+  }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="e1">Nothing to revise yet</div>Each video's R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.`}</section>`}
+
+  ${m.remaining > 0 && todayPlan.length ? `
+  ${sectionH(bonus ? 'New videos · bonus' : 'New videos', `<span class="num">${mins(acc)}</span>`)}
+  <ul class="card flush list">${nextHtml}</ul>` : ''}
+
+  ${openMistakes.length ? `
+  ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}
+  <ul class="card flush list">${openMistakes.slice(0, 3).map(x => `<li class="item">
+    <button class="check" data-act="mistake-done" data-id="${x.id}" aria-label="Mark revisited"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <button class="open" data-act="${x.video ? 'open-video' : 'edit-mistake'}" data-id="${x.video || x.id}"><div class="t">${h(x.note || (x.video ? BY[x.video]?.title : x.subject))}</div>
+    <div class="s">${subjDot(x.subject)}${h(x.subject)}${x.video && x.note ? ' · ' + h(BY[x.video]?.title) : ''}</div></button>
+    <div class="end"><span class="pill">${reason[x.reason]}</span></div></li>`).join('')}</ul>` : ''}
+
+  ${doneToday.length ? `
+  ${sectionH('Done today', `<span class="num">${mins(m.realToday)}</span>`)}
+  <ul class="card flush list">${doneToday.map(v => videoItem(v)).join('')}</ul>` : ''}
+
+  ${frTodayVids.length ? `
+  ${sectionH("Anki for today's videos", plural(tagsToday.length, 'tag'))}
+  <section class="card">
+    <p class="small muted" style="margin:0 0 12px">Paste into the Anki browser search, select all, then unsuspend (Ctrl/⌘+J on desktop).</p>
+    <div class="btns">
+      <button class="btn primary" data-act="copy" data-q="${h(ankiQuery(tagsToday, true))}">${ICON.copy}Suspended cards</button>
+      <button class="btn" data-act="copy" data-q="${h(ankiQuery(tagsToday, false))}">All cards</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="note"><b>Draft mapping.</b> These tags come from the sheet and haven't been checked against your collection yet.</div>
+  </section>` : ''}
+
+  <section class="card tiles">
+    <button class="tile" data-act="tab" data-v="plan"><div class="k">WOR done by</div><div class="v num">${fc.length ? fmtDay(fc[fc.length - 1].date) : '—'}</div><div class="s">if you hit each day's target</div></button>
+    <button class="tile" data-act="tab" data-v="tests"><div class="k">Last test</div><div class="v num">${lastTest ? `${4 * lastTest.c - lastTest.w}/${4 * lastTest.n}` : '—'}</div><div class="s">${lastTest ? h(lastTest.name) : 'Log one from Tests'}</div></button>
+    <div class="tile"><div class="k">Exam</div><div class="v num">${m.examDays} days</div><div class="s">${fmtDayYear(st.exam)} (est.)</div></div>
+  </section>
+
+  ${m.projected ? `<p class="small faint center">At your last two weeks' pace, WOR first watch finishes ${fmtDayYear(m.projected)}.</p>` : ''}
+  `,
+  };
+}
