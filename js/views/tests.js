@@ -148,7 +148,9 @@ export const actions = {
   },
   'del-test': () => {
     if (!confirm('Delete this test?')) return;
+    const gone = S.tests.find(x => x.id === tctx.id);
     S.tests = S.tests.filter(x => x.id !== tctx.id); save(); closeSheet();
+    toast('Test deleted', () => { S.tests.push(gone); save(); });
   },
   'new-mistake': el => openMistake(el.dataset.test ? { test: el.dataset.test } : {}),
   'edit-mistake': el => { mctx = { ...S.mistakes.find(x => x.id === el.dataset.id) }; openSheet(mistakeBody); },
@@ -161,8 +163,12 @@ export const actions = {
     save(); closeSheet(); toast('Added to your mistakes diary');
   },
   'mistake-toggle': () => { const x = S.mistakes.find(y => y.id === mctx.id); x.done = !x.done; save(); closeSheet(); },
-  'mistake-done': el => { const x = S.mistakes.find(y => y.id === el.dataset.id); if (x) { x.done = true; save(); toast('Revisited'); } },
-  'del-mistake': () => { S.mistakes = S.mistakes.filter(y => y.id !== mctx.id); save(); closeSheet(); },
+  'mistake-done': el => { const x = S.mistakes.find(y => y.id === el.dataset.id); if (x) { x.done = true; save(); toast('Marked revisited', () => { x.done = false; save(); }); } },
+  'del-mistake': () => {
+    const gone = S.mistakes.find(y => y.id === mctx.id);
+    S.mistakes = S.mistakes.filter(y => y.id !== mctx.id); save(); closeSheet();
+    toast('Mistake deleted', () => { S.mistakes.unshift(gone); save(); });
+  },
 };
 
 export function onChange(e) {

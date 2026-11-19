@@ -47,7 +47,7 @@ export function videoItem(v, { showSubject = false, showBlock = true, real = nul
   else bits.push(`${mins(v.mins)} · ${mins(real ?? v.mins / S.settings.speed)} at ${sp(S.settings.speed)}`);
   const open = S.mistakes.filter(x => x.video === v.id && !x.done).length;
   return `<li class="item${done ? ' done' : ''}">
-    <button class="check${done ? ' on' : ''}" data-act="${done ? 'open-video' : 'mark'}" data-id="${v.id}" aria-label="${done ? 'Watched: open details' : 'Mark watched'}">${CHECK}</button>
+    <button class="check${done ? ' on' : ''}" data-act="${done ? 'unmark' : 'mark'}" data-id="${v.id}" aria-label="${done ? 'Watched: tap to undo' : 'Mark watched'}">${CHECK}</button>
     <button class="open" data-act="open-video" data-id="${v.id}">
       <div class="t">${h(v.title)}</div>
       <div class="s num">${showSubject ? subjDot(v.subject) : ''}${bits.join(' · ')}</div></button>
@@ -112,11 +112,26 @@ export function confetti() {
 }
 
 /* ---------- toast + clipboard ---------- */
-let toastTimer;
-export function toast(msg) {
+let toastTimer, toastUndo = null;
+// toast('Saved') or toast('Unmarked', () => putItBack()) for a toast with an Undo button.
+let queued = null;
+export function toast(msg, undo = null) {
   const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  // Never cover an Undo that's still on screen: show plain messages after it.
+  if (!undo && toastUndo && el.classList.contains('show')) { queued = msg; return; }
+  toastUndo = undo;
+  el.innerHTML = `<span>${String(msg).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</span>${undo ? '<button data-act="toast-undo">Undo</button>' : ''}`;
+  el.classList.toggle('has-undo', !!undo);
+  el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.classList.remove('show'); toastUndo = null; flushQueued(); }, undo ? 5000 : 2400);
+}
+function flushQueued() { if (queued) { const m = queued; queued = null; setTimeout(() => toast(m), 300); } }
+export function runToastUndo() {
+  const fn = toastUndo; toastUndo = null;
+  document.getElementById('toast').classList.remove('show');
+  clearTimeout(toastTimer);
+  if (fn) fn();
+  flushQueued();
 }
 export async function copy(text, msg = 'Copied. Paste it into Anki search.') {
   try { await navigator.clipboard.writeText(text); }

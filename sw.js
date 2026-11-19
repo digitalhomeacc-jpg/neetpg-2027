@@ -1,12 +1,12 @@
 // Offline cache for the app, plus daily reminders. Bump VERSION whenever any file changes.
-const VERSION = 'pg27-v4';
+const VERSION = 'pg27-v5';
 const FILES = ['./', 'index.html', 'css/app.css', 'js/main.js', 'js/core.js', 'js/ui.js', 'js/notify.js',
   'js/views/today.js', 'js/views/plan.js', 'js/views/videos.js', 'js/views/tests.js', 'js/views/progress.js',
-  'js/views/settings.js', 'js/views/video.js', 'js/views/revise.js', 'js/views/focus.js', 'js/data-wor.js', 'js/note.js', 'manifest.webmanifest',
+  'js/views/settings.js', 'js/views/video.js', 'js/views/revise.js', 'js/views/focus.js', 'js/history.js', 'js/data-wor.js', 'js/note.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
@@ -16,7 +16,7 @@ self.addEventListener('activate', e => {
 // Network first so updates show straight away; the cache when offline.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(fetch(e.request).then(res => {
+  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(res => {
     const copy = res.clone();
     caches.open(VERSION).then(c => c.put(e.request, copy));
     return res;

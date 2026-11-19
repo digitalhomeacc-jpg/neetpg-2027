@@ -1,5 +1,5 @@
 import { S, save, today, metrics, achievements, h } from './core.js';
-import { closeSheet, openSheet, renderSheet, sheetOpen, copy, toast, confetti, ICON } from './ui.js';
+import { closeSheet, openSheet, renderSheet, sheetOpen, copy, toast, confetti, runToastUndo, ICON } from './ui.js';
 import * as todayV from './views/today.js';
 import * as planV from './views/plan.js';
 import * as videosV from './views/videos.js';
@@ -10,9 +10,11 @@ import * as videoS from './views/video.js';
 import * as reviseS from './views/revise.js';
 import * as focusS from './views/focus.js';
 import { writeSummary } from './notify.js';
+import * as historyV from './history.js';
+import { phases } from './core.js';
 
-const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS];
+const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV };
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -20,6 +22,7 @@ function quickActions() {
       <li class="item"><span class="rbadge" style="--h:160">${ICON.timer}</span><button class="open" data-act="qa-focus"><div class="t">Start a focus session</div><div class="s">Time Anki, Q-bank, PYQs or notes</div></button></li>
       <li class="item"><span class="rbadge" style="--h:215">${ICON.test}</span><button class="open" data-act="qa-test"><div class="t">Log a test</div><div class="s">Grand test, subject test or PYQ set</div></button></li>
       <li class="item"><span class="rbadge" style="--h:0">${ICON.bug}</span><button class="open" data-act="qa-mistake"><div class="t">Log a mistake</div><div class="s">Pulls that video's next revision forward</div></button></li>
+      <li class="item"><span class="rbadge" style="--h:30">🕘</span><button class="open" data-act="qa-history"><div class="t">Change history</div><div class="s">Every change, with what it was before</div></button></li>
       <li class="item"><span class="rbadge" style="--h:275">${ICON.search}</span><button class="open" data-act="qa-search"><div class="t">Find a video</div><div class="s">Search titles, topics and tags</div></button></li>
     </ul>`;
 }
@@ -29,11 +32,19 @@ const ACTIONS = Object.assign({
   close: () => closeSheet(),
   copy: el => copy(el.dataset.q),
   settings: () => { S.ui.back = S.ui.tab; S.ui.tab = 'settings'; return 'enter'; },
-  back: () => { S.ui.tab = S.ui.back && S.ui.back !== 'settings' ? S.ui.back : 'today'; return 'enter'; },
+  back: () => {
+    if (S.ui.tab === 'history') {
+      if (S.ui.histKey && S.ui.histFromList) { S.ui.histKey = null; return 'enter'; }
+      S.ui.histKey = null; S.ui.tab = S.ui.histBack || 'settings'; return 'enter';
+    }
+    S.ui.tab = S.ui.back && S.ui.back !== 'settings' ? S.ui.back : 'today'; return 'enter';
+  },
+  'toast-undo': () => runToastUndo(),
   quick: () => openSheet(quickActions),
   'qa-focus': () => { closeSheet(); focusS.openFocus(); },
   'qa-test': el => testsV.actions['new-test'](el),
   'qa-mistake': el => testsV.actions['new-mistake'](el),
+  'qa-history': () => { closeSheet(); return historyV.actions.history(); },
   'qa-search': () => { closeSheet(); S.ui.tab = 'videos'; S.ui.subject = null; return () => document.getElementById('q')?.focus(); },
 }, ...MODULES.map(m => m.actions || {}));
 
@@ -60,7 +71,7 @@ function render({ top = false, enter = false } = {}) {
   const tab = VIEWS[S.ui.tab] ? S.ui.tab : 'today';
   const { title, meta, html } = VIEWS[tab].view();
   document.getElementById('nav-title').textContent = title;
-  document.getElementById('nav-btns').innerHTML = tab === 'settings'
+  document.getElementById('nav-btns').innerHTML = tab === 'settings' || tab === 'history'
     ? `<button class="icon-btn" data-act="back" aria-label="Back">${ICON.back}</button>`
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;
@@ -78,6 +89,7 @@ function render({ top = false, enter = false } = {}) {
   if (sheetOpen()) renderSheet();
   focusS.renderFocus();
   checkBadges(m);
+  historyV.recordChanges(); // compare with the last snapshot and log what changed
   writeSummary(); // keeps the next reminder current
 }
 
@@ -103,13 +115,20 @@ document.addEventListener('change', e => {
 
 let qTimer;
 document.addEventListener('input', e => {
+  // Searches redraw only their results, so the keyboard stays open while typing.
   if (e.target.id === 'q') {
     S.ui.q = e.target.value;
     clearTimeout(qTimer);
+    qTimer = setTimeout(() => { save(); const r = document.getElementById('lib-results'); if (r) r.innerHTML = videosV.results(); }, 140);
+    return;
+  }
+  if (e.target.id === 'hist-q') {
+    S.ui.histQ = e.target.value;
+    clearTimeout(qTimer);
     qTimer = setTimeout(() => {
-      save(); render();
-      const q = document.getElementById('q');
-      if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+      save();
+      const html = historyV.view().html, box = document.getElementById('hist-list');
+      if (box) box.innerHTML = new DOMParser().parseFromString(html, 'text/html').getElementById('hist-list').innerHTML;
     }, 160);
     return;
   }
@@ -126,14 +145,9 @@ document.addEventListener('input', e => {
 function onScroll() { document.body.classList.toggle('scrolled', window.scrollY > 38); }
 window.addEventListener('scroll', onScroll, { passive: true });
 
-// App-like touch: no pinch zoom, no double-tap zoom.
+// App-like touch: no pinch zoom. (Double-tap zoom is off via touch-action in the CSS,
+// which doesn't swallow quick taps the way a touchend hack would.)
 document.addEventListener('gesturestart', e => e.preventDefault());
-let lastTouch = 0;
-document.addEventListener('touchend', e => {
-  const now = Date.now();
-  if (now - lastTouch < 320 && !e.target.closest('input, textarea, select')) e.preventDefault();
-  lastTouch = now;
-}, { passive: false });
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetOpen()) { closeSheet(); render(); } });
 document.addEventListener('pg27:render', () => render());
@@ -145,8 +159,16 @@ document.addEventListener('visibilitychange', () => {
 });
 
 if (S.ui.focusOpen) S.ui.focusOpen = false;
+historyV.setGoalLabels(Object.fromEntries(phases().flatMap(p => p.goals)));
+historyV.startHistory();
 render({ top: true, enter: true });
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // When a new version takes over, reload once so the whole app is the new version.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
+  navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
 }

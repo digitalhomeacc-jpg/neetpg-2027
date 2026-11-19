@@ -91,7 +91,8 @@ export const actions = {
     (S.progress[v.id] ||= {})[r.k] = { d: today(), m: spent, q: ctx.q ?? 3 };
     save(); clearInterval(timer); closeSheet();
     const nx = revInfo(v);
-    toast(nx?.k ? `${r.k.toUpperCase()} done in ${mins(spent)}. ${nx.k.toUpperCase()} due ${fmtDay(nx.due)}` : `All 5 revisions done for ${v.title}`);
+    toast(nx?.k ? `${r.k.toUpperCase()} done in ${mins(spent)}. ${nx.k.toUpperCase()} due ${fmtDay(nx.due)}` : `All 5 revisions done for ${v.title}`,
+      () => { delete S.progress[v.id][r.k]; save(); });
   },
 };
 

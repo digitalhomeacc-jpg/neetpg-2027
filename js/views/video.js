@@ -22,7 +22,8 @@ function body() {
     let info, btn = '';
     if (x) {
       info = `${fmtDay(x.d)} · ${mins(passMins(v, x))}${x.s && k === 'fr' ? ` at ${sp(x.s)}` : ''}${x.q ? ` · recalled ${ratingName(x.q).toLowerCase()}` : ''}`;
-      btn = `<button class="btn ghost danger" data-act="vs-unpass" data-k="${k}">Undo</button>`;
+      const latest = PASSES.filter(kk => p[kk]).pop() === k;
+      btn = latest ? `<button class="btn ghost danger" data-act="vs-unpass" data-k="${k}">Undo</button>` : '';
     } else if (k === 'fr') {
       info = 'Not watched yet';
       btn = `<button class="btn ghost" data-act="mark" data-id="${v.id}">Mark</button>`;
@@ -48,6 +49,8 @@ function body() {
       <div class="note"><b>Draft mapping.</b> This gets replaced with your checked tags once your Anki tag list is in.</div>
     </div>
 
+    <button class="btn block" style="margin-top:14px" data-act="hist-open" data-v="video:${v.id}">History of this video</button>
+
     <div class="field"><div class="row"><span class="lbl grow" style="margin:0">Mistakes on this video · ${ms.length}</span>
       <button class="btn ghost" data-act="vs-mistake">+ Log one</button></div>
       ${ms.length ? `<ul class="list mini-list">${ms.map(x => `<li class="item"><span class="pill ${x.done ? '' : 'bad'}">${reason[x.reason] || x.reason}</span>
@@ -65,12 +68,24 @@ export const actions = {
   'vs-confirm': () => {
     const d = document.getElementById('vs-date').value || today();
     (S.progress[ctx.id] ||= {}).fr = { d, s: ctx.speed };
-    save(); const title = BY[ctx.id].title; closeSheet(); toast(`Watched: ${title}`);
+    save(); const id = ctx.id, title = BY[id].title; closeSheet();
+    toast(`Watched: ${title}`, () => { delete S.progress[id].fr; if (!Object.keys(S.progress[id]).length) delete S.progress[id]; save(); });
+  },
+  'unmark': el => {
+    const id = el.dataset.id, p = S.progress[id];
+    if (!p?.fr) return;
+    // With revisions logged, open the details so only the latest pass can be undone.
+    if (PASSES.slice(1).some(k => p[k])) return openVideo(id);
+    const was = p.fr;
+    delete p.fr; if (!Object.keys(p).length) delete S.progress[id];
+    save();
+    toast(`Unmarked: ${BY[id].title}`, () => { (S.progress[id] ||= {}).fr = was; save(); });
   },
   'vs-unpass': el => {
-    const p = S.progress[ctx.id]; delete p[el.dataset.k];
-    if (!Object.keys(p).length) delete S.progress[ctx.id];
+    const id = ctx.id, k = el.dataset.k, p = S.progress[id], was = p[k];
+    delete p[k]; if (!Object.keys(p).length) delete S.progress[id];
     save();
+    toast(`${PLABEL[k]} undone`, () => { (S.progress[id] ||= {})[k] = was; save(); });
   },
   'vs-mistake': () => openMistake({ video: ctx.id, subject: BY[ctx.id].subject }),
 };

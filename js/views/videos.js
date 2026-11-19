@@ -1,7 +1,7 @@
 import { S, VIDS, SUBJECTS, prog, save, h, hrs, subjDot, subjHue } from '../core.js';
 import { videoItem, sectionH } from '../ui.js';
 
-export function view() {
+export function results() {
   const ui = S.ui;
   const q = ui.q.trim().toLowerCase();
   const grid = SUBJECTS.map(s => {
@@ -28,13 +28,17 @@ export function view() {
       <ul class="card flush list">${vs.map(v => videoItem(v)).join('')}</ul>`;
   }
 
+  return q ? list : `${sectionH('Marrow WOR', 'tap a subject')}<div class="subjects">${grid}</div>${list}`;
+}
+
+export function view() {
   return {
     title: 'Library',
     meta: `<span class="num">${VIDS.filter(v => prog(v.id).fr).length} / ${VIDS.length}</span> watched`,
     html: `
   <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-    <input id="q" type="search" placeholder="Search videos, topics, tags" value="${h(ui.q)}" autocomplete="off" enterkeyhint="search"></div>
-  ${q ? list : `${sectionH('Marrow WOR', 'tap a subject')}<div class="subjects">${grid}</div>${list}`}`,
+    <input id="q" type="search" placeholder="Search videos, topics, tags" value="${h(S.ui.q)}" autocomplete="off" enterkeyhint="search"></div>
+  <div id="lib-results">${results()}</div>`,
   };
 }
 

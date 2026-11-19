@@ -9,6 +9,7 @@ A personal NEET PG 2027 tracker. It runs in the browser, works offline, and can 
 - **Plan:** a timeline of the four phases up to the exam, with goals to tick off. Also a "what if" slider (hours a day → finish date), the revision load for the next 8 weeks, and a day-by-day schedule of revisions and new videos.
 - **Tests:** log grand tests, subject tests and PYQ sets (+4/−1). Shows a score trend against the rank <1,500 zone (~620/800, from unofficial 2025 tables). The mistakes diary sorts errors by cause, and a mistake tied to a video pulls that video's next revision forward.
 - **Progress:** pace chart, activity heatmap, passes, and each subject's progress.
+- **Change history:** every change, big or small, with the exact time and a before → after table (like Dukaan Khata). Tap a card to see that video's, test's or mistake's whole story. Open it from Settings or the + menu. Most changes can also be undone straight from the message that appears.
 - **Reminders:** a 7 am "today: at least X, revise these" and a 9 pm "you're Y short" (see below).
 
 Everything is stored on the device (`localStorage`). Export a backup from Settings.

@@ -101,7 +101,7 @@ function load() {
 export let S = load();
 export function replaceState(n) { S = n; save(); }
 export function resetProgress() {
-  const keep = S.settings; S = defaults(); S.progress = {}; S.settings = keep; save();
+  const keep = S.settings, hist = S.history; S = defaults(); S.progress = {}; S.settings = keep; S.history = hist; save();
 }
 export function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: keep going in memory */ } }
 

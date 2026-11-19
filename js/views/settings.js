@@ -1,5 +1,5 @@
 import { S, VIDS, D, DOW, DOW_LONG, SPEEDS, save, today, h, hrs, sp, mergeState, replaceState, resetProgress } from '../core.js';
-import { seg, sectionH, toast, copy } from '../ui.js';
+import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
 
 function reminders() {
@@ -45,6 +45,9 @@ export function view() {
     <div class="field" style="margin-bottom:0"><span class="lbl">Questions in a full test</span>${seg('questions', [[200, '200'], [180, '180']], st.questions)}
       <p class="hint">Reports conflict on whether 2026 had 180 or 200 questions. This only sets the default when you log a test.</p></div>
   </section>
+
+  <section class="card flush"><ul class="list"><li class="item"><span class="rbadge" style="--h:30">🕘</span>
+    <button class="open" data-act="history"><div class="t">Change history</div><div class="s">Every change, with the exact time and what it was before</div></button><span class="faint">${ICON.chev}</span></li></ul></section>
 
   ${sectionH('Reminders')}
   <section class="card">${reminders()}</section>
@@ -104,7 +107,12 @@ export const actions = {
 
 export function onChange(e) {
   const el = e.target;
-  if (el.dataset.set && el.value) { S.settings[el.dataset.set] = el.value; save(); return true; }
+  if (el.dataset.set && el.value) {
+    const next = { ...S.settings, [el.dataset.set]: el.value };
+    if (next.target <= next.start) { toast('The WOR deadline has to be after the start date'); return true; }
+    if (next.exam <= next.target) { toast('The exam has to be after the WOR deadline'); return true; }
+    S.settings[el.dataset.set] = el.value; save(); return true;
+  }
   if (el.id === 'import-file' && el.files[0]) {
     el.files[0].text().then(txt => {
       const data = JSON.parse(txt);
