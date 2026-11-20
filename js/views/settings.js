@@ -225,7 +225,17 @@ export const actions = {
   },
 };
 
+// Text settings save as you type, so closing the app with the keyboard up loses nothing.
+let typeTimer = null, pending = null;
+const flush = () => { clearTimeout(typeTimer); if (pending) { const f = pending; pending = null; f(); } };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
 export function onInput(e) {
+  if (e.target.id === 's-name' || e.target.id === 's-marrow') {
+    const el = e.target, key = el.dataset.set;
+    pending = () => { S.settings[key] = el.value.trim(); save(); };
+    clearTimeout(typeTimer); typeTimer = setTimeout(flush, 300);
+    return true;
+  }
   const k = { 'sy-email': 'email', 'sy-pass': 'pass', 'sy-pass2': 'pass2' }[e.target.id];
   if (!k) return false;
   auth[k] = e.target.value; return true;
