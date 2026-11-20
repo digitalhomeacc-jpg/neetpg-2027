@@ -969,3 +969,19 @@ button.yrow:active:not(:disabled) { transform: none; background: var(--surface-2
 .pyt-lec { width: 100%; text-align: left; background: var(--surface-2); border-radius: 16px; margin-top: 4px; }
 .pyt-lec .t, .pyt-lec .s { display: block; }
 .pyt-editor { margin-top: 10px; }
+/* Anki overview */
+.ak-tiles { margin: 12px 0 4px; grid-template-columns: 1fr 1fr; }
+.split { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--ring-track); margin: 8px 0 8px; }
+.split i { display: block; height: 100%; }
+.split .s-a, .split-key .s-a { background: var(--accent); } .split .s-b, .split-key .s-b { background: #8b7cf6; }
+.split .s-c, .split-key .s-c { background: var(--warn); } .split .s-d, .split-key .s-d { background: var(--bad); }
+.split-key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.split-key b { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: 0; }
+.aktable { padding: 4px 0; }
+.akrow { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(5, minmax(0, 1fr)); gap: 4px; padding: 10px 14px; width: 100%; text-align: left; font-size: 13.5px; align-items: center; }
+.akrow > span:not(:first-child) { text-align: right; }
+.akrow > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.akrow + .akrow { border-top: .5px solid var(--line-2); }
+.akhead { font-size: 11.5px; font-weight: 700; color: var(--muted); }
+button.akrow:active:not(:disabled) { transform: none; background: var(--surface-2); }
+@media (max-width: 400px) { .akrow { font-size: 12px; padding: 9px 10px; grid-template-columns: minmax(0, 1.3fr) repeat(5, minmax(0, 1fr)); } }

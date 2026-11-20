@@ -107,7 +107,7 @@ export function view() {
   <div class="btns" style="margin-top:8px"><button class="btn" data-act="report">📊 Weekly report</button><button class="btn" data-act="share-card">Share card</button></div>
   <button class="card tomorrow" data-act="anki">
     <span class="rbadge" style="--h:200">🗂️</span>
-    <span class="grow"><span class="t">Anki tags</span><span class="s">Which tags and how many cards you've hit, video by video</span></span>
+    <span class="grow"><span class="t">Anki</span><span class="s">Your cards at a glance: tagged, deck-only, frozen, unsure, and by video</span></span>
     <span class="faint">›</span>
   </button>
   <button class="card tomorrow" data-act="times">

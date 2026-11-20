@@ -3,7 +3,7 @@
 // (js/data-anki.js, made by tools/anki_map.py); the mapping is automatic, so some cards sit
 // under a neighbouring video. Fix those in Anki as you meet them.
 import { S, VIDS, SUBJECTS, ANKI, ankiOf, pgTag, usePg, prog, save, ankiQuery, h, pct, plural, fmtDayYear, subjDot, subjHue } from '../core.js';
-import { ICON } from '../ui.js';
+import { ICON, sectionH } from '../ui.js';
 import { chapterCounts } from './pyt.js';
 
 const tagShort = v => pgTag(v).split('::').slice(1).join(' › ').replace(/_/g, ' ');
@@ -63,7 +63,7 @@ export function ankiBlock(v) {
       <div class="seg pick-seg"><button data-act="ak-susp" data-v="1" aria-pressed="${pk.susp}">Only still suspended</button><button data-act="ak-susp" data-v="0" aria-pressed="${!pk.susp}">All cards</button></div>
       <button class="btn primary block" data-act="copy" data-q="${h(on.length ? ankiQuery(on.map(x => x.tag), pk.susp) : '')}" ${on.length ? '' : 'disabled'}>Copy Anki search · ${plural(on.length, 'tag')}</button>
       <p class="hint">${pk.susp ? '"Only still suspended" finds just the cards you haven\'t unsuspended yet, so after you unsuspend them they no longer show up. Use it to get new cards ready.' : '"All cards" finds every card under these tags, suspended or not. Use it to review or browse.'}
-        Paste it in Anki's Browse search.${usePg() ? '' : ' The video and chapter tags appear here once you\'ve added the PG27 tags in Anki (Progress → Anki tags).'}</p>
+        Paste it in Anki's Browse search.${usePg() ? '' : ' The video and chapter tags appear here once you\'ve added the PG27 tags in Anki (Library → Anki).'}</p>
     </div>` : ''}</div>`;
 }
 
@@ -80,6 +80,72 @@ function bulkQuery(vs, suspended) {
   return ankiQuery(parts, suspended);
 }
 
+// ---------- Overview: what's in the collection, and what the app can reach ----------
+const n = x => (x || 0).toLocaleString('en-IN');
+function splitBar(parts, total) {
+  return `<div class="split">${parts.filter(p => p[1]).map(([cls, v]) => `<i class="${cls}" style="width:${(v / total) * 100}%"></i>`).join('')}</div>
+    <div class="split-key">${parts.map(([cls, v, l]) => `<span><b class="${cls}"></b>${l} <span class="num">${n(v)}</span> <span class="faint num">${Math.round((v / total) * 100)}%</span></span>`).join('')}</div>`;
+}
+function overview(hit) {
+  const A = ANKI.summary.all, tagged = usePg();
+  const reach = tagged ? A.placed : A.searchNow;
+  const subs = Object.entries(ANKI.summary.subjects).sort((a, b) => b[1].cards - a[1].cards);
+  const hitCards = hit.reduce((t, x) => t + (x.a.c || 0) + (x.a.qc || 0), 0);
+  return `
+  <section class="card pyt-hero">
+    <div class="row" style="gap:16px">
+      <div class="ak-ring" style="--p:${(reach / A.cards) * 100}"><b class="num">${Math.round((reach / A.cards) * 100)}%</b><span>searchable</span></div>
+      <div class="grow"><div class="t"><b class="num">${n(A.cards)}</b> <b>cards</b> <span class="muted">· ${n(A.notes)} notes</span></div>
+        <div class="small muted">${n(reach)} can be found from their lecture's Anki search ${tagged ? '(PG27 tags added)' : 'today. Add the PG27 tags in Anki to reach all placed cards.'}</div></div>
+    </div>
+  </section>
+
+  <div class="stats ak-tiles">
+    <div class="stat"><div class="v num">${n(A.regular)}</div><div class="k">regular learning cards</div></div>
+    <div class="stat warn"><div class="v num">${n(A.frozen)}</div><div class="k">in "_FROZEN_DON'T USE_" (MCQs)</div></div>
+    <div class="stat"><div class="v num">${n(A.deckOnly)}</div><div class="k">with no tags (deck only)</div></div>
+    <div class="stat bad"><div class="v num">${n(A.unsure)}</div><div class="k">not placed under a lecture</div></div>
+  </div>
+
+  ${sectionH('How your cards are organised')}
+  <section class="card">
+    <div class="lbl">By your own tags and decks</div>
+    ${splitBar([['s-a', A.tagged, 'Have tags'], ['s-c', A.deckOnly, 'Deck only, no tags']], A.cards)}
+    <div class="lbl" style="margin-top:14px">Placed under a WOR lecture by the app</div>
+    ${splitBar([['s-a', A.placed, 'Placed'], ['s-d', A.unsure, 'Too unsure to place']], A.cards)}
+    <div class="lbl" style="margin-top:14px">Found by a lecture's "Copy Anki search"</div>
+    ${splitBar(tagged ? [['s-a', A.placed, 'Yes (PG27 tags)'], ['s-d', A.unsure, 'Unsure: PG27::_Unsure']] : [['s-a', A.searchNow, 'Yes'], ['s-c', A.placed - A.searchNow, 'Not yet: needs PG27 tags'], ['s-d', A.unsure, 'Unsure']], A.cards)}
+    <div class="lbl" style="margin-top:14px">Regular vs frozen MCQ deck</div>
+    ${splitBar([['s-a', A.regular, 'Regular'], ['s-b', A.frozen, 'Frozen (MCQs)']], A.cards)}
+    <p class="hint">Every card counts in the video and subject totals. "Searchable" only says whether a lecture's copy button can find it in Anki. ${tagged ? '' : 'The Anki step (tools/anki_apply_tags.py) gives every placed card its own lecture tag.'}</p>
+  </section>
+
+  ${sectionH('By subject', 'cards')}
+  <section class="card flush"><div class="aktable">
+    <div class="akrow akhead"><span>Subject</span><span>Cards</span><span>Frozen</span><span>No tags</span><span>Unsure</span><span>Search</span></div>
+    ${subs.map(([s, x]) => `<button class="akrow" data-act="ak-subj-go" data-v="${h(s)}"><span>${subjDot(s)}${h(s)}</span><span class="num">${n(x.cards)}</span><span class="num">${n(x.frozen)}</span><span class="num">${n(x.deckOnly)}</span><span class="num${x.unsure ? ' bad-t' : ''}">${n(x.unsure)}</span><span class="num">${Math.round(((tagged ? x.placed : x.searchNow) || 0) / x.cards * 100)}%</span></button>`).join('')}
+  </div></section>
+
+  <section class="card">
+    <div class="row"><div class="grow"><b>Tags hit</b><div class="small muted num">${n(hitCards)} cards under the ${hit.length} lectures you've watched</div></div>
+      <button class="link" data-act="ak-mode" data-v="videos">By video ›</button></div>
+  </section>
+  <button class="card tomorrow" data-act="ankilib"><span class="rbadge" style="--h:45">📚</span>
+    <span class="grow"><span class="t">Anki library</span><span class="s">Every deck and tag, with PYT, regular and frozen sections</span></span><span class="faint">›</span></button>
+  <section class="card">
+    <label class="row" style="gap:12px"><input type="checkbox" data-act="ak-tagged" ${S.settings.ankiTagged ? 'checked' : ''}>
+      <span class="grow"><b>I've added the PG27 tags in Anki</b><br><span class="small muted">Then every search in the app uses one tag per lecture and reaches all placed cards.</span></span></label>
+  </section>`;
+}
+
+export function libraryCard() {
+  if (!ANKI?.summary) return '';
+  const A = ANKI.summary.all, reach = usePg() ? A.placed : A.searchNow;
+  return `<button class="card tomorrow pyt-entry" data-act="anki"><span class="rbadge" style="--h:200">🗂️</span>
+    <span class="grow"><span class="t">Anki · ${n(A.cards)} cards</span>
+      <span class="s">${n(A.frozen)} frozen · ${n(A.deckOnly)} without tags · ${n(A.unsure)} not placed · ${Math.round((reach / A.cards) * 100)}% searchable</span></span><span class="faint">›</span></button>`;
+}
+
 export function view() {
   if (!ANKI) return { title: 'Anki tags', html: `<section class="card empty"><div class="ei">🗂️</div><div class="e1">No Anki data yet</div>Export your collection with tools/anki_export.py, then run tools/anki_map.py.</section>` };
   const subj = S.ui.ankiSubj || '';
@@ -91,10 +157,13 @@ export function view() {
   const frac = cards ? cardsHit / cards : 0;
   const list = subj ? all.filter(x => x.v.subject === subj) : all;
   const groups = SUBJECTS.map(s => list.filter(x => x.v.subject === s)).filter(g => g.length);
+  const mode = S.ui.ankiMode || 'overview';
+  const seg = `<div class="seg pyt-mode">${[['overview', 'Overview'], ['videos', 'By video']].map(([k, l]) => `<button data-act="ak-mode" data-v="${k}" aria-pressed="${mode === k}">${l}</button>`).join('')}</div>`;
+  if (mode === 'overview' && ANKI.summary) return { title: 'Anki', meta: `From your export · ${fmtDayYear(ANKI.made)}`, html: seg + overview(hit) };
   return {
-    title: 'Anki tags',
+    title: 'Anki',
     meta: `Mapped from your export · ${fmtDayYear(ANKI.made)}`,
-    html: `
+    html: `${seg}
   <section class="card anki-sum">
     <div class="row" style="gap:16px">
       <div class="ak-ring" style="--p:${frac * 100}"><b class="num">${Math.round(frac * 100)}%</b><span>of cards</span></div>
@@ -155,6 +224,8 @@ export const actions = {
   'ak-all': () => { const v = VIDS.find(x => x.id === pick.vid); const items = pickItems(v); pick.off = pick.off.size ? new Set() : new Set(items.map(x => x.k)); },
   'ak-susp': el => { pick.susp = el.dataset.v === '1'; },
   anki: () => { S.ui.ankiBack = S.ui.tab === 'anki' ? S.ui.ankiBack : S.ui.tab; S.ui.tab = 'anki'; return 'enter'; },
+  'ak-mode': el => { S.ui.ankiMode = el.dataset.v; },
+  'ak-subj-go': el => { S.ui.ankiMode = 'videos'; S.ui.ankiSubj = el.dataset.v; return 'top'; },
   'ak-subj': el => { S.ui.ankiSubj = el.dataset.v; },
   'ak-tagged': el => { S.settings.ankiTagged = el.checked; save(); },
 };

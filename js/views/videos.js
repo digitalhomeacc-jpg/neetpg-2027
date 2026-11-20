@@ -1,6 +1,7 @@
 import { S, VIDS, SUBJECTS, prog, save, h, hrs, subjDot, subjHue } from '../core.js';
 import { videoItem, sectionH } from '../ui.js';
 import { libraryCard } from './pyt.js';
+import { libraryCard as ankiCard } from './anki.js';
 
 export function results() {
   const ui = S.ui;
@@ -39,7 +40,7 @@ export function view() {
     html: `
   <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
     <input id="q" type="search" placeholder="Search videos, topics, tags" value="${h(S.ui.q)}" autocomplete="off" enterkeyhint="search"></div>
-  ${S.ui.q ? '' : libraryCard()}
+  ${S.ui.q ? '' : libraryCard() + ankiCard()}
   <div id="lib-results">${results()}</div>`,
   };
 }
