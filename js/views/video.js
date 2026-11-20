@@ -5,6 +5,7 @@ import { openMistake } from './tests.js';
 import { pinBox } from './pins.js';
 import { ankiBlock, chaptersList } from './anki.js';
 import { getPack, countFor } from './pyt.js';
+import { lectureCount } from './concepts.js';
 
 let ctx = null; // { id, kind, speed, date }
 
@@ -55,6 +56,7 @@ function body() {
   return `${head}
     ${p.fr ? '' : `<button class="btn primary block" data-act="study-now" data-id="${v.id}" style="margin:0 0 14px">▶ Study now</button>`}
     ${getPack() ? `<button class="btn block pyt-btn" data-act="pyt-video" data-id="${v.id}">📚 PYTs & what was asked · ${countFor(v.id)}</button>` : ''}
+    ${lectureCount(v.id) ? `<button class="btn block pyt-btn" data-act="cm-lecture" data-id="${v.id}">🧠 Concept map of this lecture · ${lectureCount(v.id)}</button>` : ''}
     ${v.chapters?.length ? chaptersList(v) : v.notes ? `<p class="small" style="margin:0 0 4px">${h(v.notes)}</p>` : ''}
     <div class="field"><label for="v-notes">My notes</label>
       <textarea id="v-notes" class="inp" rows="3" placeholder="High-yield points in your own words. They show up in this video's recall check.">${h(S.notes[v.id] || '')}</textarea>

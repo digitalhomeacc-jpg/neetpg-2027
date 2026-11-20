@@ -94,7 +94,7 @@ export function merge(mine, theirs, theirsNewer, base = null) {
     out[k] = base ? u.filter(x => !(baseIds.has(x.id) && (!mi.has(x.id) || !ti.has(x.id)))) : u;
   }
   out.history = byId(older.history, newer.history).sort((x, y) => y.at.localeCompare(x.at)).slice(0, 5000);
-  for (const k of ['plan', 'notes', 'health', 'days', 'goals', 'badges', 'reflect', 'runtimes', 'duty', 'revTime', 'pytLinks']) out[k] = base ? dict3(mine[k], theirs[k], base[k]) : { ...(older[k] || {}), ...(newer[k] || {}) };
+  for (const k of ['plan', 'notes', 'health', 'days', 'goals', 'badges', 'reflect', 'runtimes', 'duty', 'revTime', 'pytLinks', 'mastery']) out[k] = base ? dict3(mine[k], theirs[k], base[k]) : { ...(older[k] || {}), ...(newer[k] || {}) };
   out.settings = base ? dict3(mine.settings, theirs.settings, base.settings) : { ...older.settings, ...newer.settings };
   return out;
 }
