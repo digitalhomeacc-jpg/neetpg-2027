@@ -61,7 +61,7 @@ export function view() {
 
   // Revisions by due date (overdue ones count as today).
   const revBy = {};
-  for (const v of VIDS) { const r = revInfo(v, t); if (r?.k) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ v, r }); } }
+  for (const v of VIDS) { const r = revInfo(v, t); if (r?.k && r.due) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ v, r }); } }
   const revWeeks = Array.from({ length: 8 }, (_, i) => {
     const w = addDays(weekStart(t), i * 7);
     let tot = 0, n = 0;
@@ -142,7 +142,7 @@ function icsFile(days, revBy) {
 export const actions = {
   'ics': () => {
     const m = metrics(), t = m.t, revBy = {};
-    for (const v of VIDS) { const r = revInfo(v, t); if (r?.k) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ v, r }); } }
+    for (const v of VIDS) { const r = revInfo(v, t); if (r?.k && r.due) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ v, r }); } }
     const blob = new Blob([icsFile(forecast(m), revBy)], { type: 'text/calendar' });
     const url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = 'pg27-next-14-days.ics'; document.body.appendChild(a); a.click(); a.remove();

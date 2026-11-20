@@ -92,6 +92,7 @@ function defaults() {
     rehearsals: [], // GT rehearsals: {id, date, checks}
     duty: {},      // date -> hospital duty hours that day
     revTime: {},   // date -> minutes for revision that day (else the default)
+    pytLinks: {},  // PYT key -> {vid, ch} you linked (null = you unlinked it)
     runtimes: {},  // video id -> runtime in minutes you corrected (from Marrow)
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
@@ -106,7 +107,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {}, duty: raw.duty || {}, revTime: raw.revTime || {},
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {}, duty: raw.duty || {}, revTime: raw.revTime || {}, pytLinks: raw.pytLinks || {},
   };
 }
 function load() {

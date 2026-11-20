@@ -4,14 +4,15 @@
 // under a neighbouring video. Fix those in Anki as you meet them.
 import { S, VIDS, SUBJECTS, ANKI, ankiOf, pgTag, usePg, prog, save, ankiQuery, h, pct, plural, fmtDayYear, subjDot, subjHue } from '../core.js';
 import { ICON } from '../ui.js';
+import { chapterCounts } from './pyt.js';
 
 const tagShort = v => pgTag(v).split('::').slice(1).join(' › ').replace(/_/g, ' ');
 const fmtAt = s => s === '?' ? '—' : s;
 
 export function chaptersList(v) {
-  const a = ankiOf(v), ch = a?.ch || [];
+  const a = ankiOf(v), ch = a?.ch || [], pc = chapterCounts(v.id);
   return `<div class="field"><span class="lbl">In this video · ${v.chapters.length} chapters</span>
-    <ol class="chapters">${v.chapters.map(([at, t], i) => `<li><span class="num at">${h(fmtAt(at))}</span><span class="grow">${h(t)}</span>${ch[i] ? `<span class="ch-n num" title="Anki cards placed on this chapter">${ch[i]}</span>` : ''}</li>`).join('')}</ol>
+    <ol class="chapters">${v.chapters.map(([at, t], i) => `<li><span class="num at">${h(fmtAt(at))}</span><span class="grow">${h(t)}${pc[i] ? ` <span class="pyt-badge" title="Previous-year topics linked here">PYT ${pc[i]}</span>` : ''}</span>${ch[i] ? `<span class="ch-n num" title="Anki cards placed on this chapter">${ch[i]}</span>` : ''}</li>`).join('')}</ol>
     ${ch.some(Boolean) ? '<p class="hint">Numbers are Anki cards placed on that chapter. Cards that fit no single chapter count for the whole video only.</p>' : ''}</div>`;
 }
 

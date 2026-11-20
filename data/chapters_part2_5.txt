@@ -58,7 +58,7 @@
 20:28 Antifungal Drugs
 28:04 Antihelminthic Drugs
 30:22 Antiprotozoal Drugs
-42:36 Anti tubercular Drugs
+42:36 Antitubercular Drugs
 54:26 Antileprosy Drugs
 ## wor-pharma-10 Drugs Acting on Endocrine System
 00:10 Antidiabetic Drugs
@@ -518,7 +518,7 @@
 49:10 Optic Atrophy
 52:08 Optic Neuritis, Papilledema & Miscellaneous Conditions
 ## wor-ophtha-05 Squint
-00:57 Extra ocular Muscles (EOM)
+00:57 Extraocular Muscles (EOM)
 17:52 Directions of Deviation
 20:38 Types of Squint
 25:49 Investigations
@@ -945,7 +945,7 @@
 26:23 Polyuria
 30:38 AVP Resistance/Nephrogenic DI
 34:11 Management of DI
-45:59 Anti diuretic Hormone (ADH)
+45:59 Antidiuretic Hormone (ADH)
 56:26 Hyponatremia
 1:03:31 SIADH
 ## wor-medici-06 Adrenal Cortex
@@ -1596,7 +1596,7 @@
 ## wor-obstet-05 Gynaecology Revision: Part 4
 00:20 PCOS
 21:00 Hirsutism
-27:22 Ovarian Hyper stimulation Syndrome
+27:22 Ovarian Hyperstimulation Syndrome
 36:12 Menopause
 42:10 HRT
 47:56 AMH, POI & SERM
@@ -1682,7 +1682,7 @@
 ## wor-obstet-15 Obstetrics Revision: Part 6
 00:27 Abortions
 07:10 Cervical Insufficiency/Incompetent Os
-17:52 Anti phospholipid Antibody (APLA) Syndrome
+17:52 Antiphospholipid Antibody (APLA) Syndrome
 26:46 Diagnostic Flow Chart for Abortions
 30:10 Medical Termination of Pregnancy
 40:40 Ectopic Pregnancy

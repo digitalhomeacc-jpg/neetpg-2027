@@ -15,7 +15,7 @@ export function buildSummary() {
   const revBy = {};
   for (const v of VIDS) {
     const r = revInfo(v, t);
-    if (r?.k) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ title: v.title, k: r.k.toUpperCase(), m: r.budget }); }
+    if (r?.k && r.due) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ title: v.title, k: r.k.toUpperCase(), m: r.budget }); }
   }
   const days = {};
   for (let i = 0; i < 14; i++) {

@@ -123,6 +123,12 @@ export function view() {
   ${sectionH('Appearance')}
   <section class="card">${seg('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], st.theme)}</section>
 
+  ${sectionH('PYT pack')}
+  <section class="card">
+    <p class="small muted" style="margin:0 0 12px">Previous-year topics and questions, linked to your lectures. The pack stays on this device: import it on each device. Your links sync.</p>
+    <div class="btns"><label class="btn" for="pyt-file">Import PYT pack</label><input id="pyt-file" type="file" accept=".json,application/json" hidden><button class="btn" data-act="pyts">Open PYTs</button></div>
+  </section>
+
   ${sectionH('Backup')}
   <section class="card">
     <p class="small muted" style="margin:0 0 12px">Everything is saved on this device only. Export a backup now and then; import it to move to another phone or browser.</p>

@@ -4,6 +4,7 @@ import { openSheet, closeSheet, toast, seg, clockTime } from '../ui.js';
 import { openMistake } from './tests.js';
 import { pinBox } from './pins.js';
 import { ankiBlock, chaptersList } from './anki.js';
+import { getPack, countFor } from './pyt.js';
 
 let ctx = null; // { id, kind, speed, date }
 
@@ -41,7 +42,8 @@ function body() {
       info = 'Not watched yet';
       btn = `<button class="btn ghost" data-act="mark" data-id="${v.id}">Mark</button>`;
     } else if (r?.k === k) {
-      info = `<b class="${r.overdue > 0 ? 'bad-t' : r.overdue === 0 ? 'good-t' : ''}">${r.overdue > 0 ? `${r.overdue}d overdue` : r.overdue === 0 ? 'Due today' : `Due ${fmtDay(r.due)}`}</b> · ${mins(r.budget)} limit${r.pulled ? ' · moved up by a mistake' : ''}`;
+      info = r.waiting ? `<span class="faint">When all of ${h(v.subject)} has had ${k === 'r1' ? 'its first watch' : PASSES[PASSES.indexOf(k) - 1].toUpperCase()}</span> · ${mins(r.budget)} limit`
+        : `<b class="${r.overdue > 0 ? 'bad-t' : r.overdue === 0 ? 'good-t' : ''}">${r.overdue > 0 ? `${r.overdue}d overdue` : r.overdue === 0 ? 'Due today' : `${r.block ? 'Planned' : 'Due'} ${fmtDay(r.due)}`}</b> · ${mins(r.budget)} limit${r.pulled ? ' · moved up by a mistake' : ''}`;
       btn = `<button class="btn ghost" data-act="revise" data-id="${v.id}">Revise</button>`;
     } else {
       info = `${mins(Math.max(2, Math.round(v.mins * REV[k].budget)))} limit`;
@@ -52,6 +54,7 @@ function body() {
   const reason = Object.fromEntries(REASONS);
   return `${head}
     ${p.fr ? '' : `<button class="btn primary block" data-act="study-now" data-id="${v.id}" style="margin:0 0 14px">▶ Study now</button>`}
+    ${getPack() ? `<button class="btn block pyt-btn" data-act="pyt-video" data-id="${v.id}">📚 PYTs & what was asked · ${countFor(v.id)}</button>` : ''}
     ${v.chapters?.length ? chaptersList(v) : v.notes ? `<p class="small" style="margin:0 0 4px">${h(v.notes)}</p>` : ''}
     <div class="field"><label for="v-notes">My notes</label>
       <textarea id="v-notes" class="inp" rows="3" placeholder="High-yield points in your own words. They show up in this video's recall check.">${h(S.notes[v.id] || '')}</textarea>
