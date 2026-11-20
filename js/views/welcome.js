@@ -22,7 +22,7 @@ function screen() {
     return `<div class="wl-body">
       <div class="wl-logo"><svg viewBox="0 0 116 116"><circle cx="58" cy="58" r="44" class="track"/><circle cx="58" cy="58" r="44" class="bar" stroke-dasharray="276" stroke-dashoffset="70"/><path d="M40 60l12 12 26-28" class="tick"/></svg></div>
       <h1>PG 2027</h1>
-      <p class="wl-lead">Your NEET PG plan: every Marrow WOR video, five spaced revisions of each, and a daily target you can actually finish.</p>
+      <p class="wl-lead">Your NEET PG plan: every Marrow WOR video, a first read plus four revisions of each, and a daily target you can actually finish.</p>
       <ul class="wl-feats">
         <li><b>📅</b><span><strong>Plan your days</strong>Pick the lectures for each day against the hours it needs.</span></li>
         <li><b>🧠</b><span><strong>Revise on schedule</strong>Recall first, then revise against a shrinking time limit.</span></li>

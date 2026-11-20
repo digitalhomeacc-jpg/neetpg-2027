@@ -90,8 +90,13 @@ export function view() {
 
   ${sectionH('Daily targets')}
   <section class="card">
-    <div class="field" style="margin-top:0"><span class="lbl">Most revision per day</span>${seg('revcap', [[60, '1h'], [90, '1.5h'], [120, '2h'], [180, '3h'], [0, 'No cap']], st.revCap ?? 120)}
-      <p class="hint">When more revisions than this fall on one day, some R2–R5 move a few days earlier so they don't pile up.</p></div>
+    <div class="field" style="margin-top:0"><span class="lbl">How you revise</span>${seg('revmode', [['block', 'By subject'], ['spaced', 'Per video, spaced']], st.revMode || 'block')}
+      <p class="hint">${(st.revMode || 'block') === 'block' ? 'Whole subjects, round by round: a subject\'s R1 starts once all its videos are watched, then R2, R3, R4. Each day takes as many as fit in that day\'s revision time.' : 'Each video is revised on its own schedule: R1 3 days after watching, then 10, 30 and 60 days.'} First read + 4 revisions either way.</p></div>
+    ${(st.revMode || 'block') === 'block' ? `<div class="field"><span class="lbl">Revision time on study days</span>${seg('revdaily', [[30, '30m'], [60, '1h'], [90, '1.5h'], [120, '2h'], [180, '3h']], st.revDaily ?? 90)}</div>
+    <div class="field"><span class="lbl">Revision time on rest days</span>${seg('revrest', [[0, 'None'], [60, '1h'], [120, '2h'], [180, '3h'], [240, '4h']], st.revRest ?? 0)}
+      <p class="hint">Change any single day from Today or the day planner.</p></div>`
+    : `<div class="field"><span class="lbl">Most revision per day</span>${seg('revcap', [[60, '1h'], [90, '1.5h'], [120, '2h'], [180, '3h'], [0, 'No cap']], st.revCap ?? 120)}
+      <p class="hint">When more revisions than this fall on one day, some R2–R4 move a few days earlier so they don't pile up.</p></div>`}
     <div class="field"><span class="lbl">Get-ready time before Study now</span>${seg('breath', [[0, 'None'], [60, '1 min'], [120, '2 min'], [180, '3 min']], st.breath ?? 120)}</div>
     <div class="field" style="margin-bottom:0"><label for="s-marrow">“Open Marrow” link</label><input id="s-marrow" class="inp" data-set="marrowUrl" value="${h(st.marrowUrl || 'https://www.marrow.com/')}" autocomplete="off">
       <p class="hint">Opens Marrow during the get-ready time. If it opens Safari instead of the app, try the link your Marrow app uses.</p></div>
@@ -169,6 +174,9 @@ export const actions = {
   'questions': el => { S.settings.questions = +el.dataset.v; save(); },
   'minpct': el => { S.settings.minPct = +el.dataset.v; save(); },
   'revcap': el => { S.settings.revCap = +el.dataset.v; save(); },
+  'revmode': el => { S.settings.revMode = el.dataset.v; save(); },
+  'revdaily': el => { S.settings.revDaily = +el.dataset.v; save(); },
+  'revrest': el => { S.settings.revRest = +el.dataset.v; save(); },
   'breath': el => { S.settings.breath = +el.dataset.v; save(); },
   'theme': el => { S.settings.theme = el.dataset.v; save(); },
   'rest': el => {

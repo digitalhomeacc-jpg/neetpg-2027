@@ -24,13 +24,14 @@ import * as ankiV from './views/anki.js';
 import * as ankiLibV from './views/ankilib.js';
 import * as helloV from './views/hello.js';
 import * as dutyV from './views/duty.js';
+import * as revTimeV from './views/revtime.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
 const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV, ankilib: ankiLibV, duty: dutyV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV, dutyV];
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV, dutyV, revTimeV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>

@@ -9,7 +9,8 @@ import { checkinCard } from './health.js';
 import { rehearsalCard, finalCard } from './extras.js';
 import { backlogCard } from './backlog.js';
 import { account } from '../sync.js';
-import { finishDate, studyDays, dayDiff, pace, hoursNeeded } from '../core.js';
+import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode } from '../core.js';
+import { revTimeChips, upNextHtml } from './revtime.js';
 
 // When your recent pace won't make the deadline, offer three concrete fixes.
 function catchUp(m, st) {
@@ -169,7 +170,9 @@ export function view() {
       <button class="open" data-act="revise" data-id="${v.id}"><div class="t">${h(v.title)}</div>
       <div class="s num">${subjDot(v.subject)}${mins(r.budget)} limit · ${r.overdue > 0 ? `<span class="bad-t">${r.overdue}d overdue</span>` : 'due today'}${r.pulled ? ' · from a mistake' : ''}${extra ? ' · if you have time' : ''}</div></button>
       <button class="btn small-btn" data-act="revise" data-id="${v.id}">Start</button></li>`;
-  }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="ei">🎉</div><div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="ei">🧠</div><div class="e1">Nothing to revise yet</div>Each video's R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.`}</section>`}
+  }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="ei">🎉</div><div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="ei">🧠</div><div class="e1">Nothing to revise yet</div>${blockMode() ? 'A subject\'s R1 starts once all its videos are watched. Then it goes round by round, R1 to R4, at the revision time you set each day.' : 'Each video\'s R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.'}`}</section>`}
+  ${revTimeChips(m.t)}
+  ${upNextHtml()}
 
   ${m.remaining > 0 ? `
   ${sectionH(mineToday ? "Today's plan" : bonus ? 'Suggested · bonus' : 'Suggested for today',

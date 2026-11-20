@@ -105,7 +105,7 @@ export function view() {
   ${sectionH('Revision load', 'next 8 weeks')}
   <section class="card">
     <div class="wbars">${revWeeks.map(w => `<div class="wbar"><span class="wb" style="height:${Math.max(3, (w.tot / maxW) * 100)}%" title="${w.n} revisions"></span><span class="wv num">${w.tot ? hrs(w.tot) : ''}</span><span class="wl num">${fmtDay(w.w)}</span></div>`).join('')}</div>
-    <p class="small faint" style="margin:10px 0 0">Every video you watch adds 5 revisions, each shorter than the last. This load grows as you watch more, so keep clearing what's due.</p>
+    <p class="small faint" style="margin:10px 0 0">Every video you watch adds 4 revisions, each shorter than the last. This load grows as you watch more, so keep clearing what's due.</p>
   </section>
 
   ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}

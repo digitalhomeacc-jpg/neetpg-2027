@@ -1,4 +1,4 @@
-// How long each pass really took: first watch and R1–R5, per video and per subject, against the limits.
+// How long each pass really took: first watch and R1–R4, per video and per subject, against the limits.
 import { S, VIDS, SUBJECTS, PASSES, PLABEL, REV, prog, passMins, h, mins, hrs, subjDot, subjHue } from '../core.js';
 import { sectionH, closeSheet } from '../ui.js';
 

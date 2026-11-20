@@ -4,6 +4,7 @@ import {
   h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, subjHue, ankiQuery, vTags,
 } from '../core.js';
 import { openSheet, closeSheet, toast, ICON } from '../ui.js';
+import { revTimeChips } from './revtime.js';
 
 let ctx = null; // { date, subject, q }
 
@@ -42,6 +43,7 @@ function body() {
   const subjects = [...recent, ...SUBJECTS.filter(s => !recent.includes(s))];
   return `<h3>Plan ${label(d) === 'Today' ? 'today' : label(d) === 'Tomorrow' ? 'tomorrow' : fmtDayLong(d)}</h3>
     <div class="sub">${isRest(d) ? 'This is a rest day, but you can still plan something.' : `Pick the lectures you'll watch. Revisions due that day are added on top.`}</div>
+    ${revTimeChips(d)}
     <div class="chips scroll-x">${days.map(x => `<button class="chip" data-act="pl-day" data-v="${x}" aria-pressed="${x === d}">${label(x)}${(S.plan[x] || []).length ? ' •' : ''}</button>`).join('')}</div>
 
     <div class="plan-meter">

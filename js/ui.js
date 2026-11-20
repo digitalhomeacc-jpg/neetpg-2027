@@ -38,7 +38,7 @@ export function miniRing(frac, cls = '') {
 }
 
 export function revPill(p) {
-  let n = 0; for (const k of PASSES.slice(1)) if (p[k]) n++; // R1–R5 done
+  let n = 0; for (const k of PASSES.slice(1)) if (p[k]) n++; // R1–R4 done
   return n ? `<span class="pill good">R${n}</span>` : '';
 }
 

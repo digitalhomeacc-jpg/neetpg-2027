@@ -28,13 +28,13 @@ function topics(v) {
 
 function body() {
   const v = BY[ctx.id], r = revInfo(v);
-  if (!r?.k) return `<h3>${h(v.title)}</h3><p class="muted">All five revisions are done.</p>`;
+  if (!r?.k) return `<h3>${h(v.title)}</h3><p class="muted">All four revisions are done.</p>`;
   const n = PASSES.indexOf(r.k);
   const steps = ['Recall', 'Check', 'Revise'];
   const si = { recall: 0, rate: 1, timer: 2, log: 2 }[ctx.step];
   const head = `<div class="rv-steps">${steps.map((s, i) => `<span class="${i === si ? 'on' : i < si ? 'done' : ''}">${i + 1}. ${s}</span>`).join('')}</div>
     <h3>${h(v.title)}</h3>
-    <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Revision ${n} of 5 · ${mins(r.budget)} limit${r.overdue > 0 ? ` · <span class="bad-t">${r.overdue}d overdue</span>` : ''}</div>`;
+    <div class="sub num">${subjDot(v.subject)}${h(v.subject)} · Revision ${n} of 4 · ${mins(r.budget)} limit${r.overdue > 0 ? ` · <span class="bad-t">${r.overdue}d overdue</span>` : ''}</div>`;
 
   if (ctx.step === 'recall') {
     return `${head}
@@ -113,7 +113,7 @@ export const actions = {
     (S.progress[v.id] ||= {})[r.k] = { d: today(), t: new Date().toISOString(), m: spent, q: ctx.q ?? 3, ...(ctx.breaks && span ? { span, breaks: ctx.breaks } : {}) };
     save(); clearInterval(timer); closeSheet();
     const nx = revInfo(v);
-    toast(nx?.k ? `${r.k.toUpperCase()} done in ${mins(spent)}. ${nx.k.toUpperCase()} due ${fmtDay(nx.due)}` : `All 5 revisions done for ${v.title}`,
+    toast(nx?.k ? `${r.k.toUpperCase()} done in ${mins(spent)}. ${nx.k.toUpperCase()} ${nx.due ? `planned ${fmtDay(nx.due)}` : `when the rest of ${v.subject} has had ${r.k.toUpperCase()}`}` : `All 4 revisions done for ${v.title}`,
       () => { delete S.progress[v.id][r.k]; save(); });
   },
 };

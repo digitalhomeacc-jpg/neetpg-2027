@@ -5,8 +5,9 @@ export const VIDS = D.videos;
 for (const v of VIDS) v.sheetMins = v.mins;
 export const BY = Object.fromEntries(VIDS.map(v => [v.id, v]));
 export const SUBJECTS = D.subjects.filter(s => VIDS.some(v => v.subject === s));
-export const PASSES = ['fr', 'r1', 'r2', 'r3', 'r4', 'r5'];
-export const PLABEL = { fr: 'First watch', r1: 'R1', r2: 'R2', r3: 'R3', r4: 'R4', r5: 'R5' };
+// First read + 4 revisions.
+export const PASSES = ['fr', 'r1', 'r2', 'r3', 'r4'];
+export const PLABEL = { fr: 'First watch', r1: 'R1', r2: 'R2', r3: 'R3', r4: 'R4' };
 // Each revision gets less time than the last, and comes after a longer gap.
 // budget = share of the video's runtime; gap = days after the previous pass.
 export const REV = {
@@ -14,8 +15,10 @@ export const REV = {
   r2: { budget: 0.35, gap: 10 },
   r3: { budget: 0.25, gap: 30 },
   r4: { budget: 0.15, gap: 60 },
-  r5: { budget: 0.10, gap: 90 },
 };
+// "By subject" mode: a subject's next round opens this many days after its previous round
+// finished for every video of that subject (R1 once the whole subject is watched).
+export const BLOCK_GAP = { r1: 2, r2: 14, r3: 30, r4: 45 };
 // How much you recalled before revising stretches or shrinks the next gap.
 export const RATINGS = [[1, 'Blank', 0.5], [2, 'Some', 0.75], [3, 'Most', 1], [4, 'All', 1.4]];
 const RATE_MULT = Object.fromEntries(RATINGS.map(([q, , m]) => [q, m]));
@@ -73,7 +76,7 @@ function defaults() {
   return {
     v: 2,
     onboarded: false,
-    settings: { start: t, target: addDays(t, 75), exam: '2027-08-29', rest: [0], speed: 1.5, theme: 'auto', questions: 200, minPct: 0.5, revCap: 120, breath: 120, marrowUrl: 'https://www.marrow.com/' },
+    settings: { start: t, target: addDays(t, 75), exam: '2027-08-29', rest: [0], speed: 1.5, theme: 'auto', questions: 200, minPct: 0.5, revCap: 120, breath: 120, marrowUrl: 'https://www.marrow.com/', revMode: 'block', revDaily: 90, revRest: 0 },
     progress: {},
     tests: [],     // {id, name, type, date, n, c, w, rank, notes}
     mistakes: [],  // {id, date, subject, video, reason, note, test, done}
@@ -88,6 +91,7 @@ function defaults() {
     pairs: [],     // lookalike concepts: {id, a, b, how, subject, d}
     rehearsals: [], // GT rehearsals: {id, date, checks}
     duty: {},      // date -> hospital duty hours that day
+    revTime: {},   // date -> minutes for revision that day (else the default)
     runtimes: {},  // video id -> runtime in minutes you corrected (from Marrow)
     badges: {},    // achievement id -> date unlocked
     ui: { tab: 'today', subject: null, q: '', whatif: null, phase: null },
@@ -102,7 +106,7 @@ export function mergeState(raw) {
     settings: { ...base.settings, ...raw.settings },
     ui: { ...base.ui, ...raw.ui },
     tests: raw.tests || [], mistakes: raw.mistakes || [], days: raw.days || {}, goals: raw.goals || {},
-    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {}, duty: raw.duty || {},
+    sessions: raw.sessions || [], badges: raw.badges || {}, plan: raw.plan || {}, notes: raw.notes || {}, pins: raw.pins || [], health: raw.health || {}, reflect: raw.reflect || {}, pairs: raw.pairs || [], rehearsals: raw.rehearsals || [], runtimes: raw.runtimes || {}, duty: raw.duty || {}, revTime: raw.revTime || {},
   };
 }
 function load() {
@@ -175,7 +179,7 @@ function rawRev(v, t) {
   return { k, due, pulled, gap, prev: prev.d, tight: tight < 1, budget: Math.max(2, Math.round(v.mins * REV[k].budget * tight)), overdue: dayDiff(due, t) };
 }
 
-// Smoothing: when too many revisions land on one day, move some R2–R5 up to a quarter
+// Smoothing: when too many revisions land on one day, move some R2–R4 up to a quarter
 // of their gap earlier (or at most 2 days later) so no day goes over the revision cap.
 let smoothKey = '', smoothMap = {};
 function smoothing(t) {
@@ -215,7 +219,95 @@ function smoothing(t) {
   }
   return smoothMap;
 }
+/* ---------- revising by subject (blocks) ---------- */
+export const blockMode = () => (S.settings.revMode || 'block') === 'block';
+// Minutes for revision on a day: what you set for that day, else your default.
+export function revTimeOn(d) {
+  if (S.revTime?.[d] != null) return S.revTime[d];
+  return isRest(d) ? (S.settings.revRest ?? 0) : (S.settings.revDaily ?? 90);
+}
+const passBudget = (v, k, d) => Math.max(2, Math.round(v.mins * REV[k].budget * (dayDiff(d, S.settings.exam) <= 42 ? 0.7 : 1)));
+// Lays revisions out day by day. Each subject goes round by round (R1 for all its videos,
+// then later R2 …); a round opens BLOCK_GAP days after the previous round finished for the
+// whole subject. Each day takes items, oldest open round first, until its revision time is
+// used. With `watch` (a queue of videos still to watch and a function for the day's new-video
+// time) it also plays out future first watches — that's the what-if simulation.
+export function runBlocks({ from, until, revCap, watch = null, record = false }) {
+  const st = S.settings, done = {}, last = {};
+  for (const v of VIDS) { const p = prog(v.id); let i = -1; for (const k of PASSES) if (p[k]) i = PASSES.indexOf(k); done[v.id] = i; if (i >= 0) last[v.id] = p[PASSES[i]].d; }
+  const subjVids = Object.fromEntries(SUBJECTS.map(s => [s, VIDS.filter(v => v.subject === s)]));
+  const openAt = {};   // subject -> { r, at } the next round and the date it opens
+  const refresh = s => {
+    const vs = subjVids[s], r = Math.min(...vs.map(v => done[v.id])) + 1;
+    if (r < 1 || r >= PASSES.length) { delete openAt[s]; return; }
+    const prevDone = vs.reduce((a, v) => (last[v.id] && last[v.id] > a ? last[v.id] : a), '');
+    // Videos already revised ahead for this round don't hold it back.
+    openAt[s] = { r, at: addDays(prevDone || from, BLOCK_GAP[PASSES[r]]) };
+  };
+  SUBJECTS.forEach(refresh);
+  const due = {}, passDone = {}, passLeft = {};
+  for (const k of PASSES.slice(1)) { passLeft[k] = VIDS.filter(v => done[v.id] < PASSES.indexOf(k)).length; if (!passLeft[k]) passDone[k] = from; }
+  let finish = VIDS.every(v => done[v.id] >= 0) ? from : null, revTotal = 0, newTotal = 0, revPeak = 0;
+  const queue = watch ? [...watch.queue] : [];
+  for (let d = from, g = 0; d <= until && g < 1500; d = addDays(d, 1), g++) {
+    let cap = revCap(d), used = 0;
+    for (;;) {
+      const open = Object.entries(openAt).filter(([, o]) => o.at <= d).sort((a, b) => a[1].at.localeCompare(b[1].at) || a[1].r - b[1].r || SUBJECTS.indexOf(a[0]) - SUBJECTS.indexOf(b[0]));
+      if (!open.length) break;
+      const [s, o] = open[0], k = PASSES[o.r];
+      const v = subjVids[s].find(x => done[x.id] === o.r - 1);
+      if (!v) { refresh(s); continue; }
+      const b = passBudget(v, k, d);
+      if (cap - used < b && !(cap - used >= b * 0.5)) break;
+      used += b; done[v.id] = o.r; last[v.id] = d;
+      if (record && !due[v.id]) due[v.id] = { k, due: d, budget: b };
+      if (--passLeft[k] === 0) passDone[k] = d;
+      if (subjVids[s].every(x => done[x.id] >= o.r)) refresh(s);
+    }
+    revTotal += used; revPeak = Math.max(revPeak, used);
+    if (watch && !isRest(d)) {
+      let avail = watch.newCap(d, used);
+      while (queue.length && avail > 0) {
+        const v = queue[0], real = v.mins / watch.speed;
+        if (real > avail && avail < real * 0.5) break;
+        queue.shift(); avail -= real; newTotal += real; done[v.id] = 0; last[v.id] = d;
+        if (subjVids[v.subject].every(x => done[x.id] >= 0)) refresh(v.subject);
+        if (!queue.length) finish = d;
+      }
+    }
+    if (!watch && !Object.keys(openAt).length) break;
+  }
+  return { due, passDone, passLeft, finish, revTotal, newTotal, revPeak };
+}
+let blockKey = '', blockPlan = {};
+function blockDue() {
+  const t = today(), key = `${saveVersion}|${t}`;
+  if (key === blockKey) return blockPlan;
+  blockKey = key;
+  // Today's revision time, less what you've already revised today.
+  let revisedToday = 0;
+  for (const v of VIDS) { const p = prog(v.id); for (const k of PASSES.slice(1)) if (p[k]?.d === t) revisedToday += passMins(v, p[k]); }
+  const cap = d => d === t ? Math.max(0, revTimeOn(d) - revisedToday) : revTimeOn(d);
+  blockPlan = runBlocks({ from: t, until: addDays(S.settings.exam, 30), revCap: cap, record: true }).due;
+  return blockPlan;
+}
+function blockRev(v, t) {
+  const p = prog(v.id);
+  if (!p.fr) return null;
+  const k = nextPass(p);
+  if (!k) return { k: null, complete: true };
+  const i = PASSES.indexOf(k), prev = p[PASSES[i - 1]];
+  const plan = blockDue()[v.id];
+  const budget = passBudget(v, k, t);
+  if (!plan || plan.k !== k) {
+    // Its subject hasn't finished the round before (or isn't fully watched yet).
+    return { k, due: null, waiting: true, gap: 0, prev: prev.d, budget, overdue: -999 };
+  }
+  return { k, due: plan.due, gap: dayDiff(prev.d, plan.due), prev: prev.d, budget, overdue: dayDiff(plan.due, t), block: true };
+}
+
 export function revInfo(v, t = today()) {
+  if (blockMode()) return blockRev(v, t);
   const r = rawRev(v, t);
   if (!r?.k) return r;
   const adj = smoothing(today())[v.id];
@@ -223,7 +315,7 @@ export function revInfo(v, t = today()) {
   return r;
 }
 export function revisionsDue(t = today()) {
-  return VIDS.map(v => ({ v, r: revInfo(v, t) })).filter(x => x.r?.k && x.r.due <= t)
+  return VIDS.map(v => ({ v, r: revInfo(v, t) })).filter(x => x.r?.k && x.r.due && x.r.due <= t)
     .sort((a, b) => a.r.due.localeCompare(b.r.due) || PASSES.indexOf(a.r.k) - PASSES.indexOf(b.r.k));
 }
 export function revisionsOn(d) {
@@ -351,10 +443,19 @@ export function forecast(m, realPerDay = m.target) {
 // (S.duty) use that day's free time instead, when it's smaller.
 export function simulate(capMin, { until = S.settings.exam } = {}) {
   const m = metrics(), t = m.t, exam = S.settings.exam, latest = addDays(exam, -5);
+  if (blockMode()) {
+    // Each day: up to that day's revision time for revisions (by subject), the rest of the
+    // day's hours for new videos.
+    const dayCap = d => { let c = isRest(d) ? 0 : Math.min(capMin, freeMinutes(d) ?? capMin); if (d === t) c = Math.max(0, c - m.realToday); return c; };
+    const revCap = d => isRest(d) ? Math.min(revTimeOn(d), freeMinutes(d) ?? revTimeOn(d)) : Math.min(revTimeOn(d), dayCap(d));
+    const queue = forecast(m, Math.max(30, capMin)).flatMap(d => d.items.map(x => x.v));
+    const r = runBlocks({ from: t, until, revCap, watch: { queue, speed: m.planSpeed, newCap: (d, used) => Math.max(0, dayCap(d) - used) } });
+    return { finish: r.finish, revPeak: r.revPeak, revTotal: r.revTotal, newTotal: r.newTotal, revLeft: Object.values(r.passLeft).reduce((a, x) => a + x, 0), lateMax: 0, passDone: r.passDone, passLeft: r.passLeft };
+  }
   const revs = [];
   for (const v of VIDS) { const r = rawRev(v, t); if (r?.k) revs.push({ due: r.due, v, i: PASSES.indexOf(r.k) }); }
   const queue = forecast(m, Math.max(30, capMin)).flatMap(d => d.items.map(x => x.v));
-  // When each round (R1…R5) is done for every video. Rounds already complete count from today.
+  // When each round (R1…R4) is done for every video. Rounds already complete count from today.
   const passDone = {}, passLeft = {};
   for (const k of PASSES.slice(1)) { passLeft[k] = VIDS.filter(v => !prog(v.id)[k]).length; if (!passLeft[k]) passDone[k] = t; }
   let finish = m.remaining <= 0 ? t : null, revPeak = 0, revTotal = 0, newTotal = 0, days = 0, lateMax = 0;

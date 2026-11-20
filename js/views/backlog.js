@@ -133,8 +133,8 @@ export function view() {
     <ul class="conseq">
       ${scen[1] ? `<li><b>One skipped day a week</b> pushes WOR to ${fmtDay(scen[1].finish)}${scen[1].late ? ` and takes ${scen[1].late} days from BTR and PYQs` : ''}. To skip it and still finish on time, the other days need ${mins(scen[1].catchUp)} each.</li>` : ''}
       ${scen[2] ? `<li><b>Two a week</b> means ${scen[2].late ? `finishing ${scen[2].late} days late` : 'finishing just in time'}, leaving ${scen[2].p2days} of ${scen[2].p2orig} days for Phase 2.</li>` : ''}
-      <li><b>Revisions compound.</b> Every video you watch adds five revisions. When days are skipped, they pile up, recall falls, and each revision takes longer: the time you save by skipping comes back with interest.</li>
-      <li><b>The last weeks get squeezed.</b> R4 and R5 are timed to finish before ${fmtDay(st.exam)}. Late starts mean shorter gaps and less time for grand tests, which toppers credit most.</li>
+      <li><b>Revisions compound.</b> Every video you watch adds four revisions. When days are skipped, they pile up, recall falls, and each revision takes longer: the time you save by skipping comes back with interest.</li>
+      <li><b>The last weeks get squeezed.</b> R3 and R4 have to finish before ${fmtDay(st.exam)}. Late starts mean shorter gaps and less time for grand tests, which toppers credit most.</li>
     </ul>
   </section>
 
