@@ -52,27 +52,65 @@ const strip = st => { const o = { ...st }; for (const k of LOCAL) delete o[k]; o
 
 const byId = (a = [], b = []) => { const m = new Map(); for (const x of [...a, ...b]) m.set(x.id, { ...(m.get(x.id) || {}), ...x }); return [...m.values()]; };
 const later = (x, y) => (x?.t || x?.d || '') >= (y?.t || y?.d || '') ? x : y;
-// Merge two versions: union of everything, newer wins where both have the same thing.
-export function merge(mine, theirs, theirsNewer) {
-  const [older, newer] = theirsNewer ? [mine, theirs] : [theirs, mine];
-  const out = { ...older, ...newer };
-  out.progress = {};
-  for (const id of new Set([...Object.keys(mine.progress || {}), ...Object.keys(theirs.progress || {})])) {
-    const a = mine.progress?.[id] || {}, b = theirs.progress?.[id] || {}, p = {};
-    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) p[k] = a[k] && b[k] ? later(a[k], b[k]) : a[k] || b[k];
-    out.progress[id] = p;
+// Merge this device's state with the other device's. With `base` (what both last agreed on,
+// saved after every sync) it's a three-way merge: for each plan day, note, setting, pass…
+// whichever side changed it since the last sync wins, so an edit here is never undone by a
+// stale copy there, and deletions (removing a lecture, undoing a tick) stick.
+// Without a base it falls back to: union of everything, the other side wins on clashes.
+const same = (x, y) => JSON.stringify(x ?? null) === JSON.stringify(y ?? null);
+function pick3(mine, theirs, base) {
+  if (base === undefined) return theirs !== undefined ? theirs : mine;
+  if (!same(mine, base)) return mine;       // changed here: keep it (even if that's a deletion)
+  return theirs;                             // unchanged here: take theirs (their edit or deletion)
+}
+function dict3(mine = {}, theirs = {}, base) {
+  const out = {};
+  for (const k of new Set([...Object.keys(mine), ...Object.keys(theirs), ...Object.keys(base || {})])) {
+    const v = base ? pick3(mine[k], theirs[k], base[k]) : (theirs[k] !== undefined ? theirs[k] : mine[k]);
+    if (v !== undefined && v !== null) out[k] = v;
   }
-  for (const k of ['tests', 'mistakes', 'sessions', 'pins', 'pairs', 'rehearsals']) out[k] = byId(older[k], newer[k]);
-  out.history = byId(older.history, newer.history).sort((x, y) => y.at.localeCompare(x.at)).slice(0, 5000);
-  for (const k of ['plan', 'notes', 'health', 'days', 'goals', 'badges', 'reflect', 'runtimes', 'duty']) out[k] = { ...(older[k] || {}), ...(newer[k] || {}) };
-  out.settings = { ...older.settings, ...newer.settings };
   return out;
 }
+export function merge(mine, theirs, theirsNewer, base = null) {
+  const [older, newer] = theirsNewer ? [mine, theirs] : [theirs, mine];
+  const out = { ...older, ...newer };
+  if (base) for (const k of Object.keys(out)) if (typeof out[k] !== 'object' || out[k] === null) out[k] = pick3(mine[k], theirs[k], base[k]);
+  out.progress = {};
+  for (const id of new Set([...Object.keys(mine.progress || {}), ...Object.keys(theirs.progress || {})])) {
+    const a = mine.progress?.[id] || {}, b = theirs.progress?.[id] || {}, o = base?.progress?.[id], p = {};
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      if (o && (o[k] !== undefined) && (a[k] === undefined || b[k] === undefined)) {
+        // Present at the last sync, now gone on one side: an undo there. Keep it only if the other side changed it.
+        const v = pick3(a[k], b[k], o[k]); if (v) p[k] = v; continue;
+      }
+      p[k] = a[k] && b[k] ? later(a[k], b[k]) : a[k] || b[k];
+    }
+    if (Object.keys(p).length) out.progress[id] = p;
+  }
+  for (const k of ['tests', 'mistakes', 'sessions', 'pins', 'pairs', 'rehearsals']) {
+    const u = byId(older[k], newer[k]);
+    // Deleted on one side since the last sync (and not edited on the other): stays deleted.
+    const baseIds = new Set((base?.[k] || []).map(x => x.id)), mi = new Set((mine[k] || []).map(x => x.id)), ti = new Set((theirs[k] || []).map(x => x.id));
+    out[k] = base ? u.filter(x => !(baseIds.has(x.id) && (!mi.has(x.id) || !ti.has(x.id)))) : u;
+  }
+  out.history = byId(older.history, newer.history).sort((x, y) => y.at.localeCompare(x.at)).slice(0, 5000);
+  for (const k of ['plan', 'notes', 'health', 'days', 'goals', 'badges', 'reflect', 'runtimes', 'duty']) out[k] = base ? dict3(mine[k], theirs[k], base[k]) : { ...(older[k] || {}), ...(newer[k] || {}) };
+  out.settings = base ? dict3(mine.settings, theirs.settings, base.settings) : { ...older.settings, ...newer.settings };
+  return out;
+}
+
+// What both devices last agreed on (the copy this device last pushed or pulled).
+const BASE_KEY = 'pg27.syncbase';
+const readBase = () => { try { return JSON.parse(localStorage.getItem(BASE_KEY)); } catch { return null; } };
+const writeBase = d => { try { localStorage.setItem(BASE_KEY, JSON.stringify(d)); } catch { /* full or private: falls back to two-way */ } };
 
 let pushTimer = null, busy = false, quiet = false;
 export async function syncNow() {
   if (!configured() || !auth || busy) return;
   busy = true; status.state = 'syncing'; status.error = '';
+  const startVersion = saveCount;
+  const startSnap = JSON.parse(JSON.stringify(strip(S))); // the common ancestor if you edit during this sync
+  let pushed = null;
   try {
     const tk = await token();
     let next = S, stamp = null;
@@ -84,7 +122,7 @@ export async function syncNow() {
       if (remote && remote.updated_at !== sync.lastPulled) {
         // Your other device saved since this one last looked.
         const theirs = mergeState({ ...remote.data, ui: S.ui });
-        const merged = sync.dirty ? merge(next, theirs, true) : { ...theirs };
+        const merged = sync.dirty ? merge(next, theirs, true, readBase()) : { ...theirs };
         for (const k of LOCAL) merged[k] = S[k];
         merged.settings = { ...merged.settings, syncUrl: S.settings.syncUrl, syncKey: S.settings.syncKey, theme: S.settings.theme };
         merged.sync = { lastPulled: remote.updated_at, dirty: sync.dirty };
@@ -94,6 +132,7 @@ export async function syncNow() {
       if (!(next.sync?.dirty ?? true) && remote) break;
       const at = new Date().toISOString();
       const body = { user_id: auth.uid, data: strip(next), updated_at: at };
+      pushed = JSON.parse(JSON.stringify(body.data)); // a frozen copy: later edits mustn't change it
       if (!remote) {
         await call('/rest/v1/pg27_state', { method: 'POST', token: tk, headers: { Prefer: 'return=minimal' }, body });
       } else {
@@ -105,7 +144,15 @@ export async function syncNow() {
       break;
     }
     const finalSync = { lastPulled: stamp, dirty: false };
-    if (next !== S) { next.sync = finalSync; quiet = true; replaceState(next); startHistory(); quiet = false; document.dispatchEvent(new Event('pg27:render')); }
+    if (saveCount === startVersion) writeBase(pushed || strip(next));
+    if (saveCount !== startVersion) {
+      // You changed something while this sync was talking to the server. Don't overwrite it:
+      // keep your copy and sync again right away. If the server copy has the other device's
+      // changes, the next round pulls it and merges, with this sync's starting point as the base.
+      writeBase(next !== S ? startSnap : (pushed || strip(next)));
+      S.sync = { lastPulled: next !== S ? null : stamp, dirty: true }; saveQuiet();
+      clearTimeout(pushTimer); pushTimer = setTimeout(syncNow, 300);
+    } else if (next !== S) { next.sync = finalSync; quiet = true; replaceState(next); startHistory(); quiet = false; document.dispatchEvent(new Event('pg27:render')); }
     else { S.sync = finalSync; saveQuiet(); }
     status.state = 'ok'; status.at = new Date();
   } catch (e) {
@@ -119,8 +166,10 @@ export async function syncNow() {
 }
 
 function saveQuiet() { quiet = true; save(); quiet = false; }
+let saveCount = 0;
 onSave(() => {
   if (quiet || !auth || !configured()) return;
+  saveCount++;
   if (!S.sync?.dirty) { S.sync = { ...(S.sync || {}), dirty: true }; saveQuiet(); }
   clearTimeout(pushTimer); pushTimer = setTimeout(syncNow, 2500);
 });
