@@ -11,6 +11,7 @@ import { backlogCard } from './backlog.js';
 import { account } from '../sync.js';
 import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode } from '../core.js';
 import { revTimeChips, upNextHtml } from './revtime.js';
+import { todayCard } from './pyt.js';
 
 // When your recent pace won't make the deadline, offer three concrete fixes.
 function catchUp(m, st) {
@@ -179,6 +180,9 @@ export function view() {
     `<button class="link" data-act="plan-day" data-v="${m.t}">${mineToday ? 'Edit' : 'Choose myself'}</button>`)}
   ${todayPlan.length ? `<ul class="card flush list">${nextHtml}</ul>` : `<section class="card empty small"><div class="e1">${mineToday ? 'Everything planned is watched' : 'Nothing left for today'}</div>${mins(m.realToday)} done today.</section>`}
   ${!mineToday && todayPlan.length ? `<p class="small faint" style="margin:6px 4px 0">These follow your sheet's order. Tap “Choose myself” to pick your own lectures.</p>` : ''}
+  ${todayCard([...new Set([...todayPlan.map(x => x.v.id), ...VIDS.filter(v => prog(v.id).fr?.d === m.t).map(v => v.id)])])}
+  ${(() => { const ids = [...new Set([...todayPlan.map(x => x.v.id), ...VIDS.filter(v => prog(v.id).fr?.d === m.t).map(v => v.id)])];
+    return ids.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(ids.flatMap(id => vTags(BY[id])))], true))}">${ICON.copy}Copy today's Anki cards · still suspended</button>` : ''; })()}
 
   <button class="card tomorrow" data-act="plan-day" data-v="${tmr}">
     <span class="rbadge" style="--h:215">${ICON.cal}</span>
