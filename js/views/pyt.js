@@ -7,6 +7,29 @@ import { openSheet, closeSheet, toast, sectionH } from '../ui.js';
 
 const KEY = 'pg27.pyt';
 let pack = null, loaded = false;
+// One file box for the whole app, outside the screen that gets redrawn. Android leaves the app
+// for its file picker, and the app redraws when it comes back; a box inside the screen would be
+// thrown away before it could hand over the file, and the import would silently do nothing.
+function readText(f) {
+  if (f.text) return f.text();
+  return new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => bad(r.error); r.readAsText(f); });
+}
+function importFile(f) {
+  toast('Importing PYT pack…');
+  readText(f).then(txt => {
+    try {
+      const p = JSON.parse(txt);
+      if (!p || p.kind !== 'pg27-pyt' || !Array.isArray(p.tables) || !Array.isArray(p.recall)) throw new Error('not a PYT pack');
+      p.at = Date.now(); setPack(p);
+      toast(`PYT pack imported: ${p.tables.length} topics, ${p.recall.length} questions`);
+      document.dispatchEvent(new Event('pg27:pack'));
+    } catch (err) { toast(err.message === 'not a PYT pack' ? "That file isn't a PYT pack" : "Couldn't read that file. Pick pg27-pyt-pack.json (if it came on WhatsApp, save it to Files/Downloads first)"); }
+  }, () => toast("Couldn't open that file. Save it to Files/Downloads first, then import it from there"));
+}
+const picker = Object.assign(document.createElement('input'), { type: 'file', id: 'pyt-file', hidden: true });
+picker.addEventListener('change', () => { const f = picker.files?.[0]; if (f) importFile(f); picker.value = ''; });
+document.body.append(picker);
+
 // Store a pack on this device (from an import, or pulled from your synced account).
 export function setPack(p) {
   try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* storage full: keep it in memory for now */ }
@@ -133,7 +156,7 @@ export function view() {
   if (!p) return {
     title: 'PYTs', html: `<section class="card empty"><div class="ei">📚</div><div class="e1">Import your PYT pack</div>
       Topics asked in NEET PG and INICET (2020–2025) by importance, and the questions asked each year, linked to your lectures.
-      <div class="spacer"></div><label class="btn primary" for="pyt-file">Import PYT pack</label><input id="pyt-file" type="file" hidden>
+      <div class="spacer"></div><button class="btn primary" data-act="pyt-import">Import PYT pack</button>
       <p class="hint">If you've signed in to sync, import it on one device and your other devices get it too.</p></section>`,
   };
   const mode = S.ui.pytMode || 'analysis';
@@ -250,6 +273,7 @@ export const actions = {
   'pyt-mode': el => { S.ui.pytMode = el.dataset.v; },
   'pyt-all': () => { S.ui.pytAll = true; },
   'pyt-tab': el => { S.ui.pytTab = el.dataset.v; S.ui.pytAll = false; },
+  'pyt-import': () => picker.click(),
   'pyt-open': el => openTopic(el.dataset.k),
   'pyt-video': el => videoSheet(el.dataset.id),
   'pyt-confirm': el => { const x = find(el.dataset.k); (S.pytLinks ||= {})[x.k] = { vid: x.guess, ch: null }; save(); if (ctx) ctx.edit = false; toast(`Linked to ${BY[x.guess].title}`, () => { delete S.pytLinks[x.k]; save(); }); },
@@ -264,18 +288,5 @@ export const actions = {
 export function onChange(e) {
   if (e.target.id === 'pyt-subj') { ctx.subj = e.target.value; ctx.pick = ''; ctx.ch = null; return 'sheet'; }
   if (e.target.id === 'pyt-vid') { ctx.pick = e.target.value; ctx.ch = null; return 'sheet'; }
-  if (e.target.id === 'pyt-file' && e.target.files[0]) {
-    e.target.files[0].text().then(txt => {
-      try {
-        const p = JSON.parse(txt);
-        if (!p || p.kind !== 'pg27-pyt' || !Array.isArray(p.tables) || !Array.isArray(p.recall)) throw new Error('not a PYT pack');
-        p.at = Date.now(); setPack(p);
-        toast(`PYT pack imported: ${p.tables.length} topics, ${p.recall.length} questions`);
-        document.dispatchEvent(new Event('pg27:pack'));
-      } catch (err) { toast(err.message === 'not a PYT pack' ? "That file isn't a PYT pack" : "Couldn't read that file. Pick pg27-pyt-pack.json (if it came on WhatsApp, save it to Files/Downloads first)"); }
-    }, () => toast("Couldn't open that file. Save it to Files/Downloads first, then import it from there"));
-    e.target.value = '';
-    return true;
-  }
   return false;
 }
