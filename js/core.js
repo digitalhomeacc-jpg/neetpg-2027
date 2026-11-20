@@ -594,13 +594,19 @@ const pgPrefix = v => pgTag(v).replace(/::(\d+)_[^:]*$/, '::$1_*');
 export const usePg = () => !!(ANKI && S.settings.ankiTagged);
 // Without the PG27 tags in Anki, searches use your own tags that hold this video's cards
 // (from the export), falling back to the sheet's draft tags.
-export const vTags = v => usePg() ? [pgPrefix(v)] : (ANKI?.videos[v.id]?.top?.map(t => t[0]) || []).slice(0, 8).concat([]).filter(Boolean).length
-  ? ANKI.videos[v.id].top.slice(0, 8).map(t => t[0]) : v.tags;
+export const vTags = v => {
+  if (usePg()) return [pgPrefix(v)];
+  const a = ANKI?.videos[v.id];
+  const terms = [...(a?.top || []).slice(0, 8).map(t => t[0]), ...(a?.decks || []).map(d => 'deck:' + d[0])];
+  return terms.length ? terms : v.tags;
+};
 export const ankiOf = v => ANKI?.videos[v.id] || null;
 export const ankiQuery = (tags, onlySuspended) => {
   tags = tags.flatMap(t => typeof t === 'string' ? [t] : vTags(t));
   if (!tags.length) return '';
-  const q = tags.map(t => `"tag:${t.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`).join(' OR ');
+  // Entries starting "deck:" search a deck (and its subdecks); everything else is a tag.
+  const esc = t => t.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const q = tags.map(t => t.startsWith('deck:') ? `"deck:${esc(t.slice(5))}"` : `"tag:${esc(t)}"`).join(' OR ');
   return onlySuspended ? `(${q}) is:suspended` : q;
 };
 
