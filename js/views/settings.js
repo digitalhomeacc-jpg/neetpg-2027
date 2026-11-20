@@ -125,8 +125,8 @@ export function view() {
 
   ${sectionH('PYT pack')}
   <section class="card">
-    <p class="small muted" style="margin:0 0 12px">Previous-year topics and questions, linked to your lectures. The pack stays on this device: import it on each device. Your links sync.</p>
-    <div class="btns"><label class="btn" for="pyt-file">Import PYT pack</label><input id="pyt-file" type="file" accept=".json,application/json" hidden><button class="btn" data-act="pyts">Open PYTs</button></div>
+    <p class="small muted" style="margin:0 0 12px">Previous-year topics and questions, linked to your lectures. Signed in? Import it on one device and it syncs to your others, with your links.</p>${sync.status.packError ? `<p class="small bad-t" style="margin:0 0 12px">${h(sync.status.packError)}</p>` : ''}
+    <div class="btns"><label class="btn" for="pyt-file">Import PYT pack</label><input id="pyt-file" type="file" hidden><button class="btn" data-act="pyts">Open PYTs</button></div>
   </section>
 
   ${sectionH('Backup')}

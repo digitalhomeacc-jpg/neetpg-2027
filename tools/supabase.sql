@@ -23,6 +23,8 @@ create policy "own row: update" on public.pg27_state for update using (auth.uid(
 -- (Row-level security above still limits everyone to their own row.)
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on table public.pg27_state to anon, authenticated;
+-- The PYT pack syncs in its own column (added later: safe to run again).
+alter table public.pg27_state add column if not exists pyt jsonb;
 notify pgrst, 'reload schema';
 
 -- Check: this should list "authenticated" with SELECT, INSERT, UPDATE and DELETE.

@@ -7,6 +7,11 @@ import { openSheet, closeSheet, toast, sectionH } from '../ui.js';
 
 const KEY = 'pg27.pyt';
 let pack = null, loaded = false;
+// Store a pack on this device (from an import, or pulled from your synced account).
+export function setPack(p) {
+  try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* storage full: keep it in memory for now */ }
+  pack = p; loaded = true; document.dispatchEvent(new Event('pg27:render'));
+}
 export function getPack() {
   if (!loaded) { loaded = true; try { pack = JSON.parse(localStorage.getItem(KEY)) || null; } catch { pack = null; } }
   return pack;
@@ -128,8 +133,8 @@ export function view() {
   if (!p) return {
     title: 'PYTs', html: `<section class="card empty"><div class="ei">📚</div><div class="e1">Import your PYT pack</div>
       Topics asked in NEET PG and INICET (2020–2025) by importance, and the questions asked each year, linked to your lectures.
-      <div class="spacer"></div><label class="btn primary" for="pyt-file">Import PYT pack</label><input id="pyt-file" type="file" accept=".json,application/json" hidden>
-      <p class="hint">It stays on this device. Import it once on each device you use.</p></section>`,
+      <div class="spacer"></div><label class="btn primary" for="pyt-file">Import PYT pack</label><input id="pyt-file" type="file" hidden>
+      <p class="hint">If you've signed in to sync, import it on one device and your other devices get it too.</p></section>`,
   };
   const mode = S.ui.pytMode || 'analysis';
   const subjects = SUBJECTS.filter(s => p.tables.some(x => x.s === s) || p.recall.some(x => x.s === s));
@@ -264,11 +269,12 @@ export function onChange(e) {
       try {
         const p = JSON.parse(txt);
         if (!p || p.kind !== 'pg27-pyt' || !Array.isArray(p.tables) || !Array.isArray(p.recall)) throw new Error('not a PYT pack');
-        localStorage.setItem(KEY, JSON.stringify(p)); pack = p; loaded = true;
+        p.at = Date.now(); setPack(p);
         toast(`PYT pack imported: ${p.tables.length} topics, ${p.recall.length} questions`);
-        document.dispatchEvent(new Event('pg27:render'));
-      } catch (err) { toast(err.message === 'not a PYT pack' ? "That file isn't a PYT pack" : "Couldn't read that file (it may be too big for this browser)"); }
-    });
+        document.dispatchEvent(new Event('pg27:pack'));
+      } catch (err) { toast(err.message === 'not a PYT pack' ? "That file isn't a PYT pack" : "Couldn't read that file. Pick pg27-pyt-pack.json (if it came on WhatsApp, save it to Files/Downloads first)"); }
+    }, () => toast("Couldn't open that file. Save it to Files/Downloads first, then import it from there"));
+    e.target.value = '';
     return true;
   }
   return false;

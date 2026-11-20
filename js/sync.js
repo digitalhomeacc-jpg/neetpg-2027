@@ -13,7 +13,7 @@ let auth = null;
 try { auth = JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { auth = null; }
 const saveAuth = a => { auth = a; try { a ? localStorage.setItem(AUTH_KEY, JSON.stringify(a)) : localStorage.removeItem(AUTH_KEY); } catch { /* ignore */ } };
 export const account = () => auth ? { email: auth.email } : null;
-export const status = { state: 'idle', at: null, error: '' };
+export const status = { state: 'idle', at: null, error: '', packError: '' };
 
 async function call(path, { method = 'GET', body, token, headers = {} } = {}) {
   const { url, key } = conf();
@@ -155,6 +155,7 @@ export async function syncNow() {
     } else if (next !== S) { next.sync = finalSync; quiet = true; replaceState(next); startHistory(); quiet = false; document.dispatchEvent(new Event('pg27:render')); }
     else { S.sync = finalSync; saveQuiet(); }
     status.state = 'ok'; status.at = new Date();
+    await syncPack(tk);
   } catch (e) {
     status.state = 'error';
     status.error = /failed to fetch|network/i.test(e.message) ? 'No connection. It will sync when you\'re back online.'
@@ -164,6 +165,32 @@ export async function syncNow() {
       : e.message;
   } finally { busy = false; document.dispatchEvent(new Event('pg27:sync')); }
 }
+
+// The PYT pack (about 600 KB) lives in its own column, so the everyday sync stays small.
+// The newer import wins; each device downloads it only when the stamp differs.
+async function syncPack(tk) {
+  try {
+    const pyt = await import('./views/pyt.js');
+    const mine = pyt.getPack();
+    const rows = await call(`/rest/v1/pg27_state?user_id=eq.${auth.uid}&select=pyt_at:pyt->at`, { token: tk });
+    if (!rows?.length) return;
+    const theirs = +rows[0].pyt_at || 0, at = mine ? +mine.at || 0 : 0;
+    if (mine && (!theirs || at > theirs)) {
+      if (!at) { mine.at = Date.now(); pyt.setPack(mine); }
+      await call(`/rest/v1/pg27_state?user_id=eq.${auth.uid}`, { method: 'PATCH', token: tk, headers: { Prefer: 'return=minimal' }, body: { pyt: mine } });
+    } else if (theirs && theirs !== at) {
+      const got = await call(`/rest/v1/pg27_state?user_id=eq.${auth.uid}&select=pyt`, { token: tk });
+      const p = got?.[0]?.pyt;
+      if (p?.kind === 'pg27-pyt') pyt.setPack(p);
+    }
+    status.packError = '';
+  } catch (e) {
+    status.packError = /pyt/i.test(e.message) && /column|schema/i.test(e.message)
+      ? 'To sync the PYT pack, the account owner runs the "pyt" line at the end of tools/supabase.sql once in Supabase (SQL Editor). Until then, import the pack on each device.'
+      : '';
+  }
+}
+document.addEventListener('pg27:pack', () => syncNow());
 
 function saveQuiet() { quiet = true; save(); quiet = false; }
 let saveCount = 0;
