@@ -194,14 +194,14 @@ function alarmSetup(c) {
   return `<div class="hk-sec"><b>Alarms</b>
     <p class="small muted" style="margin:4px 0 8px">Duty shifts and study blocks with an alarm (set them in the Day planner or Duty & free time) become real alarms in the Clock app, so they ring even through silent mode and sleep.</p>
     ${up.length ? `<ul class="list mini-list">${up.slice(0, 6).map(a => `<li class="item"><span class="grow small">⏰ <b>${h(when(a))}</b> · ${h(a.label)}</span></li>`).join('')}</ul>` : '<p class="small faint" style="margin:0 0 8px">No alarms set for the next two days.</p>'}
-    <button class="btn block" data-act="hk-test-alarm" style="margin:4px 0 10px">Send a test alarm (rings in 3 minutes)</button>
+    <div class="btns" style="margin:4px 0 10px"><button class="btn" data-act="hk-test-alarm">Test alarm (in 3 min)</button><button class="btn" data-act="hk-resend">Send upcoming again</button></div>
     <div class="hk-row"><span class="hk-l">Alarms URL</span><code class="hk-v">${h(c.url)}/rest/v1/rpc/pg27_alarms</code><button class="btn small-btn" data-act="hk-copy" data-k="alarms">Copy</button></div>
     <details class="setup"><summary>Add alarms to your Shortcut (5 minutes, once)</summary><ol class="small">
       <li>In the <b>Sleep</b> Shortcut, at the end, add another <b>Get Contents of URL</b>: paste the Alarms URL, <b>›</b> → Method <b>POST</b>, header <code>apikey</code> (same as before), Request Body <b>JSON</b> with one Text field <code>k</code> = your key.</li>
       <li>Add <b>Repeat with Each</b>; it repeats with each item in <i>Contents of URL</i>.</li>
       <li>Inside the repeat: <b>Get Dictionary Value</b> → Value for <code>local</code> in <i>Repeat Item</i>. Then <b>Get Dates from Input</b>.</li>
       <li>Still inside: <b>Get Dictionary Value</b> → Value for <code>label</code> in <i>Repeat Item</i>.</li>
-      <li>Still inside: <b>Create Alarm</b> → time = <i>Dates</i>, label = the second <i>Dictionary Value</i>. Turn off repeating.</li>
+      <li>Still inside: <b>Create Alarm</b>. Tap its time and <b>don't type</b>: tap <b>Select Variable</b> (or the blue <i>Dates</i> chip above the keyboard) so it becomes a blue <i>Dates</i> pill. Do the same for the label with the second <i>Dictionary Value</i>. Turn off repeating.</li>
       <li>Your automations already run this Shortcut a few times a day, so each new alarm reaches the Clock app within hours of you setting it. Run it by hand after planning if the alarm is soon.</li>
     </ol><p class="hint">Each alarm is sent once, so running the Shortcut often never duplicates it. If you change or remove a block after its alarm was created, delete that alarm in the Clock app yourself: Shortcuts can't remove alarms.</p></details>
     <p class="hint">The account owner runs <code>tools/supabase_alarms.sql</code> once in Supabase first.</p></div>`;
@@ -254,6 +254,10 @@ export const actions = {
     S.testAlarm = { at: at.toISOString() }; save();
     await sync.syncNow();
     toast(`Test alarm set for ${at.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}. Now run your Sleep Shortcut, then look in Clock → Alarms.`);
+  },
+  'hk-resend': async () => {
+    try { await sync.syncNow(); await sync.resendAlarms(); toast('Done. The next Shortcut run creates all upcoming alarms again.'); }
+    catch (e) { toast(/alarms_sent/.test(e.message) ? 'Run tools/supabase_alarms.sql in Supabase first' : `Couldn't do that: ${e.message}`); }
   },
   'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'alarms' ? `${c.url}/rest/v1/rpc/pg27_alarms` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
 };

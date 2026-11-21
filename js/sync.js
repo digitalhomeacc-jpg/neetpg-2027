@@ -257,6 +257,12 @@ export async function healthSetup() {
   return (status.healthKey = key);
 }
 export const syncConf = () => conf();
+// Hand out the upcoming alarms again (after a Shortcut run that collected them but failed to
+// create them). Clears the "already sent" list on your own health row.
+export async function resendAlarms() {
+  const tk = await token();
+  await call(`/rest/v1/pg27_health?user_id=eq.${auth.uid}`, { method: 'PATCH', token: tk, headers: { Prefer: 'return=minimal' }, body: { alarms_sent: [] } });
+}
 
 function saveQuiet() { quiet = true; save(); quiet = false; }
 let saveCount = 0;
