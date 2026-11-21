@@ -223,7 +223,7 @@ async function syncHealth(tk) {
   try {
     const rows = await call(`/rest/v1/pg27_health?user_id=eq.${auth.uid}&select=key,data,updated_at`, { token: tk });
     const r = rows?.[0];
-    status.healthKey = r?.key || null; status.healthError = '';
+    status.healthKey = r?.key || null; status.healthError = ''; status.healthErrorText = '';
     if (!r?.data) return;
     let seen = null; try { seen = localStorage.getItem(HEALTH_AT); } catch { /* ignore */ }
     status.health = { at: r.updated_at };
@@ -234,6 +234,7 @@ async function syncHealth(tk) {
     document.dispatchEvent(new Event('pg27:render'));
   } catch (e) {
     status.healthError = missingHealth(e) ? 'needs-sql' : /failed to fetch|load failed|network/i.test(e.message) ? '' : e.message;
+    status.healthErrorText = `${e.status ? `HTTP ${e.status}: ` : ''}${e.message}`;
   }
 }
 // Look again now (Settings open, or "Check again"). Quietly at most every 20 seconds.

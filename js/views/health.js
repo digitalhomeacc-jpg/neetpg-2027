@@ -184,8 +184,9 @@ export function healthSettings() {
   let top;
   if (!acct) top = `<p class="small">Sign in under <b>Sync between devices</b> above first. Health data travels through your account, so it reaches every device without opening Safari.</p>`;
   else if (st.healthError === 'needs-sql') top = `<p class="small warn-t">One-time setup: the account owner runs the "Apple Health without Safari" part at the end of <code>tools/supabase.sql</code> in Supabase (SQL Editor → Run).</p>
+      ${st.healthErrorText ? `<p class="small faint" style="margin:0 0 10px">Supabase says: <code>${h(st.healthErrorText.slice(0, 220))}</code></p>` : ''}
       <button class="btn block" data-act="hk-check">I've run it: check again</button>`;
-  else if (st.healthError) top = `<p class="small warn-t">Couldn't reach the Health table: ${h(st.healthError)}</p><button class="btn block" data-act="hk-check">Check again</button>`;
+  else if (st.healthError) top = `<p class="small warn-t">Couldn't reach the Health table. Supabase says: <code>${h((st.healthErrorText || st.healthError).slice(0, 220))}</code></p><button class="btn block" data-act="hk-check">Check again</button>`;
   else if (!st.healthKey) top = `<p class="small" style="margin:0 0 10px">Your iPhone sends sleep (with exact times) to your account in the background, every time the Shortcut runs. The app picks it up whenever it's open, and every 15 minutes while it stays open.</p>
       <button class="btn primary block" data-act="hk-setup">Turn on automatic Health</button>`;
   else top = `<p class="small" style="margin:0 0 10px">${st.health?.at ? `Last delivery: <b>${new Date(st.health.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</b>.` : 'Waiting for the first delivery from your Shortcut.'} Copy these three into the Shortcut (they're yours: don't share the key).</p>

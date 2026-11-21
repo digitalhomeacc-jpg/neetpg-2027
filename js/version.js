@@ -1,2 +1,2 @@
 // Bumped with every release (together with VERSION in sw.js). Shown at the bottom of Settings.
-export const APP_VERSION = { v: 46, at: '2026-11-21T23:45:00+05:30' };
+export const APP_VERSION = { v: 47, at: '2026-11-21T23:55:00+05:30' };
