@@ -177,12 +177,15 @@ export function sleepCard(m) {
 }
 
 export function healthSettings() {
+  if (sync.account()) sync.healthCheck(false);
   const st = sync.status, acct = sync.account(), c = sync.syncConf();
   const rpc = `${c.url}/rest/v1/rpc/pg27_health_push`;
   const field = (label, val, k) => `<div class="hk-row"><span class="hk-l">${label}</span><code class="hk-v">${h(val)}</code><button class="btn small-btn" data-act="hk-copy" data-k="${k}">Copy</button></div>`;
   let top;
   if (!acct) top = `<p class="small">Sign in under <b>Sync between devices</b> above first. Health data travels through your account, so it reaches every device without opening Safari.</p>`;
-  else if (st.healthError === 'needs-sql') top = `<p class="small warn-t">One-time setup: the account owner runs the "Apple Health without Safari" part at the end of <code>tools/supabase.sql</code> in Supabase (SQL Editor → Run). Then come back here.</p>`;
+  else if (st.healthError === 'needs-sql') top = `<p class="small warn-t">One-time setup: the account owner runs the "Apple Health without Safari" part at the end of <code>tools/supabase.sql</code> in Supabase (SQL Editor → Run).</p>
+      <button class="btn block" data-act="hk-check">I've run it: check again</button>`;
+  else if (st.healthError) top = `<p class="small warn-t">Couldn't reach the Health table: ${h(st.healthError)}</p><button class="btn block" data-act="hk-check">Check again</button>`;
   else if (!st.healthKey) top = `<p class="small" style="margin:0 0 10px">Your iPhone sends sleep (with exact times) to your account in the background, every time the Shortcut runs. The app picks it up whenever it's open, and every 15 minutes while it stays open.</p>
       <button class="btn primary block" data-act="hk-setup">Turn on automatic Health</button>`;
   else top = `<p class="small" style="margin:0 0 10px">${st.health?.at ? `Last delivery: <b>${new Date(st.health.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</b>.` : 'Waiting for the first delivery from your Shortcut.'} Copy these three into the Shortcut (they're yours: don't share the key).</p>
@@ -213,5 +216,6 @@ export const actions = {
     catch (e) { toast(/pg27_health/i.test(e.message) ? 'Run the Apple Health part of tools/supabase.sql in Supabase first' : `Couldn't turn it on: ${e.message}`); }
     document.dispatchEvent(new Event('pg27:render'));
   },
+  'hk-check': async () => { toast('Checking…'); await sync.healthCheck(true); document.dispatchEvent(new Event('pg27:render')); toast(sync.status.healthError === 'needs-sql' ? 'Still not found. Make sure the whole Apple Health block ran without errors, then try again in a minute.' : 'Found it. Tap Turn on automatic Health.'); },
   'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
 };

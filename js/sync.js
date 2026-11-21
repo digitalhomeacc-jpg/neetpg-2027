@@ -233,8 +233,17 @@ async function syncHealth(tk) {
     try { localStorage.setItem(HEALTH_AT, r.updated_at); } catch { /* ignore */ }
     document.dispatchEvent(new Event('pg27:render'));
   } catch (e) {
-    status.healthError = missingHealth(e) ? 'needs-sql' : '';
+    status.healthError = missingHealth(e) ? 'needs-sql' : /failed to fetch|load failed|network/i.test(e.message) ? '' : e.message;
   }
+}
+// Look again now (Settings open, or "Check again"). Quietly at most every 20 seconds.
+let lastHealthCheck = 0, checking = false;
+export async function healthCheck(force) {
+  if (!auth || checking || (!force && Date.now() - lastHealthCheck < 20000)) return;
+  lastHealthCheck = Date.now(); checking = true;
+  const before = JSON.stringify([status.healthError, status.healthKey]);
+  try { await syncHealth(await token()); } catch { /* offline: try later */ } finally { checking = false; }
+  if (!force && JSON.stringify([status.healthError, status.healthKey]) !== before) document.dispatchEvent(new Event('pg27:sync'));
 }
 // Turn on background Health: make (or keep) your private key.
 export async function healthSetup() {
