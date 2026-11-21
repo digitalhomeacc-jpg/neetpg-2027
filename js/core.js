@@ -133,7 +133,7 @@ let saveVersion = 0;
 const saveHooks = [];
 export const onSave = fn => saveHooks.push(fn);
 // Alarms for the Shortcut to create in the Clock app: duty shifts and study blocks that have an
-// alarm set, from now to the end of the day after tomorrow. Worked out on every save, so they
+// alarm set, from now on. Worked out on every save, so they
 // always match the plan; the Shortcut asks for them and gets each one only once.
 const ALARM_KIND = { lectures: 'New lectures', revision: 'Revision', anki: 'Anki', qbank: 'Q-bank', pyq: 'PYQs', notes: 'Notes', other: 'Study' };
 function alarmsOut() {
@@ -144,8 +144,11 @@ function alarmsOut() {
     if (!(at.getTime() > now)) return;
     out.push({ id: `${d}|${tag}|${from}|${before}`, at: at.toISOString(), local: `${iso(at)} ${pad(at.getHours())}:${pad(at.getMinutes())}`, label });
   };
-  for (let i = 0; i <= 2; i++) {
-    const d = addDays(t, i), x = S.duty?.[d];
+  // Everything planned ahead (up to 60 days) is listed, so alarms reach the Shortcut on time even
+  // if the app isn't opened for days; the Shortcut only creates the ones due in the next 36 hours.
+  const days = new Set([...Object.keys(S.duty || {}), ...Object.keys(S.blocks || {})].filter(d => d >= addDays(t, -1) && d <= addDays(t, 60)));
+  for (const d of days) {
+    const x = S.duty?.[d];
     if (x && typeof x === 'object' && x.alarm != null) push(d, x.from, x.alarm, `Duty ${x.from}–${x.to}${x.alarm ? ` (in ${x.alarm} min)` : ''}`, 'duty');
     for (const b of S.blocks?.[d] || []) if (b.alarm != null) push(d, b.from, b.alarm, `Study: ${ALARM_KIND[b.kind] || 'Study'} at ${b.from}${b.alarm ? ` (in ${b.alarm} min)` : ''}`, `b${b.id}`);
   }
