@@ -132,9 +132,29 @@ export function resetProgress() {
 let saveVersion = 0;
 const saveHooks = [];
 export const onSave = fn => saveHooks.push(fn);
+// Alarms for the Shortcut to create in the Clock app: duty shifts and study blocks that have an
+// alarm set, from now to the end of the day after tomorrow. Worked out on every save, so they
+// always match the plan; the Shortcut asks for them and gets each one only once.
+const ALARM_KIND = { lectures: 'New lectures', revision: 'Revision', anki: 'Anki', qbank: 'Q-bank', pyq: 'PYQs', notes: 'Notes', other: 'Study' };
+function alarmsOut() {
+  const out = [], now = Date.now(), t = today();
+  const push = (d, from, before, label, tag) => {
+    const [hh, mm] = String(from).split(':').map(Number);
+    const at = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10), hh, mm - before);
+    if (!(at.getTime() > now)) return;
+    out.push({ id: `${d}|${tag}|${from}|${before}`, at: at.toISOString(), local: `${iso(at)} ${pad(at.getHours())}:${pad(at.getMinutes())}`, label });
+  };
+  for (let i = 0; i <= 2; i++) {
+    const d = addDays(t, i), x = S.duty?.[d];
+    if (x && typeof x === 'object' && x.alarm != null) push(d, x.from, x.alarm, `Duty ${x.from}–${x.to}${x.alarm ? ` (in ${x.alarm} min)` : ''}`, 'duty');
+    for (const b of S.blocks?.[d] || []) if (b.alarm != null) push(d, b.from, b.alarm, `Study: ${ALARM_KIND[b.kind] || 'Study'} at ${b.from}${b.alarm ? ` (in ${b.alarm} min)` : ''}`, `b${b.id}`);
+  }
+  return out.sort((a, b) => a.at.localeCompare(b.at));
+}
 export function save() {
   saveVersion++;
   applyRuntimes();
+  try { S.alarmsOut = alarmsOut(); } catch { /* never block saving */ }
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: keep going in memory */ }
   for (const fn of saveHooks) { try { fn(); } catch { /* a hook must never break saving */ } }
 }

@@ -65,7 +65,7 @@ function timeline(d) {
     ...du.segs.map(([a, b]) => `<div class="dv-band duty" style="top:${y(a)}px;height:${H(b, a)}px"><span>Duty ${clock(a)}–${clock(b % 1440)}</span></div>`),
   ].join('');
   const planned = blocksOn(d).map(b => { const a = toMin(b.from), e = Math.min(1440, a + b.mins);
-    return `<button class="dv-blk plan k-${b.kind}" data-act="dv-edit" data-id="${b.id}" style="top:${y(a)}px;height:${H(e, a)}px"><b>${h(KIND[b.kind] || 'Study')}</b><span>${clock(a)}–${clock(e)}${b.ids?.length ? ` · ${b.ids.length} lecture${b.ids.length > 1 ? 's' : ''}` : ''}${b.note ? ` · ${h(b.note)}` : ''}</span></button>`; }).join('');
+    return `<button class="dv-blk plan k-${b.kind}" data-act="dv-edit" data-id="${b.id}" style="top:${y(a)}px;height:${H(e, a)}px"><b>${b.alarm != null ? '⏰ ' : ''}${h(KIND[b.kind] || 'Study')}</b><span>${clock(a)}–${clock(e)}${b.ids?.length ? ` · ${b.ids.length} lecture${b.ids.length > 1 ? 's' : ''}` : ''}${b.note ? ` · ${h(b.note)}` : ''}</span></button>`; }).join('');
   const done = act.timed.map(x => `<button class="dv-blk done k-${x.kind}${x.live ? ' live' : ''}" ${x.live ? '' : x.sid ? `data-act="pd-edit-s" data-id="${x.sid}"` : `data-act="pd-edit-p" data-id="${x.id}" data-k="${x.k}"`} style="top:${y(x.a)}px;height:${H(x.b, x.a)}px"><b>${h(x.label)}</b><span>${x.sub} · ${clock(x.a)}–${clock(x.b)}</span></button>`).join('');
   const nowLine = d === t ? (() => { const n = new Date(); const m = n.getHours() * 60 + n.getMinutes(); return `<div class="dv-now" id="dv-now" style="top:${y(m)}px"><span>${clock(m)}</span></div>`; })() : '';
   const hours = Array.from({ length: 25 }, (_, i) => `<div class="dv-hr" style="top:${y(i * 60)}px"><span>${i === 24 ? '' : clock(i * 60)}</span></div>`).join('');
@@ -100,6 +100,7 @@ export function view() {
     ${past && plannedMin && studied < plannedMin * 0.8 ? `<p class="hint">You planned ${mins(plannedMin)} and studied ${mins(studied)}. Look at where the planned blocks sit against what happened: that's usually the lesson.</p>` : ''}
   </section>
   <div class="btns"><button class="btn primary" data-act="dv-new" data-at="${d === t ? Math.ceil((new Date().getHours() * 60 + new Date().getMinutes()) / 30) * 30 : 19 * 60}">+ Plan a block</button>
+    <button class="btn" data-act="du-edit" data-d="${d}">${S.duty[d] != null ? '🏥 Duty' : '+ Duty'}</button>
     <button class="btn" data-act="dv-copy" data-d="${d}">Copy ${fmtDow(addDays(d, -1)).split(' ')[0]}’s</button></div>
   <section class="card flush dv-card">${tl.html}</section>
   ${act.untimed.length ? `${sectionH('Logged without a time', 'counted, not drawn')}<ul class="card flush list">${act.untimed.map(x => `<li class="item"><span class="rbadge" style="--h:${x.kind === 'lectures' ? 160 : 260}">${x.k ? (x.k === 'fr' ? 'FW' : x.k.toUpperCase()) : 'F'}</span><div class="grow"><div class="t">${h(x.label)}</div><div class="s">${x.sub} · ${mins(x.m)}</div></div><button class="btn small-btn" ${x.sid ? `data-act="pd-edit-s" data-id="${x.sid}"` : `data-act="pd-edit-p" data-id="${x.id}" data-k="${x.k}"`}>Edit</button></li>`).join('')}</ul>` : ''}
@@ -116,6 +117,8 @@ function sheet() {
     <div class="field"><label for="dv-from">Starts</label><input id="dv-from" type="time" value="${b.from}"></div>
     <div class="field"><span class="lbl">How long</span><div class="chips">${[30, 45, 60, 90, 120, 180, 240].map(n => `<button class="chip" data-act="dv-len" data-v="${n}" aria-pressed="${b.mins === n}">${mins(n)}</button>`).join('')}</div></div>
     ${b.kind === 'lectures' && lectures.length ? `<div class="field"><span class="lbl">Lectures planned for this day</span><div class="chips">${lectures.map(id => `<button class="chip" data-act="dv-lec" data-v="${id}" aria-pressed="${(b.ids || []).includes(id)}">${h(BY[id].title)}</button>`).join('')}</div></div>` : ''}
+    <div class="field"><span class="lbl">Alarm</span><div class="chips">${[[null, 'None'], [0, 'At start'], [5, '5 min before'], [10, '10 min'], [15, '15 min'], [30, '30 min']].map(([v, l]) => `<button class="chip" data-act="dv-alarm" data-v="${v ?? ''}" aria-pressed="${(b.alarm ?? null) === v}">${l}</button>`).join('')}</div>
+      ${b.alarm != null ? '<p class="hint">Your Shortcut puts it in the Clock app as a real alarm (Settings → Apple Health & alarms).</p>' : ''}</div>
     <div class="field"><label for="dv-note">Note (optional)</label><input id="dv-note" class="inp" value="${h(b.note || '')}" placeholder="e.g. library, after duty"></div>
     ${ed.err ? `<p class="small bad-t" style="margin:0 0 10px">${h(ed.err)}</p>` : ''}
     <button class="btn primary block" data-act="dv-save">${ed.isNew ? 'Add to the day' : 'Save'}</button>
@@ -131,6 +134,7 @@ export const actions = {
   'dv-edit': el => { const d = S.ui.dvDay || today(); ed = { d, b: JSON.parse(JSON.stringify(blocksOn(d).find(x => x.id === el.dataset.id))) }; openSheet(sheet); },
   'dv-kind': el => { keep(); ed.b.kind = el.dataset.v; },
   'dv-len': el => { keep(); ed.b.mins = +el.dataset.v; },
+  'dv-alarm': el => { keep(); if (el.dataset.v === '') delete ed.b.alarm; else ed.b.alarm = +el.dataset.v; },
   'dv-lec': el => { keep(); const s = new Set(ed.b.ids || []); s.has(el.dataset.v) ? s.delete(el.dataset.v) : s.add(el.dataset.v); ed.b.ids = [...s]; },
   'dv-save': () => {
     keep();

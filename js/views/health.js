@@ -188,6 +188,23 @@ export function sleepCard(m) {
     <p class="small" style="margin:10px 0 0">${insight}</p></section>`;
 }
 
+function alarmSetup(c) {
+  const up = (S.alarmsOut || []).filter(a => Date.parse(a.at) > Date.now());
+  const when = a => new Date(a.at).toLocaleString('en-IN', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  return `<div class="hk-sec"><b>Alarms</b>
+    <p class="small muted" style="margin:4px 0 8px">Duty shifts and study blocks with an alarm (set them in the Day planner or Duty & free time) become real alarms in the Clock app, so they ring even through silent mode and sleep.</p>
+    ${up.length ? `<ul class="list mini-list">${up.slice(0, 6).map(a => `<li class="item"><span class="grow small">⏰ <b>${h(when(a))}</b> · ${h(a.label)}</span></li>`).join('')}</ul>` : '<p class="small faint" style="margin:0 0 8px">No alarms set for the next two days.</p>'}
+    <div class="hk-row"><span class="hk-l">Alarms URL</span><code class="hk-v">${h(c.url)}/rest/v1/rpc/pg27_alarms</code><button class="btn small-btn" data-act="hk-copy" data-k="alarms">Copy</button></div>
+    <details class="setup"><summary>Add alarms to your Shortcut (5 minutes, once)</summary><ol class="small">
+      <li>In the <b>Sleep</b> Shortcut, at the end, add another <b>Get Contents of URL</b>: paste the Alarms URL, <b>›</b> → Method <b>POST</b>, header <code>apikey</code> (same as before), Request Body <b>JSON</b> with one Text field <code>k</code> = your key.</li>
+      <li>Add <b>Repeat with Each</b>; it repeats with each item in <i>Contents of URL</i>.</li>
+      <li>Inside the repeat: <b>Get Dictionary Value</b> → Value for <code>local</code> in <i>Repeat Item</i>. Then <b>Get Dates from Input</b>.</li>
+      <li>Still inside: <b>Get Dictionary Value</b> → Value for <code>label</code> in <i>Repeat Item</i>.</li>
+      <li>Still inside: <b>Create Alarm</b> → time = <i>Dates</i>, label = the second <i>Dictionary Value</i>. Turn off repeating.</li>
+      <li>Your automations already run this Shortcut a few times a day, so each new alarm reaches the Clock app within hours of you setting it. Run it by hand after planning if the alarm is soon.</li>
+    </ol><p class="hint">Each alarm is sent once, so running the Shortcut often never duplicates it. If you change or remove a block after its alarm was created, delete that alarm in the Clock app yourself: Shortcuts can't remove alarms.</p></details>
+    <p class="hint">The account owner runs <code>tools/supabase_alarms.sql</code> once in Supabase first.</p></div>`;
+}
 export function healthSettings() {
   if (sync.account()) sync.healthCheck(false);
   const st = sync.status, acct = sync.account(), c = sync.syncConf();
@@ -213,6 +230,7 @@ export function healthSettings() {
       </ol><p class="hint">iPhone only lets Shortcuts read Health while the phone is unlocked, so a run while it's locked may send nothing; the next one catches up (each run covers the last 2 days).</p></details>`;
   return `<p class="small muted" style="margin:0 0 10px">Apps on the web can't read Apple Health directly, but an iPhone Shortcut can send your sleep (from your Watch or iPhone) to PG 2027.</p>
     ${top}
+    ${st.healthKey ? alarmSetup(c) : ''}
     <details class="setup"><summary>Other way: open a link in Safari</summary><ol class="small">
       <li>Same as above up to <i>Set Variable Ends</i>, then a <b>Text</b> action with this link, putting <i>Starts</i> and <i>Ends</i> in place of the capitals, then <b>Open URLs</b>. It opens Safari each time, and Safari needs you signed in to Sync too.</li></ol>
       <div class="tag" style="margin:8px 0">${h(location.origin + location.pathname)}?health=1&amp;ss=STARTS&amp;se=ENDS</div>
@@ -230,5 +248,5 @@ export const actions = {
     document.dispatchEvent(new Event('pg27:render'));
   },
   'hk-check': async () => { toast('Checking…'); await sync.healthCheck(true); document.dispatchEvent(new Event('pg27:render')); toast(sync.status.healthError === 'needs-sql' ? 'Still not found. Make sure the whole Apple Health block ran without errors, then try again in a minute.' : 'Found it. Tap Turn on automatic Health.'); },
-  'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
+  'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'alarms' ? `${c.url}/rest/v1/rpc/pg27_alarms` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
 };

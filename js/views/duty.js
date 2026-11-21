@@ -50,13 +50,17 @@ function pastRow(L, t) {
 }
 
 const PRESETS = [['09:00', '21:00', '9a–9p'], ['08:00', '16:00', '8a–4p'], ['08:00', '14:00', '8a–2p'], ['21:00', '09:00', 'Night 9p–9a'], ['08:00', '08:00', '24h from 8a']];
-let edit = null;
+let edit = null, dAlarm = null;
+const ALARMS = [[null, 'None'], [0, 'At start'], [30, '30 min before'], [60, '1 hour'], [90, '1½ hours'], [120, '2 hours']];
 function editSheet() {
   const x = S.duty[edit], tm = x && typeof x === 'object' ? x : { from: '09:00', to: '21:00' };
   return `<h3>Duty · ${fmtDow(edit)}</h3><div class="sub">Times place it on the day's timeline; a shift that ends before it starts runs into the next day.</div>
+    <div class="field"><span class="lbl">Wake-up alarm before the shift</span><div class="chips">${ALARMS.map(([v, l]) => `<button class="chip" data-act="du-alarm" data-v="${v ?? ''}" aria-pressed="${dAlarm === v}">${l}</button>`).join('')}</div>
+      <p class="hint">A real alarm in the Clock app, so it rings even if you're asleep at an odd hour. Your Shortcut creates it (Settings → Apple Health & alarms). Applies to shifts with times.</p></div>
     <div class="field"><span class="lbl">Quick</span><div class="chips">${PRESETS.map(([a, b, l]) => `<button class="chip" data-act="du-preset" data-a="${a}" data-b="${b}" aria-pressed="${x?.from === a && x?.to === b}">${l}</button>`).join('')}</div></div>
     <div class="field"><span class="lbl">Shift times</span><div class="row" style="gap:8px"><input id="du-from" class="inp num" type="time" value="${tm.from}"><span class="muted">to</span><input id="du-to" class="inp num" type="time" value="${tm.to}"></div>
       <button class="btn primary block" data-act="du-save" style="margin-top:10px">Save times</button></div>
+
     <div class="field"><span class="lbl">Or just hours</span><div class="chips">${CHIPS.map(c => `<button class="chip" data-act="du-hours" data-v="${c}" aria-pressed="${x === c}">${c === 0 ? 'Off' : `${c}h`}</button>`).join('')}<button class="chip" data-act="duty-other" data-d="${edit}">Other…</button></div></div>
     ${x != null ? '<button class="btn ghost danger block" data-act="du-clear">Clear this day</button>' : ''}`;
 }
@@ -130,12 +134,13 @@ export const actions = {
   'duty-open': () => { closeSheet(); S.ui.dutyBack = S.ui.tab === 'duty' ? S.ui.dutyBack : S.ui.tab; S.ui.tab = 'duty'; return 'enter'; },
   duty: el => { S.duty[el.dataset.d] = +el.dataset.v; save(); },
   'duty-clear': el => { delete S.duty[el.dataset.d]; save(); },
-  'du-edit': el => { edit = el.dataset.d; openSheet(editSheet); },
-  'du-preset': el => { S.duty[edit] = { from: el.dataset.a, to: el.dataset.b }; save(); closeSheet(); toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])}`); },
+  'du-edit': el => { edit = el.dataset.d; const x = S.duty[edit]; dAlarm = x && typeof x === 'object' ? (x.alarm ?? null) : (S.settings.dutyAlarm ?? 60); openSheet(editSheet); },
+  'du-alarm': el => { dAlarm = el.dataset.v === '' ? null : +el.dataset.v; const x = S.duty[edit]; if (x && typeof x === 'object') { if (dAlarm == null) delete x.alarm; else x.alarm = dAlarm; save(); } S.settings.dutyAlarm = dAlarm; },
+  'du-preset': el => { S.duty[edit] = { from: el.dataset.a, to: el.dataset.b, ...(dAlarm != null ? { alarm: dAlarm } : {}) }; save(); closeSheet(); toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])}`); },
   'du-save': () => {
     const a = document.getElementById('du-from').value, b = document.getElementById('du-to').value;
     if (!/^\d{2}:\d{2}$/.test(a) || !/^\d{2}:\d{2}$/.test(b)) { toast('Pick both times'); return; }
-    S.duty[edit] = { from: a, to: b }; save(); closeSheet(); toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])} · ${mins(shiftMins(S.duty[edit]))}`);
+    S.duty[edit] = { from: a, to: b, ...(dAlarm != null ? { alarm: dAlarm } : {}) }; save(); closeSheet(); toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])} · ${mins(shiftMins(S.duty[edit]))}`);
   },
   'du-hours': el => { S.duty[edit] = +el.dataset.v; save(); closeSheet(); },
   'du-clear': () => { delete S.duty[edit]; save(); closeSheet(); },

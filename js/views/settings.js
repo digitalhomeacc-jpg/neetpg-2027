@@ -111,7 +111,7 @@ export function view() {
   ${sectionH('Sync between devices')}
   <section class="card">${syncCard()}</section>
 
-  ${sectionH('Apple Health')}
+  ${sectionH('Apple Health & alarms')}
   <section class="card">${healthSettings()}</section>
 
   ${sectionH('Share with friends')}
