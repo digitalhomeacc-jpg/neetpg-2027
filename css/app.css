@@ -1020,3 +1020,21 @@ button.akrow:active:not(:disabled) { transform: none; background: var(--surface-
 .cm-lec.done { border-color: hsl(150 55% 45%); }
 .cm-lec.done span::before { content: '✓ '; color: hsl(150 55% 50%); }
 .cm-lec:active { transform: scale(.97); }
+
+/* ---------- where the day went ---------- */
+.tl { position: relative; height: 18px; border-radius: 6px; background: var(--surface-3); overflow: hidden; margin: 10px 0 3px; }
+.tl i { position: absolute; top: 0; bottom: 0; }
+.tl-sleep, .k-sleep::before { background: hsl(250 60% 62%); }
+.tl-duty, .k-duty::before { background: hsl(355 65% 58%); }
+.tl-study, .k-study::before { background: hsl(150 55% 45%); }
+.tl-other { background: transparent; }
+.k-other::before { background: var(--surface-3); border: 1px solid var(--line-2); }
+.tl-now { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); border-radius: 1px; }
+.tl-ticks { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--faint, #888); }
+.tl-key { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; margin-top: 6px; }
+.tl-key > span::before { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: 0; }
+.tl-key > span:has(.faint)::before { display: none; }
+.duty-row.past .row .chip { flex: none; }
+.hk-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.hk-l { font-size: 12.5px; color: var(--muted); width: 74px; flex: none; }
+.hk-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; background: var(--surface-2); padding: 7px 9px; border-radius: 8px; }

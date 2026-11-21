@@ -1,8 +1,9 @@
 // Sleep and energy: a one-tap morning check-in, plus Apple Health data sent in by an
 // iPhone Shortcut (web apps can't read Health directly, but a Shortcut can open this app
 // with last night's numbers in the link).
-import { S, save, today, addDays, parse, MON, h, mins, hrs } from '../core.js';
+import { S, save, today, addDays, parse, iso, MON, h, mins, hrs } from '../core.js';
 import { toast, copy, sectionH } from '../ui.js';
+import * as sync from '../sync.js';
 
 const ENERGY = [[1, '😴'], [2, '😕'], [3, '🙂'], [4, '😊'], [5, '⚡']];
 const num = (v, lo, hi) => { const n = parseFloat(v); return Number.isFinite(n) && n >= lo && n <= hi ? Math.round(n * 10) / 10 : null; };
@@ -26,10 +27,92 @@ export function sleepHours(raw) {
   return v;
 }
 
-// ?health=1&date=2026-11-19&sleep=7.4&hrv=55&rhr=58&steps=9000
+// A date as Shortcuts writes it: ISO 8601 ("2026-11-21T03:12:00+05:30", from Format Date →
+// ISO 8601) or the phone's medium style ("21 Nov 2026 at 3:12 AM", "Nov 21, 2026 at 3:12 AM").
+const MONS = 'jan feb mar apr may jun jul aug sep oct nov dec'.split(' ');
+export function parseWhen(s) {
+  s = String(s || '').trim().replace(/\u202f|\u00a0/g, ' ');
+  if (!s) return NaN;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return Date.parse(s);
+  let m = s.match(/(\d{1,2})[\s\-/.]+([A-Za-z]{3})[A-Za-z]*\.?[\s\-/.,]+(\d{4}),?\s+(?:at\s+)?(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([ap]\.?m\.?)?/i)
+    || s.match(/([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2}),?\s+(\d{4}),?\s+(?:at\s+)?(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([ap]\.?m\.?)?/i);
+  if (!m) return NaN;
+  let [, a, b, y, hh, mm, ap] = m;
+  const [day, mon] = /\d/.test(a) ? [+a, b] : [+b, a];
+  const mi = MONS.indexOf(mon.slice(0, 3).toLowerCase()); if (mi < 0) return NaN;
+  hh = +hh; if (ap) { const pm = /p/i.test(ap); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
+  return new Date(+y, mi, day, hh, +mm).getTime();
+}
+// Every date in a list, however it was joined (commas, new lines, spaces).
+const ISO_RE = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?/g;
+const MED_RE = /\d{1,2}[\s\-/.]+[A-Za-z]{3}[A-Za-z]*\.?[\s\-/.,]+\d{4},?\s+(?:at\s+)?\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s*(?:[ap]\.?m\.?)?|[A-Za-z]{3}[A-Za-z]*\.?\s+\d{1,2},?\s+\d{4},?\s+(?:at\s+)?\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s*(?:[ap]\.?m\.?)?/gi;
+export function listWhens(s) {
+  s = String(s || '').replace(/\u202f|\u00a0/g, ' ');
+  const iso = s.match(ISO_RE);
+  const parts = iso && iso.length ? iso : (s.match(MED_RE) || []);
+  const bits = s.split(/[,;\n]+/).map(x => x.trim()).filter(Boolean);
+  return { list: parts.map(parseWhen), found: parts.length, guess: bits[0] || '' };
+}
+const dayStart = d => parse(d).getTime();
+// Sleep segments (start and end lists, in the same order) → minutes asleep in each calendar day.
+// Overlapping samples (Watch and iPhone both tracking, or stages) are merged first, so nothing
+// counts twice. The run time `at` decides which days are complete: the day it ran and the day
+// before (the Shortcut looks back 2 days, so both are fully covered).
+export function sleepByDay(ss, se, at) {
+  const A = listWhens(ss), B = listWhens(se);
+  if (!A.found && !B.found) return { err: String(ss || se || '').trim() ? `couldn't read the times (it sent "${String(ss || se).slice(0, 30)}")` : 'no sleep samples were sent (check the filters, or nothing was recorded)' };
+  if (A.found !== B.found) return { err: `${A.found} start times but ${B.found} end times` };
+  const iv = [];
+  for (let i = 0; i < A.found; i++) {
+    const a = A.list[i], b = Math.min(B.list[i], at);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return { err: 'couldn\'t read one of the times' };
+    if (b > a) iv.push([a, b]);
+  }
+  iv.sort((x, y) => x[0] - y[0]);
+  const merged = [];
+  for (const x of iv) { const l = merged[merged.length - 1]; if (l && x[0] <= l[1]) l[1] = Math.max(l[1], x[1]); else merged.push([...x]); }
+  const runDay = iso(new Date(at)), days = {};
+  for (const d of [addDays(runDay, -1), runDay]) {
+    const d0 = dayStart(d), d1 = dayStart(addDays(d, 1));
+    const segs = merged.map(([a, b]) => [Math.max(a, d0), Math.min(b, d1)]).filter(([a, b]) => b > a).map(([a, b]) => [Math.round((a - d0) / 60000), Math.round((b - d0) / 60000)]);
+    days[d] = { mins: segs.reduce((t, [a, b]) => t + b - a, 0), segs, upTo: d === runDay ? Math.round((at - d0) / 60000) : 1440 };
+  }
+  return { days };
+}
+// Apply what a Shortcut sent: sleep segments (ss/se) or a single total (sleep), plus HRV and RHR.
+// Returns a line for the toast.
+export function applyHealth(q, at = Date.now()) {
+  const g = k => q[k] ?? null;
+  const hrv = num(g('hrv'), 1, 300), rhr = num(g('rhr'), 20, 200), runDay = iso(new Date(at));
+  if (g('ss') != null || g('se') != null) {
+    const r = sleepByDay(g('ss'), g('se'), at);
+    const rec = { ...(S.health[runDay] || {}), src: 'health' };
+    if (r.err) { rec.err = r.err; rec.raw = String(g('ss') || '').slice(0, 40); }
+    else {
+      for (const [d, x] of Object.entries(r.days)) {
+        const o = d === runDay ? rec : { ...(S.health[d] || {}), src: 'health' };
+        o.sleep = Math.round(x.mins / 6) / 10; o.slp = x.segs; o.upTo = x.upTo; delete o.err; delete o.raw;
+        if (d !== runDay) S.health[d] = o;
+      }
+    }
+    if (hrv != null) rec.hrv = hrv;
+    if (rhr != null) rec.rhr = rhr;
+    S.health[runDay] = rec; save();
+    return r.err ? `Health data arrived, but sleep couldn't be read: ${r.err}` : `Sleep updated: ${S.health[addDays(runDay, -1)].sleep}h yesterday, ${rec.sleep}h today so far`;
+  }
+  return null;
+}
+
+// ?health=1&ss=…&se=…&hrv=55&rhr=58   (sleep segments)
+// ?health=1&date=2026-11-19&sleep=7.4&hrv=55&rhr=58&steps=9000   (a total)
 export function ingestFromUrl() {
   const q = new URLSearchParams(location.search);
   if (!q.has('health')) return false;
+  if (q.has('ss') || q.has('se')) {
+    const msg = applyHealth(Object.fromEntries(q));
+    history.replaceState(null, '', location.pathname);
+    toast(msg); return true;
+  }
   const d = /^\d{4}-\d{2}-\d{2}$/.test(q.get('date') || '') ? q.get('date') : today();
   const rec = { ...(S.health[d] || {}), src: 'health' };
   const raw = q.get('sleep');
@@ -94,24 +177,41 @@ export function sleepCard(m) {
 }
 
 export function healthSettings() {
-  const base = location.origin + location.pathname;
-  return `<p class="small muted" style="margin:0 0 10px">Apps on the web can't read Apple Health, but an iPhone Shortcut can send last night's sleep (and HRV and resting heart rate from your Watch) to PG 2027 every morning.</p>
-    <details class="setup"><summary>Set up the Shortcut (5 minutes)</summary><ol class="small">
-      <li><b>First, sign in to Sync in Safari too.</b> A Shortcut can only open links in Safari, which keeps its data apart from the home-screen app, so sync is what carries the numbers across. Open this site in Safari once, skip through the welcome, and sign in under Settings → Sync.</li>
-      <li>Shortcuts app → <b>+</b> → Add Action → <b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last 1 day</i>. If you wear an Apple Watch to bed, tap <i>Add Filter</i> twice and set both to <i>Value</i> · <i>is not</i>, then <b>type</b> <code>In Bed</code> in one and <code>Awake</code> in the other (the box is a text field; there's no list). That keeps only real sleep. Without a Watch, skip these filters: your iPhone only records time in bed, and filtering it out leaves nothing.</li>
-      <li>Add <b>Get Details of Health Samples</b> → <i>Duration</i>. Then <b>Calculate Statistics</b> → <i>Sum</i> of <i>Duration</i> (not of the samples themselves: a sleep sample is a label like "Core" or "REM", which is why summing the samples gives "couldn't convert from Text to Number"). Rename that result to <code>Sleep</code>.</li>
-      <li>If you wear an Apple Watch and your iPhone also tracks sleep, the two can overlap and double the total. If the number looks about twice too high, add a third filter: <i>Source is</i> your Watch.</li>
-      <li>Optional: another <b>Find Health Samples</b> for <i>Heart Rate Variability</i> (last 1 day) → <b>Calculate Statistics</b> → <i>Average</i>, renamed <code>HRV</code>. Same for <i>Resting Heart Rate</i> → <code>RHR</code>.</li>
-      <li>Add <b>Text</b> with the link below, putting the <i>Sleep</i>, <i>HRV</i> and <i>RHR</i> results in place of the words in capitals. Then add <b>Open URLs</b>.</li>
-      <li>Automation tab → <b>+</b> → <i>Time of Day</i> (e.g. 7:00 am) → <i>Run Immediately</i> → this Shortcut.</li></ol>
-      <div class="tag" style="margin:8px 0">${h(base)}?health=1&amp;sleep=SLEEP&amp;hrv=HRV&amp;rhr=RHR</div>
-      <button class="btn block" data-act="health-copy">Copy the link</button>
-      <p class="hint">Sleep can come as hours, minutes, seconds or "7 hr 24 min"; the app works out which. If it can't read it, it says so when the link opens.</p></details>`;
+  const st = sync.status, acct = sync.account(), c = sync.syncConf();
+  const rpc = `${c.url}/rest/v1/rpc/pg27_health_push`;
+  const field = (label, val, k) => `<div class="hk-row"><span class="hk-l">${label}</span><code class="hk-v">${h(val)}</code><button class="btn small-btn" data-act="hk-copy" data-k="${k}">Copy</button></div>`;
+  let top;
+  if (!acct) top = `<p class="small">Sign in under <b>Sync between devices</b> above first. Health data travels through your account, so it reaches every device without opening Safari.</p>`;
+  else if (st.healthError === 'needs-sql') top = `<p class="small warn-t">One-time setup: the account owner runs the "Apple Health without Safari" part at the end of <code>tools/supabase.sql</code> in Supabase (SQL Editor → Run). Then come back here.</p>`;
+  else if (!st.healthKey) top = `<p class="small" style="margin:0 0 10px">Your iPhone sends sleep (with exact times) to your account in the background, every time the Shortcut runs. The app picks it up whenever it's open, and every 15 minutes while it stays open.</p>
+      <button class="btn primary block" data-act="hk-setup">Turn on automatic Health</button>`;
+  else top = `<p class="small" style="margin:0 0 10px">${st.health?.at ? `Last delivery: <b>${new Date(st.health.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</b>.` : 'Waiting for the first delivery from your Shortcut.'} Copy these three into the Shortcut (they're yours: don't share the key).</p>
+      ${field('URL', rpc, 'url')}${field('apikey', c.key, 'apikey')}${field('k (your key)', st.healthKey, 'key')}
+      <details class="setup" open><summary>Build the Shortcut (10 minutes, once)</summary><ol class="small">
+        <li><b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last</i> <b>2 days</b>. With an Apple Watch, add two filters <i>Value · is not</i> and type <code>In Bed</code> and <code>Awake</code>. Without a Watch, no filters.</li>
+        <li><b>Get Details of Health Samples</b> → <i>Start Date</i>. Then <b>Format Date</b> → Date Format <i>ISO 8601</i>, <i>Include Time</i> on. Then <b>Combine Text</b> → <i>Custom</i>, type a comma <code>,</code>. Then <b>Set Variable</b> named <code>Starts</code>.</li>
+        <li>Again for the end: <b>Get Details of Health Samples</b> → <i>End Date</i> (tap its input and pick the <i>Health Samples</i> from step 1), <b>Format Date</b> ISO 8601, <b>Combine Text</b> with <code>,</code>, <b>Set Variable</b> <code>Ends</code>.</li>
+        <li><b>Get Contents of URL</b>: paste the URL above. Tap <i>Show More</i>: Method <b>POST</b>. Headers: add <code>apikey</code> with the apikey above. Request Body <b>JSON</b>: add Text fields <code>k</code> (your key), <code>ss</code> = variable <i>Starts</i>, <code>se</code> = variable <i>Ends</i>.</li>
+        <li>Run it once. Add <b>Show Result</b> at the end the first time: it should say <code>ok</code>. Then open this app: Today shows the sleep, and Duty & free time shows when you slept.</li>
+        <li><b>Run it by itself</b>: Automation tab → <b>+</b> → <i>Time of Day</i> → pick a time → <i>Daily</i> → <b>Run Immediately</b> (turn off <i>Notify When Run</i>) → this Shortcut. Make a few: e.g. 9 am, 1 pm, 6 pm, 11 pm. Also <b>+</b> → <i>Sleep</i> → <i>Waking Up</i> for right after you wake.</li>
+      </ol><p class="hint">iPhone only lets Shortcuts read Health while the phone is unlocked, so a run while it's locked may send nothing; the next one catches up (each run covers the last 2 days).</p></details>`;
+  return `<p class="small muted" style="margin:0 0 10px">Apps on the web can't read Apple Health directly, but an iPhone Shortcut can send your sleep (from your Watch or iPhone) to PG 2027.</p>
+    ${top}
+    <details class="setup"><summary>Other way: open a link in Safari</summary><ol class="small">
+      <li>Same as above up to <i>Set Variable Ends</i>, then a <b>Text</b> action with this link, putting <i>Starts</i> and <i>Ends</i> in place of the capitals, then <b>Open URLs</b>. It opens Safari each time, and Safari needs you signed in to Sync too.</li></ol>
+      <div class="tag" style="margin:8px 0">${h(location.origin + location.pathname)}?health=1&amp;ss=STARTS&amp;se=ENDS</div>
+      <button class="btn block" data-act="health-copy">Copy the link</button></details>`;
 }
 
 export const actions = {
   'ci-sleep': el => { const t = today(); const x = { ...(S.health[t] || {}), sleep: +el.dataset.v, src: S.health[t]?.src || 'checkin' }; delete x.err; S.health[t] = x; save(); },
   'ci-energy': el => { const t = today(); S.health[t] = { ...(S.health[t] || {}), energy: +el.dataset.v }; S.ui.editCheckin = false; save(); },
   'ci-edit': () => { S.ui.editCheckin = true; },
-  'health-copy': () => copy(`${location.origin + location.pathname}?health=1&sleep=SLEEP&hrv=HRV&rhr=RHR`, 'Link copied. Paste it into the Shortcut’s Text action.'),
+  'health-copy': () => copy(`${location.origin + location.pathname}?health=1&ss=STARTS&se=ENDS`, 'Link copied. Paste it into the Shortcut’s Text action.'),
+  'hk-setup': async () => {
+    try { await sync.healthSetup(); toast('Automatic Health is on. Copy the three values into your Shortcut.'); }
+    catch (e) { toast(/pg27_health/i.test(e.message) ? 'Run the Apple Health part of tools/supabase.sql in Supabase first' : `Couldn't turn it on: ${e.message}`); }
+    document.dispatchEvent(new Event('pg27:render'));
+  },
+  'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
 };

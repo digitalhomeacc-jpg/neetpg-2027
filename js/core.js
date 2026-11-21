@@ -527,12 +527,27 @@ export function pace() {
   if (active < 3 || !perDay || m.remaining <= 0) return null;
   return { perDay, finish: simulate(perDay).finish };
 }
-// Free study time on a day from the duty hours you entered (null if none entered).
+// Duty for a day is either hours (8) or clock times ({ from: '21:00', to: '09:00' }); a shift
+// that ends at or before it starts runs past midnight into the next day.
+const hhmm = s => { const [a, b] = String(s).split(':').map(Number); return a * 60 + (b || 0); };
+export const shiftMins = x => { let n = hhmm(x.to) - hhmm(x.from); if (n <= 0) n += 1440; return n; };
+export const dutyHours = x => x == null ? null : typeof x === 'number' ? x : shiftMins(x) / 60;
+// Duty inside calendar day d: its own shift (up to midnight) plus the part of yesterday's
+// shift that ran past midnight. segs are minutes from 00:00; hours-only duty has no place.
+export function dutyOn(d) {
+  const segs = []; let untimed = 0, entered = false;
+  const x = S.duty?.[d], y = S.duty?.[addDays(d, -1)];
+  if (typeof x === 'number') { untimed = x * 60; entered = true; }
+  else if (x) { const a = hhmm(x.from); segs.push([a, Math.min(1440, a + shiftMins(x))]); entered = true; }
+  if (y && typeof y === 'object') { const end = hhmm(y.from) + shiftMins(y) - 1440; if (end > 0) { segs.push([0, end]); entered = true; } }
+  return { segs, untimed, mins: untimed + segs.reduce((a, [p, q]) => a + q - p, 0), entered };
+}
+// Free study time on a day from the duty you entered (null if none entered).
 export function freeMinutes(d) {
-  const x = S.duty?.[d];
-  if (x == null) return null;
+  const du = dutyOn(d);
+  if (!du.entered) return null;
   const st = S.settings;
-  return Math.max(0, ((st.awake ?? 16) - x - (st.essentials ?? 3)) * 60);
+  return Math.max(0, (st.awake ?? 16) * 60 - du.mins - (st.essentials ?? 3) * 60);
 }
 
 export const plannedOn = id => Object.keys(S.plan).filter(d => d >= today() && S.plan[d].includes(id)).sort()[0] || null;

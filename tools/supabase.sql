@@ -29,3 +29,36 @@ notify pgrst, 'reload schema';
 
 -- Check: this should list "authenticated" with SELECT, INSERT, UPDATE and DELETE.
 select grantee, privilege_type from information_schema.role_table_grants where table_name = 'pg27_state' order by 1, 2;
+
+-- Apple Health without Safari (added later: safe to run again). An iPhone Shortcut sends sleep
+-- times here in the background with a private key that only lets it write your own health row;
+-- the app reads them the next time it's open.
+create table if not exists public.pg27_health (
+  user_id    uuid primary key references auth.users (id) on delete cascade,
+  key        text unique not null,
+  data       jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.pg27_health enable row level security;
+drop policy if exists "own health: read"   on public.pg27_health;
+drop policy if exists "own health: insert" on public.pg27_health;
+drop policy if exists "own health: update" on public.pg27_health;
+create policy "own health: read"   on public.pg27_health for select using (auth.uid() = user_id);
+create policy "own health: insert" on public.pg27_health for insert with check (auth.uid() = user_id);
+create policy "own health: update" on public.pg27_health for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+grant select, insert, update on table public.pg27_health to authenticated;
+
+create or replace function public.pg27_health_push(k text, ss text default null, se text default null, hrv text default null, rhr text default null)
+returns text language plpgsql security definer set search_path = public as $$
+begin
+  if k is null or length(k) < 20 then return 'missing key'; end if;
+  if length(coalesce(ss, '')) + length(coalesce(se, '')) > 60000 then return 'too much data'; end if;
+  update public.pg27_health
+     set data = jsonb_build_object('ss', ss, 'se', se, 'hrv', hrv, 'rhr', rhr, 'at', now()), updated_at = now()
+   where key = k;
+  if not found then return 'unknown key: copy it again from the app'; end if;
+  return 'ok';
+end $$;
+revoke all on function public.pg27_health_push(text, text, text, text, text) from public;
+grant execute on function public.pg27_health_push(text, text, text, text, text) to anon, authenticated;
+notify pgrst, 'reload schema';

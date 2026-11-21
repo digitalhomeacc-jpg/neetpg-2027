@@ -13,7 +13,7 @@ let auth = null;
 try { auth = JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { auth = null; }
 const saveAuth = a => { auth = a; try { a ? localStorage.setItem(AUTH_KEY, JSON.stringify(a)) : localStorage.removeItem(AUTH_KEY); } catch { /* ignore */ } };
 export const account = () => auth ? { email: auth.email } : null;
-export const status = { state: 'idle', at: null, error: '', packError: '' };
+export const status = { state: 'idle', at: null, error: '', packError: '', health: null, healthError: '' };
 
 async function call(path, { method = 'GET', body, token, headers = {} } = {}) {
   const { url, key } = conf();
@@ -178,6 +178,7 @@ export async function syncNow() {
     else { S.sync = finalSync; saveQuiet(); }
     status.state = 'ok'; status.at = new Date();
     await syncPack(tk);
+    await syncHealth(tk);
   } catch (e) {
     status.state = 'error';
     status.error = /failed to fetch|load failed|network|HTTP 5|HTTP 0|timed out/i.test(e.message) || e.status === 0 || e.status >= 500 ? 'No connection. It will sync when you\'re back online.'
@@ -214,6 +215,39 @@ async function syncPack(tk) {
 }
 document.addEventListener('pg27:pack', () => syncNow());
 
+// Apple Health sent in the background: the Shortcut writes sleep times to your own health row
+// (with a private key); the app applies them here, once per new delivery.
+const HEALTH_AT = 'pg27.healthAt';
+const missingHealth = e => /pg27_health/i.test(e.message) && /exist|schema|relation|could not find/i.test(e.message);
+async function syncHealth(tk) {
+  try {
+    const rows = await call(`/rest/v1/pg27_health?user_id=eq.${auth.uid}&select=key,data,updated_at`, { token: tk });
+    const r = rows?.[0];
+    status.healthKey = r?.key || null; status.healthError = '';
+    if (!r?.data) return;
+    let seen = null; try { seen = localStorage.getItem(HEALTH_AT); } catch { /* ignore */ }
+    status.health = { at: r.updated_at };
+    if (seen === r.updated_at) return;
+    const { applyHealth } = await import('./views/health.js');
+    status.health.msg = applyHealth(r.data, Date.parse(r.data.at || r.updated_at));
+    try { localStorage.setItem(HEALTH_AT, r.updated_at); } catch { /* ignore */ }
+    document.dispatchEvent(new Event('pg27:render'));
+  } catch (e) {
+    status.healthError = missingHealth(e) ? 'needs-sql' : '';
+  }
+}
+// Turn on background Health: make (or keep) your private key.
+export async function healthSetup() {
+  const tk = await token();
+  const rows = await call(`/rest/v1/pg27_health?user_id=eq.${auth.uid}&select=key`, { token: tk });
+  if (rows?.[0]?.key) return (status.healthKey = rows[0].key);
+  const b = crypto.getRandomValues(new Uint8Array(18));
+  const key = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  await call('/rest/v1/pg27_health', { method: 'POST', token: tk, headers: { Prefer: 'return=minimal' }, body: { user_id: auth.uid, key } });
+  return (status.healthKey = key);
+}
+export const syncConf = () => conf();
+
 function saveQuiet() { quiet = true; save(); quiet = false; }
 let saveCount = 0;
 onSave(() => {
@@ -227,5 +261,7 @@ export function startSync() {
   // Listen even when signed out, so signing in later still syncs on every reopen.
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
   window.addEventListener('online', syncNow);
+  // While the app stays open, look for new Health data (and other devices' edits) every 15 minutes.
+  setInterval(() => { if (document.visibilityState === 'visible') syncNow(); }, 15 * 60 * 1000);
   syncNow();
 }
