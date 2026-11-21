@@ -7,15 +7,32 @@ import { toast, copy, sectionH } from '../ui.js';
 const ENERGY = [[1, '😴'], [2, '😕'], [3, '🙂'], [4, '😊'], [5, '⚡']];
 const num = (v, lo, hi) => { const n = parseFloat(v); return Number.isFinite(n) && n >= lo && n <= hi ? Math.round(n * 10) / 10 : null; };
 
+// Shortcuts sends a sleep total in many shapes depending on the phone's language and iOS version:
+// "7.4", "7,4", "444", "26,640", "26640 s", "444 min", "7.4 hr", "7 hr 24 min", "7:24". Hours out.
+export function sleepHours(raw) {
+  if (raw == null) return null;
+  let s = String(raw).toLowerCase().trim().replace(/\u00a0/g, ' ');
+  if (!s) return null;
+  const hm = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (hm) return +hm[1] + +hm[2] / 60;
+  const hPart = s.match(/([\d.,]+)\s*(h|hr|hrs|hour|hours)\b/), mPart = s.match(/([\d.,]+)\s*(m|min|mins|minute|minutes)\b/);
+  const n = x => { x = x.replace(/,(\d{3})(?!\d)/g, '$1'); return parseFloat(x.replace(',', '.')); };
+  if (hPart || mPart) return (hPart ? n(hPart[1]) : 0) + (mPart ? n(mPart[1]) / 60 : 0);
+  const v = n(s);
+  if (!Number.isFinite(v)) return null;
+  if (/\b(s|sec|secs|second|seconds)\b/.test(s)) return v / 3600;
+  if (v > 1000) return v / 3600;   // seconds
+  if (v > 24) return v / 60;       // minutes
+  return v;
+}
+
 // ?health=1&date=2026-11-19&sleep=7.4&hrv=55&rhr=58&steps=9000
 export function ingestFromUrl() {
   const q = new URLSearchParams(location.search);
   if (!q.has('health')) return false;
   const d = /^\d{4}-\d{2}-\d{2}$/.test(q.get('date') || '') ? q.get('date') : today();
   const rec = { ...(S.health[d] || {}), src: 'health' };
-  // Shortcuts sometimes send sleep in minutes or seconds; convert anything that can't be hours.
-  let sl = parseFloat(q.get('sleep'));
-  if (sl > 1000) sl /= 3600; else if (sl > 24) sl /= 60;
+  const raw = q.get('sleep'), sl = sleepHours(raw);
   const sleep = num(sl, 0, 16), hrv = num(q.get('hrv'), 1, 300), rhr = num(q.get('rhr'), 20, 200), steps = num(q.get('steps'), 0, 100000);
   if (sleep != null) rec.sleep = sleep;
   if (hrv != null) rec.hrv = hrv;
@@ -23,7 +40,8 @@ export function ingestFromUrl() {
   if (steps != null) rec.steps = Math.round(steps);
   S.health[d] = rec; save();
   history.replaceState(null, '', location.pathname); // tidy the link so a refresh doesn't re-import
-  toast(`Health data saved${sleep != null ? `: ${sleep}h sleep` : ''}${hrv != null ? `, HRV ${hrv}` : ''}`);
+  toast(raw && sleep == null ? `Couldn't read the sleep value "${String(raw).slice(0, 24)}". Check the Shortcut steps in Settings → Apple Health.`
+    : `Health data saved${sleep != null ? `: ${sleep}h sleep` : ''}${hrv != null ? `, HRV ${hrv}` : ''}`);
   return true;
 }
 
@@ -71,13 +89,15 @@ export function healthSettings() {
   return `<p class="small muted" style="margin:0 0 10px">Apps on the web can't read Apple Health, but an iPhone Shortcut can send last night's sleep (and HRV and resting heart rate from your Watch) to PG 2027 every morning.</p>
     <details class="setup"><summary>Set up the Shortcut (5 minutes)</summary><ol class="small">
       <li><b>First, sign in to Sync in Safari too.</b> A Shortcut can only open links in Safari, which keeps its data apart from the home-screen app, so sync is what carries the numbers across. Open this site in Safari once, skip through the welcome, and sign in under Settings → Sync.</li>
-      <li>Shortcuts app → <b>+</b> → Add Action → <b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last 1 day</i>. Add <b>Calculate Statistics</b> → <i>Sum</i> of those samples. Rename that result to <code>Sleep</code>.</li>
+      <li>Shortcuts app → <b>+</b> → Add Action → <b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last 1 day</i>. Tap <i>Add Filter</i> twice: <i>Value is not In Bed</i> and <i>Value is not Awake</i> (so only real sleep counts).</li>
+      <li>Add <b>Get Details of Health Samples</b> → <i>Duration</i>. Then <b>Calculate Statistics</b> → <i>Sum</i> of <i>Duration</i> (not of the samples themselves: a sleep sample is a label like "Core" or "REM", which is why summing the samples gives "couldn't convert from Text to Number"). Rename that result to <code>Sleep</code>.</li>
+      <li>If you wear an Apple Watch and your iPhone also tracks sleep, the two can overlap and double the total. If the number looks about twice too high, add a third filter: <i>Source is</i> your Watch.</li>
       <li>Optional: another <b>Find Health Samples</b> for <i>Heart Rate Variability</i> (last 1 day) → <b>Calculate Statistics</b> → <i>Average</i>, renamed <code>HRV</code>. Same for <i>Resting Heart Rate</i> → <code>RHR</code>.</li>
       <li>Add <b>Text</b> with the link below, putting the <i>Sleep</i>, <i>HRV</i> and <i>RHR</i> results in place of the words in capitals. Then add <b>Open URLs</b>.</li>
       <li>Automation tab → <b>+</b> → <i>Time of Day</i> (e.g. 7:00 am) → <i>Run Immediately</i> → this Shortcut.</li></ol>
       <div class="tag" style="margin:8px 0">${h(base)}?health=1&amp;sleep=SLEEP&amp;hrv=HRV&amp;rhr=RHR</div>
       <button class="btn block" data-act="health-copy">Copy the link</button>
-      <p class="hint">Sleep can be in hours, minutes or seconds; the app works out which.</p></details>`;
+      <p class="hint">Sleep can come as hours, minutes, seconds or "7 hr 24 min"; the app works out which. If it can't read it, it says so when the link opens.</p></details>`;
 }
 
 export const actions = {

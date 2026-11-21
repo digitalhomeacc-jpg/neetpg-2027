@@ -26,7 +26,8 @@ function dayRows(m, n) {
 function weekData(m, overdueMins) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(m.t, i)).filter(d => !isRest(d) && d <= S.settings.target);
   const planned = days.map(d => {
-    const ids = (S.plan[d] || []).filter(id => BY[id] && !prog(id).fr);
+    // Today's plan keeps the lectures you've already watched today: they're part of this week.
+    const ids = (S.plan[d] || []).filter(id => BY[id] && (!prog(id).fr || (d === m.t && prog(id).fr.d === m.t)));
     return ids.length ? ids.reduce((a, id) => a + BY[id].mins / m.planSpeed, 0) : null;
   });
   const plannedDays = planned.filter(x => x != null).length;
@@ -34,7 +35,9 @@ function weekData(m, overdueMins) {
   const base = m.target * days.length;
   const behind = Math.max(0, m.behind) / m.planSpeed;
   return { days, plannedDays, weekPlan, base, planExtra: weekPlan - base, behind, overdueMins, backlog: behind + overdueMins,
-    remReal: m.remaining / m.planSpeed, left: m.daysLeft, T: m.target };
+    // What was left at the start of today: today's target is a share of this, so lectures
+    // already watched today mustn't be taken off twice.
+    remReal: (m.remaining + m.frToday) / m.planSpeed, left: m.daysLeft, T: m.target };
 }
 function pullOut(w, x) {
   const n = w.days.length, extraWeek = x * n;
@@ -57,7 +60,7 @@ function pullOut(w, x) {
 
 export function view() {
   const m = metrics(), st = S.settings, t = m.t;
-  const T = m.target, remReal = m.remaining / m.planSpeed;
+  const T = m.target, remReal = (m.remaining + m.frToday) / m.planSpeed; // left at the start of today
   const left = m.daysLeft;
   // 1. Skip today
   const due = m.due;
@@ -141,10 +144,11 @@ export function view() {
   ${sectionH('Your backlog now')}
   <section class="card">
     <div class="stats" style="margin:0">
-      ${tile(behind > 0 ? hrs(behind) : '0h', 'behind even pace (real time)', behind > 2 ? 'bad' : behind > 0 ? 'warn' : 'good')}
+      ${tile(behind > 0 ? hrs(behind) : '0h', 'behind schedule', behind > 60 ? 'bad' : behind > 0 ? 'warn' : 'good')}
       ${tile(`${overdue.length}`, `overdue revisions · ${mins(overdueMins)}`, overdue.length > 5 ? 'bad' : overdue.length ? 'warn' : 'good')}
       ${tile(`${missed14}`, `missed study days, last 2 wks`, missed14 > 3 ? 'bad' : missed14 ? 'warn' : 'good')}
     </div>
+    <p class="hint">Schedule = the same share of WOR every study day from ${fmtDay(st.start)} (your start date) to ${fmtDay(st.target)}. Behind = hours of watching, at your speed, needed to catch up to it.</p>
     <ul class="conseq" style="margin-top:14px">
       ${overdue.length ? `<li>Oldest overdue revision: <b>${oldest} days</b>. Clear the oldest first: they've lost the most.</li>` : '<li>No overdue revisions. Keep it that way: do revisions before new videos.</li>'}
       ${carried.length ? `<li><b>${carried.length} planned lecture${carried.length > 1 ? 's' : ''}</b> (${mins(carriedMins)}) carried over from past days.</li>` : ''}

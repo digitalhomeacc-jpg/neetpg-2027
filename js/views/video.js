@@ -1,5 +1,5 @@
 // Video panels: quick "mark watched" and the full detail with passes, Anki tags and mistakes.
-import { S, BY, PASSES, PLABEL, SPEEDS, REV, prog, save, today, h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, ankiQuery, REASONS, revInfo, passMins, ratingName, plannedOn } from '../core.js';
+import { S, BY, PASSES, PLABEL, SPEEDS, REV, prog, save, today, h, mins, sp, fmtDay, fmtDow, fmtDayLong, subjDot, ankiQuery, REASONS, revInfo, passMins, passBudget, ratingName, plannedOn } from '../core.js';
 import { openSheet, closeSheet, toast, seg, clockTime } from '../ui.js';
 import { openMistake } from './tests.js';
 import { pinBox } from './pins.js';
@@ -30,7 +30,7 @@ function body() {
     const x = p[k];
     let info, btn = '';
     if (x) {
-      const lim = k === 'fr' ? null : Math.max(2, Math.round(v.mins * REV[k].budget));
+      const lim = k === 'fr' ? null : passBudget(v, k, x.d);
       const took = passMins(v, x), over = lim && took > lim;
       info = ctx.editK === k
         ? `<span class="row" style="gap:8px"><input id="vs-min" class="inp num" type="number" inputmode="numeric" min="1" value="${Math.round(took)}" style="max-width:84px;min-height:38px;padding:6px 10px"> min
@@ -47,7 +47,7 @@ function body() {
         : `<b class="${r.overdue > 0 ? 'bad-t' : r.overdue === 0 ? 'good-t' : ''}">${r.overdue > 0 ? `${r.overdue}d overdue` : r.overdue === 0 ? 'Due today' : `${r.block ? 'Planned' : 'Due'} ${fmtDay(r.due)}`}</b> · ${mins(r.budget)} limit${r.pulled ? ' · moved up by a mistake' : ''}`;
       btn = `<button class="btn ghost" data-act="revise" data-id="${v.id}">Revise</button>`;
     } else {
-      info = `${mins(Math.max(2, Math.round(v.mins * REV[k].budget)))} limit`;
+      info = `${mins(passBudget(v, k, today()))} limit`;
     }
     return `<div class="pass${r?.k === k ? ' next' : ''}"><div class="pn">${PLABEL[k]}</div><div class="pd num">${info}</div>${btn}</div>`;
   }).join('');

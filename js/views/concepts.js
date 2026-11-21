@@ -23,7 +23,7 @@ const hueOf = c => lv(c) ? LV[lv(c)][1] : 220;
 let pytKey = '', pytMap = {};
 function pyts() {
   const p = getPack(); if (!p) return {};
-  const key = `${p.made}|${JSON.stringify(S.pytLinks || {}).length}|${p.tables.length}`;
+  const key = `${p.at || p.made}|${JSON.stringify(S.pytLinks || {})}|${p.tables.length}`;
   if (key === pytKey) return pytMap;
   pytKey = key; pytMap = {};
   const add = (c, x, kind) => { const o = (pytMap[c.id] ||= { t: [], q: [], w: 0, M: 0 }); o[kind].push(x); o.w += kind === 't' ? (x.times || (x.imp === 'M' ? 4 : x.imp === 'm' ? 2 : 1)) : 2; if (x.imp === 'M') o.M++; };

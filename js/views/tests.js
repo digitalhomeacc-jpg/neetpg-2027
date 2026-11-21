@@ -151,7 +151,7 @@ function readTest() {
   const opt = id => g(id) === '' ? null : Math.max(0, +g(id));
   const subj = {};
   SUBJECTS.forEach((sj, i) => { const c = opt(`ts-c-${i}`), w = opt(`ts-w-${i}`); if (c != null || w != null) subj[sj] = [c || 0, w || 0]; });
-  return { ...tctx, name: g('t-name').trim(), date: g('t-date') || today(), n: +g('t-n') || 0, c: +g('t-c') || 0, w: +g('t-w') || 0,
+  return { ...tctx, name: g('t-name').trim(), date: g('t-date') || today(), n: Math.max(0, Math.round(+g('t-n') || 0)), c: Math.max(0, Math.round(+g('t-c') || 0)), w: Math.max(0, Math.round(+g('t-w') || 0)),
     rank: g('t-rank').trim(), notes: g('t-notes').trim(), time: opt('t-time'), g: opt('t-g'), gr: opt('t-gr'), subj };
 }
 

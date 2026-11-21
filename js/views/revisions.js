@@ -1,15 +1,16 @@
 // One screen per revision pass (R1–R4): every video with its due or done date, time limit
 // and the time it really took, plus totals. Times can be corrected right here.
-import { S, VIDS, SUBJECTS, PASSES, REV, BLOCK_GAP, blockMode, prog, passMins, revInfo, save, today, dayDiff, h, mins, hrs, fmtDay, fmtDow, subjDot } from '../core.js';
+import { S, VIDS, SUBJECTS, PASSES, REV, BLOCK_GAP, blockMode, prog, passMins, passBudget, revInfo, save, today, dayDiff, h, mins, hrs, fmtDay, fmtDow, subjDot } from '../core.js';
 import { sectionH, openSheet, closeSheet, toast } from '../ui.js';
 
-const limitOf = (v, k) => Math.max(2, Math.round(v.mins * REV[k].budget));
+// The limit the plan gives a pass on a day (30% less in the last six weeks before the exam).
+const limitOf = (v, k, d = today()) => passBudget(v, k, d);
 let edit = null; // { id, k }
 
 function rows(k) {
   const t = today();
   return VIDS.map(v => {
-    const p = prog(v.id), x = p[k], lim = limitOf(v, k);
+    const p = prog(v.id), x = p[k], lim = limitOf(v, k, x?.d);
     if (x) return { v, state: 'done', date: x.d, lim, took: passMins(v, x), x };
     const r = revInfo(v, t);
     if (r?.k === k && r.waiting) return { v, state: 'waiting', date: null, lim: r.budget, took: null };
@@ -64,7 +65,7 @@ export function view() {
 }
 
 function editBody() {
-  const v = VIDS.find(x => x.id === edit.id), x = S.progress[v.id][edit.k], lim = limitOf(v, edit.k);
+  const v = VIDS.find(x => x.id === edit.id), x = S.progress[v.id][edit.k], lim = limitOf(v, edit.k, x?.d);
   return `<h3>${h(v.title)}</h3><div class="sub">${edit.k.toUpperCase()} on ${fmtDow(x.d)} · limit ${mins(lim)}</div>
     <div class="field"><label for="rv-real">How long did it really take?</label>
       <div class="row"><input id="rv-real" class="inp num" type="number" inputmode="numeric" min="1" value="${edit.val ?? Math.round(passMins(v, x))}" style="max-width:120px"><span class="muted">minutes</span></div>

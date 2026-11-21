@@ -228,7 +228,7 @@ export function revTimeOn(d) {
   if (S.revTime?.[d] != null) return S.revTime[d];
   return isRest(d) ? (S.settings.revRest ?? 0) : (S.settings.revDaily ?? 90);
 }
-const passBudget = (v, k, d) => Math.max(2, Math.round(v.mins * REV[k].budget * (dayDiff(d, S.settings.exam) <= 42 ? 0.7 : 1)));
+export const passBudget = (v, k, d) => Math.max(2, Math.round(v.mins * REV[k].budget * (dayDiff(d, S.settings.exam) <= 42 ? 0.7 : 1)));
 // Lays revisions out day by day. Each subject goes round by round (R1 for all its videos,
 // then later R2 …); a round opens BLOCK_GAP days after the previous round finished for the
 // whole subject. Each day takes items, oldest open round first, until its revision time is
@@ -336,8 +336,9 @@ export function metrics() {
       done += v.mins; doneCount++;
       if (p.fr.d < t) doneBefore += v.mins; else if (p.fr.d === t) frToday += v.mins;
       if (p.fr.d >= recentFrom && p.fr.d <= t) { recent += v.mins; activeDays.add(p.fr.d); }
-      // Effective speed = runtime ÷ real time (an average of speeds would overstate it).
-      wSpeed += v.mins / (p.fr.s || st.speed || 1); wMins += v.mins;
+      // Effective speed = runtime ÷ real time (an average of speeds would overstate it). Real
+      // time is the minutes you took (timer or your correction), else runtime ÷ chosen speed.
+      wSpeed += passMins(v, p.fr) || v.mins / (st.speed || 1); wMins += v.mins;
     }
     for (const k of PASSES) if (p[k]) realAll += passMins(v, p[k]);
   }
@@ -348,8 +349,9 @@ export function metrics() {
   const otherToday = sessDay[t] || 0;
   const otherAll = S.sessions.reduce((a, x) => a + x.m, 0);
   const avgSpeed = wMins ? wMins / wSpeed : null;
-  // Plan with the speed you really watch at once there's 2h+ of history.
-  const planSpeed = wMins >= 120 ? avgSpeed : st.speed;
+  // Plan with the speed you really watch at (pauses included) once there's 2h+ of history,
+  // unless you chose to plan with your set speed.
+  const planSpeed = st.planBy !== 'set' && wMins >= 120 ? avgSpeed : st.speed;
   const remaining = total - done;
   const restToday = isRest(t);
   const daysLeft = t <= st.target ? studyDays(t, st.target) : 0;
@@ -374,7 +376,7 @@ export function metrics() {
 
   const totalDays = studyDays(st.start, st.target);
   const elapsed = t > st.start ? studyDays(st.start, addDays(t, -1)) : 0;
-  // Even pace: the same runtime every study day from start to target. Behind = what even pace
+  // Schedule: the same runtime every study day from start to target. Behind = what the schedule
   // expects by now minus what you've watched. Today's even share counts only as far as you've
   // done it, so finishing today's share keeps the gap where it was and anything beyond it
   // (today's catch-up) shrinks it straight away, instead of waiting for tomorrow.
@@ -396,6 +398,7 @@ export function metrics() {
   }
 
   return {
+    wMins,
     t, total, done, doneCount, remaining, frToday, realToday, frRealToday, realAll, avgSpeed, planSpeed, byDay, sessDay, otherToday, otherAll,
     due, dueMins, must, mustMins, revDoneToday, revDoneCount, goal, minimum,
     restToday, daysLeft, overdue, target, totalDays, elapsed, expected, behind, recentRate, projected, streak,
@@ -503,10 +506,13 @@ let needKey = '', needVal = null;
 export function hoursNeeded(by = S.settings.target) {
   const key = `${saveVersion}|${today()}|${by}`;
   if (key === needKey) return needVal;
-  let lo = 0.5, hi = 14;
-  if ((simulate(hi * 60, { until: by }).finish || '9') > by) { needKey = key; return (needVal = null); }
-  for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; if ((simulate(mid * 60, { until: by }).finish || '9') <= by) hi = mid; else lo = mid; }
-  needKey = key; return (needVal = Math.ceil(hi * 4) / 4);
+  // Search in quarter hours (2 = 0.5h … 56 = 14h) for the smallest that finishes in time.
+  const fits = q => (simulate(q * 15, { until: by }).finish || '9') <= by;
+  let lo = 2, hi = 56;
+  if (!fits(hi)) { needKey = key; return (needVal = null); }
+  if (fits(lo)) { needKey = key; return (needVal = lo / 4); }
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (fits(mid)) hi = mid; else lo = mid; }
+  needKey = key; return (needVal = hi / 4);
 }
 // When the first watch finishes if you keep studying as much as in the last two weeks
 // (real time a study day, revisions included). Revisions grow, so this is simulated too.

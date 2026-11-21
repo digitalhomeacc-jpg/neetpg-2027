@@ -1,4 +1,4 @@
-import { S, VIDS, D, DOW, DOW_LONG, SPEEDS, save, today, h, hrs, sp, mergeState, replaceState, resetProgress } from '../core.js';
+import { S, VIDS, D, metrics, DOW, DOW_LONG, SPEEDS, save, today, h, hrs, sp, mergeState, replaceState, resetProgress } from '../core.js';
 import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
 import * as sync from '../sync.js';
@@ -83,7 +83,9 @@ export function view() {
       <p class="hint">NBEMS hasn't announced NEET PG 2027. This estimate is based on 30 Aug 2026. Phases in Plan follow this date.</p></div>
     <div class="field"><span class="lbl">Rest days</span><div class="days">${DOW.map((d, i) => `<button data-act="rest" data-v="${i}" aria-pressed="${st.rest.includes(i)}" aria-label="${DOW_LONG[i]}">${d}</button>`).join('')}</div></div>
     <div class="field"><span class="lbl">Usual watching speed</span>${seg('speed', SPEEDS.map(s => [s, sp(s)]), st.speed)}
-      <p class="hint">Pre-selected when you mark a video. After 2 hours logged, plans use your real average.</p></div>
+      <p class="hint">Pre-selected when you mark a video.</p>
+      ${(() => { const m = metrics(); return m.avgSpeed && m.wMins >= 120 ? `<span class="lbl" style="margin-top:12px">Plan targets with</span>${seg('planby', [['real', `Real pace ${sp(Math.round(m.avgSpeed * 100) / 100)}`], ['set', `Set speed ${sp(st.speed)}`]], st.planBy === 'set' ? 'set' : 'real')}
+      <p class="hint">Real pace is runtime ÷ the time you actually took (pauses included), from ${hrs(m.wMins)} of lectures. It's usually the more honest number. Daily targets, backlog and forecasts all use the one chosen here.</p>` : '<p class="hint">After 2 hours of lectures, you can plan with your real pace (pauses included) instead.</p>'; })()}</div>
     <div class="field" style="margin-bottom:0"><span class="lbl">Questions in a full test</span>${seg('questions', [[200, '200'], [180, '180']], st.questions)}
       <p class="hint">Reports conflict on whether 2026 had 180 or 200 questions. This only sets the default when you log a test.</p></div>
   </section>
@@ -177,6 +179,7 @@ function authAct(kind) {
 
 export const actions = {
   'speed': el => { S.settings.speed = +el.dataset.v; save(); },
+  'planby': el => { S.settings.planBy = el.dataset.v; save(); },
   'questions': el => { S.settings.questions = +el.dataset.v; save(); },
   'minpct': el => { S.settings.minPct = +el.dataset.v; save(); },
   'revcap': el => { S.settings.revCap = +el.dataset.v; save(); },

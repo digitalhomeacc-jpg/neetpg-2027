@@ -38,7 +38,7 @@ function paceChart(m) {
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hours of WOR watched against the plan">
     ${ticks}${months.join('')}${nowLine}<polyline class="plan" points="${plan.join(' ')}"/>${area}
     ${act.length ? `<polyline class="actual" points="${act.join(' ')}"/>` : ''}</svg>
-  <div class="legend"><span><i></i>Watched (runtime hours)</span><span><i class="plan"></i>Even pace to ${fmtDay(st.target)}</span></div>`;
+  <div class="legend"><span><i></i>Watched (runtime hours)</span><span><i class="plan"></i>Schedule: equal share each study day to ${fmtDay(st.target)}</span></div>`;
 }
 
 function heatmap(m) {

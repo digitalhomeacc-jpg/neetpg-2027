@@ -1,13 +1,14 @@
 // How long each pass really took: first watch and R1–R4, per video and per subject, against the limits.
-import { S, VIDS, SUBJECTS, PASSES, PLABEL, REV, prog, passMins, h, mins, hrs, subjDot, subjHue } from '../core.js';
+import { S, VIDS, SUBJECTS, PASSES, PLABEL, REV, prog, passMins, passBudget, h, mins, hrs, subjDot, subjHue } from '../core.js';
 import { sectionH, closeSheet } from '../ui.js';
 
-const limit = (v, k) => k === 'fr' ? v.mins / S.settings.speed : Math.max(2, Math.round(v.mins * REV[k].budget));
+// The same limit the plan gave that pass on its day (revisions get 30% less in the last six weeks).
+const limit = (v, k, x) => k === 'fr' ? v.mins / (x.s || S.settings.speed) : passBudget(v, k, x.d);
 
 function stats(vs) {
   return PASSES.map(k => {
     let n = 0, took = 0, lim = 0;
-    for (const v of vs) { const x = prog(v.id)[k]; if (x) { n++; took += passMins(v, x); lim += limit(v, k); } }
+    for (const v of vs) { const x = prog(v.id)[k]; if (x) { n++; took += passMins(v, x); lim += limit(v, k, x); } }
     return { k, n, took, lim, ratio: lim ? took / lim : 0 };
   });
 }
@@ -39,7 +40,7 @@ export function view() {
       const p = prog(v.id);
       return `<li class="trow"><button class="open" data-act="open-video" data-id="${v.id}"><div class="t">${h(v.title)}</div>
         <div class="tchips">${PASSES.map(k => { const x = p[k]; if (!x) return `<span class="tchip none">${PLABEL[k] === 'First watch' ? 'FW' : PLABEL[k]}</span>`;
-          const took = passMins(v, x), lim = limit(v, k);
+          const took = passMins(v, x), lim = limit(v, k, x);
           return `<span class="tchip ${k === 'fr' ? 'ok' : tone(took / lim)}"><b>${PLABEL[k] === 'First watch' ? 'FW' : PLABEL[k]}</b> ${mins(took)}${k === 'fr' ? '' : `<i>/${Math.round(lim)}</i>`}</span>`; }).join('')}</div></button></li>`;
     }).join('') : '';
     return `<li class="tsub${isOpen ? ' open' : ''}" style="--h:${subjHue(s)}">
