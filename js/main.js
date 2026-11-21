@@ -29,6 +29,7 @@ import * as pytV from './views/pyt.js';
 import * as conceptsV from './views/concepts.js';
 import * as updates from './update.js';
 import * as pastV from './views/past.js';
+import { quoteFor } from './quotes.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
@@ -122,7 +123,8 @@ function render({ top = false, enter = false } = {}) {
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;
   const view = document.getElementById('view');
-  view.innerHTML = `<div class="large-title">${meta ? `<div class="eyebrow">${meta}</div>` : ''}<h1>${h(title)}</h1></div>${html}`;
+  const fq = tab === 'today' ? null : quoteFor(tab);
+  view.innerHTML = `<div class="large-title">${meta ? `<div class="eyebrow">${meta}</div>` : ''}<h1>${h(title)}</h1></div>${html}${fq ? `<p class="page-q">“${h(fq.q)}”<span>${h(fq.who)} · ${h(fq.src)}</span></p>` : ''}`;
   if (enter) { view.classList.remove('enter'); void view.offsetWidth; view.classList.add('enter'); }
   const m = metrics();
   document.querySelectorAll('#tabs button').forEach(b => {

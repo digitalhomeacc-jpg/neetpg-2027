@@ -83,8 +83,8 @@ function readDates() {
 export const actions = {
   'wl-next': () => { if (step === 1 && !readDates()) return; step++; },
   'wl-back': () => { if (step === 1) readDates(); step = Math.max(0, step - 1); },
-  'wl-rest': e => { readDates(); const i = +e.dataset.v, r = S.settings.rest; const n = r.includes(i) ? r.filter(x => x !== i) : [...r, i]; if (n.length <= 6) S.settings.rest = n; },
-  'wl-speed': e => { readDates(); S.settings.speed = +e.dataset.v; },
+  'wl-rest': e => { readDates(); const i = +e.dataset.v, r = S.settings.rest; const n = r.includes(i) ? r.filter(x => x !== i) : [...r, i]; if (n.length <= 6) S.settings.rest = n; save(); },
+  'wl-speed': e => { readDates(); S.settings.speed = +e.dataset.v; save(); },
   'wl-subject': e => { const s = e.dataset.v; done.has(s) ? done.delete(s) : done.add(s); },
   'wl-finish': () => {
     for (const v of VIDS) if (done.has(v.subject)) (S.progress[v.id] ||= {}).fr = { d: S.settings.start < today() ? S.settings.start : today(), s: S.settings.speed };
