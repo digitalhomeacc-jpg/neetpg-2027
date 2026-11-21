@@ -3,6 +3,7 @@ import { seg, sectionH, toast, copy, ICON } from '../ui.js';
 import { pushSupported, isInstalled, isIOS, enablePush, testNotification, summaryLine } from '../notify.js';
 import * as sync from '../sync.js';
 import { APP_VERSION } from '../version.js';
+import { checkForUpdate } from '../update.js';
 import { healthSettings } from './health.js';
 
 function syncCard() {
@@ -144,7 +145,9 @@ export function view() {
   </section>
 
   <p class="small faint center">${VIDS.length} ${h(D.source)} videos · ${hrs(VIDS.reduce((a, v) => a + v.mins, 0))} runtime · from your EXAM_PREP sheet</p>
-  <p class="small faint center version-stamp">PG 2027 · version ${APP_VERSION.v} · updated ${new Date(APP_VERSION.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>`,
+  <p class="small faint center version-stamp">PG 2027 · version ${APP_VERSION.v} · updated ${new Date(APP_VERSION.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+  <div class="center" style="margin:-4px 0 18px"><button class="btn small-btn" data-act="check-update">Check for updates</button>
+    <p class="hint center" style="margin-top:6px">Updates also install by themselves when you come back to the app. Your data stays as it is.</p></div>`,
   };
 }
 
@@ -179,6 +182,7 @@ function authAct(kind) {
 
 export const actions = {
   'speed': el => { S.settings.speed = +el.dataset.v; save(); },
+  'check-update': async el => { el.textContent = 'Checking…'; const r = await checkForUpdate(true); if (r === 'latest') { el.textContent = 'Check for updates'; toast(`You're on the latest version (${APP_VERSION.v})`); } else if (r === 'offline') { el.textContent = 'Check for updates'; toast('No connection. Try again when you\'re online.'); } },
   'planby': el => { S.settings.planBy = el.dataset.v; save(); },
   'questions': el => { S.settings.questions = +el.dataset.v; save(); },
   'minpct': el => { S.settings.minPct = +el.dataset.v; save(); },

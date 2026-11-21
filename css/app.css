@@ -1038,3 +1038,7 @@ button.akrow:active:not(:disabled) { transform: none; background: var(--surface-
 .hk-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
 .hk-l { font-size: 12.5px; color: var(--muted); width: 74px; flex: none; }
 .hk-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; background: var(--surface-2); padding: 7px 9px; border-radius: 8px; }
+
+#update-pill { position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top) + 10px); z-index: 60; display: flex; align-items: center; gap: 12px;
+  padding: 9px 9px 9px 16px; border-radius: 99px; background: var(--surface); box-shadow: 0 8px 28px rgba(0,0,0,.35), 0 0 0 .5px var(--line-2); font-size: 14px; animation: cm-in .3s ease; }
+#update-pill span { background: var(--grad); color: var(--on-grad); font-weight: 750; padding: 6px 13px; border-radius: 99px; }

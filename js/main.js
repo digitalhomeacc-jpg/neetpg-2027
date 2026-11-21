@@ -27,6 +27,7 @@ import * as dutyV from './views/duty.js';
 import * as revTimeV from './views/revtime.js';
 import * as pytV from './views/pyt.js';
 import * as conceptsV from './views/concepts.js';
+import * as updates from './update.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
@@ -233,6 +234,8 @@ const fresh = !welcomeV.needed() && !/[?&]health=/.test(location.search) && hell
 render({ top: true, enter: true });
 if (fresh) helloV.showHello();
 startSync();
+updates.startUpdates();
+document.addEventListener('pg27:updated', e => toast(`Updated to version ${e.detail}`));
 document.addEventListener('pg27:sync', () => { if (S.ui.tab === 'settings') render(); });
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
