@@ -32,7 +32,9 @@ export function ingestFromUrl() {
   if (!q.has('health')) return false;
   const d = /^\d{4}-\d{2}-\d{2}$/.test(q.get('date') || '') ? q.get('date') : today();
   const rec = { ...(S.health[d] || {}), src: 'health' };
-  const raw = q.get('sleep'), sl = sleepHours(raw);
+  const raw = q.get('sleep');
+  let sl = sleepHours(raw);
+  if (sl != null && sl < 0.5) sl = NaN; // 0h: the Shortcut's filters most likely removed every sample
   const sleep = num(sl, 0, 16), hrv = num(q.get('hrv'), 1, 300), rhr = num(q.get('rhr'), 20, 200), steps = num(q.get('steps'), 0, 100000);
   if (sleep != null) rec.sleep = sleep;
   if (hrv != null) rec.hrv = hrv;
@@ -40,7 +42,8 @@ export function ingestFromUrl() {
   if (steps != null) rec.steps = Math.round(steps);
   S.health[d] = rec; save();
   history.replaceState(null, '', location.pathname); // tidy the link so a refresh doesn't re-import
-  toast(raw && sleep == null ? `Couldn't read the sleep value "${String(raw).slice(0, 24)}". Check the Shortcut steps in Settings → Apple Health.`
+  toast(raw && Number.isNaN(sl) ? 'The Shortcut sent 0h of sleep, so nothing was saved. Its filters probably removed every sample: see Settings → Apple Health.'
+    : raw && sleep == null ? `Couldn't read the sleep value "${String(raw).slice(0, 24)}". Check the Shortcut steps in Settings → Apple Health.`
     : `Health data saved${sleep != null ? `: ${sleep}h sleep` : ''}${hrv != null ? `, HRV ${hrv}` : ''}`);
   return true;
 }
@@ -89,7 +92,7 @@ export function healthSettings() {
   return `<p class="small muted" style="margin:0 0 10px">Apps on the web can't read Apple Health, but an iPhone Shortcut can send last night's sleep (and HRV and resting heart rate from your Watch) to PG 2027 every morning.</p>
     <details class="setup"><summary>Set up the Shortcut (5 minutes)</summary><ol class="small">
       <li><b>First, sign in to Sync in Safari too.</b> A Shortcut can only open links in Safari, which keeps its data apart from the home-screen app, so sync is what carries the numbers across. Open this site in Safari once, skip through the welcome, and sign in under Settings → Sync.</li>
-      <li>Shortcuts app → <b>+</b> → Add Action → <b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last 1 day</i>. Tap <i>Add Filter</i> twice: <i>Value is not In Bed</i> and <i>Value is not Awake</i> (so only real sleep counts).</li>
+      <li>Shortcuts app → <b>+</b> → Add Action → <b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last 1 day</i>. If you wear an Apple Watch to bed, tap <i>Add Filter</i> twice and set both to <i>Value</i> · <i>is not</i>, then <b>type</b> <code>In Bed</code> in one and <code>Awake</code> in the other (the box is a text field; there's no list). That keeps only real sleep. Without a Watch, skip these filters: your iPhone only records time in bed, and filtering it out leaves nothing.</li>
       <li>Add <b>Get Details of Health Samples</b> → <i>Duration</i>. Then <b>Calculate Statistics</b> → <i>Sum</i> of <i>Duration</i> (not of the samples themselves: a sleep sample is a label like "Core" or "REM", which is why summing the samples gives "couldn't convert from Text to Number"). Rename that result to <code>Sleep</code>.</li>
       <li>If you wear an Apple Watch and your iPhone also tracks sleep, the two can overlap and double the total. If the number looks about twice too high, add a third filter: <i>Source is</i> your Watch.</li>
       <li>Optional: another <b>Find Health Samples</b> for <i>Heart Rate Variability</i> (last 1 day) → <b>Calculate Statistics</b> → <i>Average</i>, renamed <code>HRV</code>. Same for <i>Resting Heart Rate</i> → <code>RHR</code>.</li>
