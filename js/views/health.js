@@ -194,6 +194,7 @@ function alarmSetup(c) {
   return `<div class="hk-sec"><b>Alarms</b>
     <p class="small muted" style="margin:4px 0 8px">Duty shifts and study blocks with an alarm (set them in the Day planner or Duty & free time) become real alarms in the Clock app, so they ring even through silent mode and sleep.</p>
     ${up.length ? `<ul class="list mini-list">${up.slice(0, 6).map(a => `<li class="item"><span class="grow small">⏰ <b>${h(when(a))}</b> · ${h(a.label)}</span></li>`).join('')}</ul>` : '<p class="small faint" style="margin:0 0 8px">No alarms set for the next two days.</p>'}
+    <button class="btn block" data-act="hk-test-alarm" style="margin:4px 0 10px">Send a test alarm (rings in 3 minutes)</button>
     <div class="hk-row"><span class="hk-l">Alarms URL</span><code class="hk-v">${h(c.url)}/rest/v1/rpc/pg27_alarms</code><button class="btn small-btn" data-act="hk-copy" data-k="alarms">Copy</button></div>
     <details class="setup"><summary>Add alarms to your Shortcut (5 minutes, once)</summary><ol class="small">
       <li>In the <b>Sleep</b> Shortcut, at the end, add another <b>Get Contents of URL</b>: paste the Alarms URL, <b>›</b> → Method <b>POST</b>, header <code>apikey</code> (same as before), Request Body <b>JSON</b> with one Text field <code>k</code> = your key.</li>
@@ -248,5 +249,11 @@ export const actions = {
     document.dispatchEvent(new Event('pg27:render'));
   },
   'hk-check': async () => { toast('Checking…'); await sync.healthCheck(true); document.dispatchEvent(new Event('pg27:render')); toast(sync.status.healthError === 'needs-sql' ? 'Still not found. Make sure the whole Apple Health block ran without errors, then try again in a minute.' : 'Found it. Tap Turn on automatic Health.'); },
+  'hk-test-alarm': async () => {
+    const at = new Date(Date.now() + 3 * 60000); at.setSeconds(0, 0);
+    S.testAlarm = { at: at.toISOString() }; save();
+    await sync.syncNow();
+    toast(`Test alarm set for ${at.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}. Now run your Sleep Shortcut, then look in Clock → Alarms.`);
+  },
   'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'alarms' ? `${c.url}/rest/v1/rpc/pg27_alarms` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
 };

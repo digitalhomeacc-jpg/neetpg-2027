@@ -149,6 +149,8 @@ function alarmsOut() {
     if (x && typeof x === 'object' && x.alarm != null) push(d, x.from, x.alarm, `Duty ${x.from}–${x.to}${x.alarm ? ` (in ${x.alarm} min)` : ''}`, 'duty');
     for (const b of S.blocks?.[d] || []) if (b.alarm != null) push(d, b.from, b.alarm, `Study: ${ALARM_KIND[b.kind] || 'Study'} at ${b.from}${b.alarm ? ` (in ${b.alarm} min)` : ''}`, `b${b.id}`);
   }
+  // A test alarm from Settings, a few minutes ahead.
+  if (S.testAlarm && Date.parse(S.testAlarm.at) > now) out.push({ id: `${iso(new Date(S.testAlarm.at))}|test|${S.testAlarm.at}`, at: S.testAlarm.at, local: (() => { const a = new Date(S.testAlarm.at); return `${iso(a)} ${pad(a.getHours())}:${pad(a.getMinutes())}`; })(), label: 'PG 2027 test alarm' });
   return out.sort((a, b) => a.at.localeCompare(b.at));
 }
 export function save() {

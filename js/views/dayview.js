@@ -110,13 +110,21 @@ export function view() {
 
 /* ---------- planning blocks ---------- */
 let ed = null;
+const speed = () => metrics().planSpeed || S.settings.speed || 1;
+const lecRaw = ids => (ids || []).reduce((a, id) => a + (BY[id] ? BY[id].mins / speed() : 0), 0);
+const lecFit = ids => { const r = lecRaw(ids); return r ? Math.ceil(r / 5) * 5 : 0; };
 function sheet() {
   const b = ed.b, d = ed.d, lectures = (S.plan[d] || []).filter(id => BY[id] && !prog(id).fr);
   return `<h3>${ed.isNew ? 'Plan a study block' : 'Study block'}</h3><div class="sub">${fmtDayLong(d)}</div>
     <div class="field"><span class="lbl">What</span><div class="chips">${Object.entries(KIND).map(([k, l]) => `<button class="chip" data-act="dv-kind" data-v="${k}" aria-pressed="${b.kind === k}">${l}</button>`).join('')}</div></div>
     <div class="field"><label for="dv-from">Starts</label><input id="dv-from" type="time" value="${b.from}"></div>
-    <div class="field"><span class="lbl">How long</span><div class="chips">${[30, 45, 60, 90, 120, 180, 240].map(n => `<button class="chip" data-act="dv-len" data-v="${n}" aria-pressed="${b.mins === n}">${mins(n)}</button>`).join('')}</div></div>
-    ${b.kind === 'lectures' && lectures.length ? `<div class="field"><span class="lbl">Lectures planned for this day</span><div class="chips">${lectures.map(id => `<button class="chip" data-act="dv-lec" data-v="${id}" aria-pressed="${(b.ids || []).includes(id)}">${h(BY[id].title)}</button>`).join('')}</div></div>` : ''}
+    ${b.kind === 'lectures' && lectures.length ? `<div class="field"><span class="lbl">Lectures planned for this day</span><div class="chips">${lectures.map(id => `<button class="chip" data-act="dv-lec" data-v="${id}" aria-pressed="${(b.ids || []).includes(id)}">${h(BY[id].title)} <span class="faint">${mins(BY[id].mins / speed())}</span></button>`).join('')}</div></div>` : ''}
+    <div class="field"><span class="lbl">How long</span><div class="chips">${(() => {
+      const fit = lecFit(b.ids), opts = [30, 45, 60, 90, 120, 180, 240];
+      const extra = [fit, b.mins].filter(n => n && !opts.includes(n));
+      return [...new Set([...opts, ...extra])].sort((x, y) => x - y).map(n => `<button class="chip" data-act="dv-len" data-v="${n}" aria-pressed="${b.mins === n}">${mins(n)}${n === fit ? ' · fits lectures' : ''}</button>`).join('');
+    })()}</div>
+      ${b.ids?.length ? `<p class="hint">${b.ids.length} lecture${b.ids.length > 1 ? 's' : ''}: ${mins(lecRaw(b.ids))} of watching at ${speed().toFixed(2).replace(/0$/, '')}× (your ${S.settings.planBy === 'set' ? 'set speed' : 'real pace'}), rounded up to ${mins(lecFit(b.ids))}.${b.mins < lecRaw(b.ids) ? ' <span class="warn-t">This block is shorter than that.</span>' : ''}</p>` : ''}</div>
     <div class="field"><span class="lbl">Alarm</span><div class="chips">${[[null, 'None'], [0, 'At start'], [5, '5 min before'], [10, '10 min'], [15, '15 min'], [30, '30 min']].map(([v, l]) => `<button class="chip" data-act="dv-alarm" data-v="${v ?? ''}" aria-pressed="${(b.alarm ?? null) === v}">${l}</button>`).join('')}</div>
       ${b.alarm != null ? '<p class="hint">Your Shortcut puts it in the Clock app as a real alarm (Settings → Apple Health & alarms).</p>' : ''}</div>
     <div class="field"><label for="dv-note">Note (optional)</label><input id="dv-note" class="inp" value="${h(b.note || '')}" placeholder="e.g. library, after duty"></div>
@@ -130,12 +138,23 @@ const overlaps = (d, b) => blocksOn(d).find(x => x.id !== b.id && toMin(x.from) 
 export const actions = {
   day: el => { closeSheet(); if (S.ui.tab !== 'day') S.ui.dayBack = S.ui.tab; S.ui.tab = 'day'; S.ui.dvDay = el?.dataset?.d || today(); return () => setTimeout(scrollToFocus, 30); },
   'dv-go': el => { S.ui.dvDay = el.dataset.d; return () => setTimeout(scrollToFocus, 30); },
-  'dv-new': el => { const at = Math.min(1410, +el.dataset.at || 19 * 60); ed = { isNew: true, d: S.ui.dvDay || today(), b: { id: uid(), from: hhmm(at), mins: 60, kind: 'lectures', ids: [] } }; openSheet(sheet); },
+  'dv-new': el => {
+    const at = Math.min(1410, +el.dataset.at || 19 * 60), d = S.ui.dvDay || today();
+    // Start with the day's planned lectures that no other block has taken, sized to fit them.
+    const taken = new Set(blocksOn(d).flatMap(x => x.ids || []));
+    const ids = (S.plan[d] || []).filter(id => BY[id] && !prog(id).fr && !taken.has(id));
+    ed = { isNew: true, d, b: { id: uid(), from: hhmm(at), mins: lecFit(ids) || 60, kind: 'lectures', ids } };
+    openSheet(sheet);
+  },
   'dv-edit': el => { const d = S.ui.dvDay || today(); ed = { d, b: JSON.parse(JSON.stringify(blocksOn(d).find(x => x.id === el.dataset.id))) }; openSheet(sheet); },
   'dv-kind': el => { keep(); ed.b.kind = el.dataset.v; },
-  'dv-len': el => { keep(); ed.b.mins = +el.dataset.v; },
+  'dv-len': el => { keep(); ed.b.mins = +el.dataset.v; ed.manualLen = true; },
   'dv-alarm': el => { keep(); if (el.dataset.v === '') delete ed.b.alarm; else ed.b.alarm = +el.dataset.v; },
-  'dv-lec': el => { keep(); const s = new Set(ed.b.ids || []); s.has(el.dataset.v) ? s.delete(el.dataset.v) : s.add(el.dataset.v); ed.b.ids = [...s]; },
+  'dv-lec': el => {
+    keep(); const s = new Set(ed.b.ids || []); s.has(el.dataset.v) ? s.delete(el.dataset.v) : s.add(el.dataset.v); ed.b.ids = [...s];
+    // The block's length follows the lectures picked (runtime ÷ your speed), until you set a length yourself.
+    if (!ed.manualLen && ed.b.ids.length) ed.b.mins = lecFit(ed.b.ids);
+  },
   'dv-save': () => {
     keep();
     ed.err = '';
