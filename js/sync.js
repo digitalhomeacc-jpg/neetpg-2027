@@ -217,7 +217,7 @@ document.addEventListener('pg27:pack', () => syncNow());
 
 // Apple Health sent in the background: the Shortcut writes sleep times to your own health row
 // (with a private key); the app applies them here, once per new delivery.
-const HEALTH_AT = 'pg27.healthAt';
+const HEALTH_AT = 'pg27.healthAt', PARSER = 'p2';
 const missingHealth = e => /pg27_health/i.test(e.message) && /exist|schema|relation|could not find/i.test(e.message);
 async function syncHealth(tk) {
   try {
@@ -227,10 +227,10 @@ async function syncHealth(tk) {
     if (!r?.data) return;
     let seen = null; try { seen = localStorage.getItem(HEALTH_AT); } catch { /* ignore */ }
     status.health = { at: r.updated_at };
-    if (seen === r.updated_at) return;
+    if (seen === `${r.updated_at}|${PARSER}`) return;
     const { applyHealth } = await import('./views/health.js');
     status.health.msg = applyHealth(r.data, Date.parse(r.data.at || r.updated_at));
-    try { localStorage.setItem(HEALTH_AT, r.updated_at); } catch { /* ignore */ }
+    try { localStorage.setItem(HEALTH_AT, `${r.updated_at}|${PARSER}`); } catch { /* ignore */ }
     document.dispatchEvent(new Event('pg27:render'));
   } catch (e) {
     status.healthError = missingHealth(e) ? 'needs-sql' : /failed to fetch|load failed|network/i.test(e.message) ? '' : e.message;

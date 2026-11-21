@@ -30,10 +30,22 @@ export function sleepHours(raw) {
 // A date as Shortcuts writes it: ISO 8601 ("2026-11-21T03:12:00+05:30", from Format Date →
 // ISO 8601) or the phone's medium style ("21 Nov 2026 at 3:12 AM", "Nov 21, 2026 at 3:12 AM").
 const MONS = 'jan feb mar apr may jun jul aug sep oct nov dec'.split(' ');
+// Day before month (India, UK) or month before day (US), as this phone writes dates.
+const DAY_FIRST = (() => { try { const p = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'numeric' }).formatToParts(new Date(2026, 10, 20)); return p.findIndex(x => x.type === 'day') < p.findIndex(x => x.type === 'month'); } catch { return true; } })();
+const NUM_RE = /(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4}),?\s*(?:at\s+)?(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([ap]\.?\s?m\.?)?/i;
 export function parseWhen(s) {
   s = String(s || '').trim().replace(/\u202f|\u00a0/g, ' ');
   if (!s) return NaN;
   if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return Date.parse(s);
+  const n = s.match(NUM_RE);
+  if (n) {
+    let [, a, b, y, hh, mm, ap] = n; a = +a; b = +b; y = +y; if (y < 100) y += 2000;
+    // Whichever can't be a month settles it; otherwise follow the phone's own order.
+    const dayFirst = a > 12 ? true : b > 12 ? false : DAY_FIRST;
+    const day = dayFirst ? a : b, mon = dayFirst ? b : a;
+    hh = +hh; if (ap) { const pm = /p/i.test(ap); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
+    return new Date(y, mon - 1, day, hh, +mm).getTime();
+  }
   let m = s.match(/(\d{1,2})[\s\-/.]+([A-Za-z]{3})[A-Za-z]*\.?[\s\-/.,]+(\d{4}),?\s+(?:at\s+)?(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([ap]\.?m\.?)?/i)
     || s.match(/([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2}),?\s+(\d{4}),?\s+(?:at\s+)?(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([ap]\.?m\.?)?/i);
   if (!m) return NaN;
@@ -49,7 +61,7 @@ const MED_RE = /\d{1,2}[\s\-/.]+[A-Za-z]{3}[A-Za-z]*\.?[\s\-/.,]+\d{4},?\s+(?:at
 export function listWhens(s) {
   s = String(s || '').replace(/\u202f|\u00a0/g, ' ');
   const iso = s.match(ISO_RE);
-  const parts = iso && iso.length ? iso : (s.match(MED_RE) || []);
+  const parts = iso && iso.length ? iso : (s.match(MED_RE) || s.match(new RegExp(NUM_RE.source, 'gi')) || []);
   const bits = s.split(/[,;\n]+/).map(x => x.trim()).filter(Boolean);
   return { list: parts.map(parseWhen), found: parts.length, guess: bits[0] || '' };
 }
@@ -143,7 +155,7 @@ export function checkinCard() {
   }
   return `<section class="card checkin">
     <div class="ci-q">How did you sleep?${x.src === 'health' ? ` <span class="pill accent">from Health${x.sleep != null ? `: ${hm(x.sleep)}` : ''}</span>` : ''}</div>
-    ${x.src === 'health' && x.err ? `<p class="small warn-t" style="margin:4px 0 8px">The Shortcut ran, but sleep wasn't saved: ${h(x.err)}${x.raw != null ? ` (it sent "${h(x.raw)}")` : ''}. Pick your hours below, and see Settings → Apple Health.</p>` : ''}
+    ${x.src === 'health' && x.err ? `<p class="small warn-t" style="margin:4px 0 8px">The Shortcut ran, but sleep wasn't saved: ${h(x.err)}${x.raw != null && !/it sent/.test(x.err) ? ` (it sent "${h(x.raw)}")` : ''}. Pick your hours below, and see Settings → Apple Health.</p>` : ''}
     <div class="chips">${[5, 6, 7, 8, 9].map(n => `<button class="chip" data-act="ci-sleep" data-v="${n}" aria-pressed="${x.sleep != null && Math.min(9, Math.max(5, Math.round(x.sleep))) === n}">${n === 5 ? '≤5h' : n === 9 ? '9h+' : `${n}h`}</button>`).join('')}</div>
     <div class="ci-q" style="margin-top:12px">Energy right now?</div>
     <div class="chips energy">${ENERGY.map(([n, e]) => `<button class="chip" data-act="ci-energy" data-v="${n}" aria-pressed="${x.energy === n}">${e}</button>`).join('')}</div>
