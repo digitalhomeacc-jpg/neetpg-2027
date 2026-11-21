@@ -374,8 +374,14 @@ export function metrics() {
 
   const totalDays = studyDays(st.start, st.target);
   const elapsed = t > st.start ? studyDays(st.start, addDays(t, -1)) : 0;
-  const expected = total * Math.min(1, totalDays ? elapsed / totalDays : 1);
-  const behind = expected - doneBefore;
+  // Even pace: the same runtime every study day from start to target. Behind = what even pace
+  // expects by now minus what you've watched. Today's even share counts only as far as you've
+  // done it, so finishing today's share keeps the gap where it was and anything beyond it
+  // (today's catch-up) shrinks it straight away, instead of waiting for tomorrow.
+  const expectedY = total * Math.min(1, totalDays ? elapsed / totalDays : 1);
+  const share = restToday || !totalDays || t > st.target ? 0 : Math.max(0, Math.min(total - expectedY, total / totalDays));
+  const expected = expectedY + Math.min(frToday, share);
+  const behind = expected - doneBefore - frToday;
   const recentDays = studyDays(recentFrom < st.start ? st.start : recentFrom, t);
   const recentRate = recentDays ? recent / recentDays : 0;
   let projected = null;

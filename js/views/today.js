@@ -101,8 +101,9 @@ export function view() {
   else if (real > 0) { status = `${mins(goal - real)} to go`; line = `${mins(real)} of today's ${mins(goal)} done.`; }
   else { status = `${mins(goal)} today`; line = `${nDue ? `${nDue} revision${nDue > 1 ? 's' : ''} + ` : ''}${mins(m.target)} of new videos, to finish WOR by ${fmtDay(st.target)}.`; }
 
-  const behindCls = m.behind > 60 ? 'bad' : m.behind > 0 ? 'warn' : 'good';
-  const behindTxt = m.behind > 0 ? `${hrs(m.behind)}` : `+${hrs(-m.behind)}`;
+  const behindCls = m.behind / m.planSpeed > 60 ? 'bad' : m.behind > 0 ? 'warn' : 'good';
+  // In hours of watching at your speed, like today's target and the Backlog card.
+  const behindTxt = m.behind > 0 ? `${hrs(m.behind / m.planSpeed)}` : `+${hrs(-m.behind / m.planSpeed)}`;
 
   const mineToday = (S.plan[m.t] || []).length > 0;
   const todayPlan = fc[0] && fc[0].date === m.t ? fc[0].items : mineToday ? [] : (fc[0]?.items.slice(0, 2) || []);
