@@ -149,7 +149,7 @@ export function view() {
       <button class="btn" data-act="focus-open">${ICON.timer}Focus</button>
     </div>
     <div class="stats">
-      <button class="stat ${behindCls}" data-act="backlog"><div class="v num">${m.remaining > 0 ? behindTxt : 'Done'}</div><div class="k">${m.remaining <= 0 ? 'WOR watched' : m.behind > 0 ? 'behind schedule' : 'ahead of schedule'}</div></button>
+      <button class="stat ${behindCls}" data-act="past"><div class="v num">${m.remaining > 0 ? behindTxt : 'Done'}</div><div class="k">${m.remaining <= 0 ? 'WOR watched' : m.behind > 0 ? 'behind schedule' : 'ahead of schedule'}</div></button>
       <div class="stat"><div class="v num">${mins(m.otherToday).replace(' min', 'm')}</div><div class="k">Anki & Qs today</div></div>
       <div class="stat ${m.streak ? 'good' : ''}"><div class="v num">${ICON.flame}${m.streak}</div><div class="k">day streak</div></div>
     </div>

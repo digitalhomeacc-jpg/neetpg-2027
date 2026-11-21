@@ -104,6 +104,7 @@ export function view() {
   </section>
 
   <div class="btns"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
+  <div class="btns" style="margin-top:8px"><button class="btn block" data-act="past">📅 Past days: what you did, day by day</button></div>
   <div class="btns" style="margin-top:8px"><button class="btn" data-act="report">📊 Weekly report</button><button class="btn" data-act="share-card">Share card</button></div>
   <button class="card tomorrow" data-act="anki">
     <span class="rbadge" style="--h:200">🗂️</span>

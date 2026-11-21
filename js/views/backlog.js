@@ -148,6 +148,7 @@ export function view() {
       ${tile(`${overdue.length}`, `overdue revisions · ${mins(overdueMins)}`, overdue.length > 5 ? 'bad' : overdue.length ? 'warn' : 'good')}
       ${tile(`${missed14}`, `missed study days, last 2 wks`, missed14 > 3 ? 'bad' : missed14 ? 'warn' : 'good')}
     </div>
+    <button class="btn block" data-act="past" style="margin-top:12px">See it day by day</button>
     <p class="hint">Schedule = the same share of WOR every study day from ${fmtDay(st.start)} (your start date) to ${fmtDay(st.target)}. Behind = hours of watching, at your speed, needed to catch up to it.</p>
     <ul class="conseq" style="margin-top:14px">
       ${overdue.length ? `<li>Oldest overdue revision: <b>${oldest} days</b>. Clear the oldest first: they've lost the most.</li>` : '<li>No overdue revisions. Keep it that way: do revisions before new videos.</li>'}
