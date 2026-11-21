@@ -109,7 +109,7 @@ export function view() {
   </section>
 
   ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
-  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="duty-open">🏥 Duty & free time</button></div>
+  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="day">🗓 Day planner</button><button class="btn" data-act="duty-open">🏥 Duty & free time</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn primary" data-act="plan-week">🗓️ Plan the week</button><button class="btn" data-act="ics">📅 To Calendar</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="rehearsals">🎯 GT rehearsals</button><button class="btn" data-act="final-preview">🏁 Final 7 days</button></div>

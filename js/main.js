@@ -29,14 +29,15 @@ import * as pytV from './views/pyt.js';
 import * as conceptsV from './views/concepts.js';
 import * as updates from './update.js';
 import * as pastV from './views/past.js';
+import * as dayV from './views/dayview.js';
 import { quoteFor } from './quotes.js';
 import { writeSummary } from './notify.js';
 import { startSync } from './sync.js';
 import * as historyV from './history.js';
 import { phases } from './core.js';
 
-const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV, ankilib: ankiLibV, duty: dutyV, pyts: pytV, concepts: conceptsV, past: pastV };
-const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV, dutyV, revTimeV, pytV, conceptsV, pastV];
+const VIEWS = { today: todayV, plan: planV, videos: videosV, tests: testsV, progress: progressV, settings: settingsV, history: historyV, times: timesV, pins: pinsV, report: reportV, pairs: { view: extrasV.pairsView }, revisions: revisionsV, backlog: backlogV, anki: ankiV, ankilib: ankiLibV, duty: dutyV, pyts: pytV, concepts: conceptsV, past: pastV, day: dayV };
+const MODULES = [todayV, planV, videosV, testsV, progressV, settingsV, videoS, reviseS, focusS, historyV, plannerS, welcomeV, timesV, watchS, healthS, pinsV, weekS, reportV, extrasV, revisionsV, backlogV, ankiV, ankiLibV, dutyV, revTimeV, pytV, conceptsV, pastV, dayV];
 
 function quickActions() {
   return `<h3>Quick add</h3><div class="sub">Log what you just did.</div>
@@ -46,6 +47,7 @@ function quickActions() {
       <li class="item"><span class="rbadge" style="--h:0">${ICON.bug}</span><button class="open" data-act="qa-mistake"><div class="t">Log a mistake</div><div class="s">Pulls that video's next revision forward</div></button></li>
       <li class="item"><span class="rbadge" style="--h:45">📌</span><button class="open" data-act="qa-pins"><div class="t">High-yield sheet</div><div class="s">Facts you've pinned, by subject</div></button></li>
       <li class="item"><span class="rbadge" style="--h:160">🔁</span><button class="open" data-act="revisions" data-v="r1"><div class="t">Revisions</div><div class="s">R1–R5 with dates, limits and time taken</div></button></li>
+      <li class="item"><span class="rbadge" style="--h:190">🗓</span><button class="open" data-act="day"><div class="t">Day planner</div><div class="s">Plan study hours; see sleep, duty and what you did on a timeline</div></button></li>
       <li class="item"><span class="rbadge" style="--h:210">📅</span><button class="open" data-act="past"><div class="t">Past days</div><div class="s">Day by day: what you did, where the backlog came from, fix entries</div></button></li>
       <li class="item"><span class="rbadge" style="--h:10">⚠️</span><button class="open" data-act="backlog"><div class="t">Backlogs and self-improvement</div><div class="s">What skipping costs, and how to get back</div></button></li>
       <li class="item"><span class="rbadge" style="--h:280">📚</span><button class="open" data-act="pyts"><div class="t">PYTs by priority</div><div class="s">Most, moderately and least important topics, and what was asked</div></button></li>
@@ -73,6 +75,7 @@ const ACTIONS = Object.assign({
     if (S.ui.tab === 'duty') { S.ui.tab = S.ui.dutyBack || 'plan'; return 'enter'; }
     if (S.ui.tab === 'ankilib') { S.ui.tab = S.ui.libBack || 'anki'; return 'enter'; }
     if (S.ui.tab === 'anki') { S.ui.tab = S.ui.ankiBack || 'progress'; return 'enter'; }
+    if (S.ui.tab === 'day') { S.ui.tab = S.ui.dayBack || 'today'; return 'enter'; }
     if (S.ui.tab === 'past') { S.ui.tab = S.ui.pastBack || 'today'; return 'enter'; }
     if (S.ui.tab === 'backlog') { S.ui.tab = S.ui.backlogBack || 'today'; return 'enter'; }
     if (S.ui.tab === 'report') { S.ui.tab = S.ui.reportBack || 'progress'; return 'enter'; }
@@ -118,7 +121,7 @@ function render({ top = false, enter = false } = {}) {
   const tab = VIEWS[S.ui.tab] ? S.ui.tab : 'today';
   const { title, meta, html } = VIEWS[tab].view();
   document.getElementById('nav-title').textContent = title;
-  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog', 'anki', 'ankilib', 'duty', 'pyts', 'concepts', 'past'].includes(tab)
+  document.getElementById('nav-btns').innerHTML = ['settings', 'history', 'times', 'pins', 'report', 'pairs', 'revisions', 'backlog', 'anki', 'ankilib', 'duty', 'pyts', 'concepts', 'past', 'day'].includes(tab)
     ? `<button class="icon-btn" data-act="back" aria-label="Back">${ICON.back}</button>`
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;

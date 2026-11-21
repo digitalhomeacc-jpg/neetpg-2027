@@ -8,6 +8,7 @@ import { watchPill } from './watch.js';
 import { checkinCard } from './health.js';
 import { rehearsalCard, finalCard } from './extras.js';
 import { backlogCard } from './backlog.js';
+import { todayCard as dayCard } from './dayview.js';
 import { account } from '../sync.js';
 import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode } from '../core.js';
 import { revTimeChips, upNextHtml } from './revtime.js';
@@ -162,6 +163,7 @@ export function view() {
   ${backupNudge()}
   ${new Date().getDay() === 0 ? `<button class="card tomorrow" data-act="report"><span class="rbadge" style="--h:250">📊</span><span class="grow"><span class="t">Your week in review</span><span class="s">Two minutes: what went well, what didn't, one change</span></span><span class="faint">›</span></button>` : ''}
 
+  ${dayCard()}
   ${backlogCard(m)}
   ${sectionH('Revise today', `${nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span> · ` : ''}<button class="link" data-act="revisions" data-v="r1">All revisions</button>`)}
   ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {
