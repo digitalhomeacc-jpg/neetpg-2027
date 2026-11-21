@@ -36,6 +36,10 @@ export function ingestFromUrl() {
   let sl = sleepHours(raw);
   if (sl != null && sl < 0.5) sl = NaN; // 0h: the Shortcut's filters most likely removed every sample
   const sleep = num(sl, 0, 16), hrv = num(q.get('hrv'), 1, 300), rhr = num(q.get('rhr'), 20, 200), steps = num(q.get('steps'), 0, 100000);
+  // Keep what arrived and, if it couldn't be used, why: shown on Today, not only in a toast.
+  rec.raw = raw == null ? null : String(raw).slice(0, 40);
+  rec.err = raw == null ? 'no sleep value in the link' : Number.isNaN(sl) ? '0h (the filters probably removed every sample)' : sleep == null ? `couldn't read "${String(raw).slice(0, 24)}"` : null;
+  if (!rec.err) delete rec.err;
   if (sleep != null) rec.sleep = sleep;
   if (hrv != null) rec.hrv = hrv;
   if (rhr != null) rec.rhr = rhr;
@@ -48,14 +52,16 @@ export function ingestFromUrl() {
   return true;
 }
 
+const hm = x => { const t = Math.round(x * 60); return `${Math.floor(t / 60)}h ${String(t % 60).padStart(2, '0')}m`; };
 export function checkinCard() {
   const t = today(), x = S.health[t] || {};
   if (x.energy && x.sleep != null && !S.ui.editCheckin) {
-    return `<button class="checkin done" data-act="ci-edit"><span>🌙 <b class="num">${x.sleep}h</b> sleep${x.hrv ? ` · HRV <b class="num">${x.hrv}</b>` : ''} · energy ${ENERGY[x.energy - 1][1]}</span><span class="faint small">Edit</span></button>`;
+    return `<button class="checkin done" data-act="ci-edit"><span>🌙 <b class="num">${hm(x.sleep)}</b> sleep${x.hrv ? ` · HRV <b class="num">${x.hrv}</b>` : ''} · energy ${ENERGY[x.energy - 1][1]}</span><span class="faint small">Edit</span></button>`;
   }
   return `<section class="card checkin">
-    <div class="ci-q">How did you sleep?${x.src === 'health' ? ' <span class="pill accent">from Health</span>' : ''}</div>
-    <div class="chips">${[5, 6, 7, 8, 9].map(n => `<button class="chip" data-act="ci-sleep" data-v="${n}" aria-pressed="${Math.round(x.sleep ?? -1) === n}">${n}h${n === 9 ? '+' : ''}</button>`).join('')}</div>
+    <div class="ci-q">How did you sleep?${x.src === 'health' ? ` <span class="pill accent">from Health${x.sleep != null ? `: ${hm(x.sleep)}` : ''}</span>` : ''}</div>
+    ${x.src === 'health' && x.err ? `<p class="small warn-t" style="margin:4px 0 8px">The Shortcut ran, but sleep wasn't saved: ${h(x.err)}${x.raw != null ? ` (it sent "${h(x.raw)}")` : ''}. Pick your hours below, and see Settings → Apple Health.</p>` : ''}
+    <div class="chips">${[5, 6, 7, 8, 9].map(n => `<button class="chip" data-act="ci-sleep" data-v="${n}" aria-pressed="${x.sleep != null && Math.min(9, Math.max(5, Math.round(x.sleep))) === n}">${n === 5 ? '≤5h' : n === 9 ? '9h+' : `${n}h`}</button>`).join('')}</div>
     <div class="ci-q" style="margin-top:12px">Energy right now?</div>
     <div class="chips energy">${ENERGY.map(([n, e]) => `<button class="chip" data-act="ci-energy" data-v="${n}" aria-pressed="${x.energy === n}">${e}</button>`).join('')}</div>
   </section>`;
@@ -104,7 +110,7 @@ export function healthSettings() {
 }
 
 export const actions = {
-  'ci-sleep': el => { const t = today(); S.health[t] = { ...(S.health[t] || {}), sleep: +el.dataset.v, src: S.health[t]?.src || 'checkin' }; save(); },
+  'ci-sleep': el => { const t = today(); const x = { ...(S.health[t] || {}), sleep: +el.dataset.v, src: S.health[t]?.src || 'checkin' }; delete x.err; S.health[t] = x; save(); },
   'ci-energy': el => { const t = today(); S.health[t] = { ...(S.health[t] || {}), energy: +el.dataset.v }; S.ui.editCheckin = false; save(); },
   'ci-edit': () => { S.ui.editCheckin = true; },
   'health-copy': () => copy(`${location.origin + location.pathname}?health=1&sleep=SLEEP&hrv=HRV&rhr=RHR`, 'Link copied. Paste it into the Shortcut’s Text action.'),
