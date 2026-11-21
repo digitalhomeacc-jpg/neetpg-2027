@@ -23,7 +23,7 @@ function syncCard() {
     return `<div class="auth">
       <div class="seg auth-seg"><button data-act="auth-mode" data-v="in" aria-pressed="${!up}">Sign in</button><button data-act="auth-mode" data-v="up" aria-pressed="${up}">Create account</button></div>
       <p class="small muted auth-lead">${up ? 'One account for all your devices. Your progress on this phone becomes your starting point.' : 'Use the same email and password on iPhone and iPad. Edits on both are merged.'}</p>
-      <label class="auth-field"><span>Email</span><input id="sy-email" class="inp" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" value="${h(auth.email)}"></label>
+      <label class="auth-field"><span>Email</span><input id="sy-email" class="inp" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" value="${h(auth.email || sync.lastEmail())}"></label>
       <label class="auth-field"><span>Password</span><div class="pw"><input id="sy-pass" class="inp" type="${auth.show ? 'text' : 'password'}" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'At least 6 characters' : 'Your password'}" value="${h(auth.pass)}">
         <button class="pw-eye" data-act="auth-show" aria-label="${auth.show ? 'Hide' : 'Show'} password">${auth.show ? 'Hide' : 'Show'}</button></div></label>
       ${up ? `<label class="auth-field"><span>Confirm password</span><input id="sy-pass2" class="inp" type="${auth.show ? 'text' : 'password'}" autocomplete="new-password" placeholder="Type it again" value="${h(auth.pass2)}"></label>` : ''}
@@ -159,7 +159,7 @@ const friendly = m => /invalid login credentials/i.test(m) ? 'Wrong email or pas
 const rerender = () => document.dispatchEvent(new Event('pg27:render'));
 
 function authAct(kind) {
-  const email = auth.email.trim(), pass = auth.pass;
+  const email = (auth.email || sync.lastEmail()).trim(), pass = auth.pass;
   auth.error = ''; auth.note = '';
   if (!/^\S+@\S+\.\S+$/.test(email)) { auth.error = 'Enter a valid email.'; return; }
   if (pass.length < 6) { auth.error = 'Passwords have at least 6 characters.'; return; }

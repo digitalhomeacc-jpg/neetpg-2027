@@ -23,8 +23,13 @@ async function call(path, { method = 'GET', body, token, headers = {} } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new Error(data?.msg || data?.error_description || data?.message || data?.error || `HTTP ${res.status}`);
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; } // e.g. a Wi-Fi login page instead of the server
+  if (!res.ok || (text && data === null)) {
+    const err = new Error(data?.msg || data?.error_description || data?.message || data?.error || `HTTP ${res.status}`);
+    err.status = res.ok ? 0 : res.status;
+    throw err;
+  }
   return data;
 }
 const keep = d => saveAuth({ token: d.access_token, refresh: d.refresh_token, exp: Date.now() + (d.expires_in - 60) * 1000, uid: d.user.id, email: d.user.email });
@@ -38,11 +43,28 @@ export async function signUp(email, password) {
 export const resetPassword = email => call('/auth/v1/recover', { method: 'POST', body: { email } });
 export function signOut() { saveAuth(null); S.sync = null; save(); }
 
+// The sign-in lasts an hour and is renewed with a one-time refresh code. Only the server saying
+// "this sign-in is no longer valid" signs you out. No connection, a slow network, the app being
+// put away mid-request, a Wi-Fi login page or a server hiccup keep you signed in; it simply tries
+// again on the next sync. Only one renewal runs at a time (each refresh code works once).
+let refreshing = null;
+export const lastEmail = () => { try { return localStorage.getItem('pg27.lastEmail') || ''; } catch { return ''; } };
 async function token() {
   if (!auth) throw new Error('Not signed in');
   if (Date.now() < auth.exp) return auth.token;
-  try { keep(await call('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: auth.refresh } })); }
-  catch (e) { saveAuth(null); throw new Error('Signed out. Please sign in again.'); }
+  refreshing ||= (async () => {
+    const used = auth.refresh;
+    try { keep(await call('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: used } })); }
+    catch (e) {
+      if (auth && auth.refresh !== used) return; // renewed meanwhile
+      if (e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) {
+        try { localStorage.setItem('pg27.lastEmail', auth.email); } catch { /* ignore */ }
+        saveAuth(null); throw new Error('Signed out. Please sign in again.');
+      }
+      throw e; // offline or server trouble: stay signed in
+    } finally { refreshing = null; }
+  })();
+  await refreshing;
   return auth.token;
 }
 
@@ -158,7 +180,7 @@ export async function syncNow() {
     await syncPack(tk);
   } catch (e) {
     status.state = 'error';
-    status.error = /failed to fetch|network/i.test(e.message) ? 'No connection. It will sync when you\'re back online.'
+    status.error = /failed to fetch|load failed|network|HTTP 5|HTTP 0|timed out/i.test(e.message) || e.status === 0 || e.status >= 500 ? 'No connection. It will sync when you\'re back online.'
       : /signed out/i.test(e.message) ? e.message
       : /permission denied for table/i.test(e.message)
       ? 'The sync table needs access rights. In Supabase (this app\'s project), open SQL Editor and run the "grant" lines at the end of tools/supabase.sql, then tap Sync now.'
