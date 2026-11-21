@@ -31,12 +31,14 @@ function body() {
   </div>`;
 }
 
-export function showHello() {
+export function showHello(atLaunch = false) {
   if (open || !S.onboarded || (navigator.webdriver && !window.PG27_HELLO)) return; // automated tests skip it
   open = true;
   const r = root();
-  r.innerHTML = `<div class="pgw" role="dialog" aria-label="Welcome">${body()}</div>`;
-  requestAnimationFrame(() => r.firstElementChild?.classList.add('in'));
+  // At launch it's drawn fully opaque straight away (under the launch screen), so nothing
+  // behind it ever shows through; coming back to the app it fades in.
+  r.innerHTML = `<div class="pgw${atLaunch ? ' in' : ''}" role="dialog" aria-label="Welcome">${body()}</div>`;
+  if (!atLaunch) requestAnimationFrame(() => r.firstElementChild?.classList.add('in'));
 }
 
 export function closeHello() {

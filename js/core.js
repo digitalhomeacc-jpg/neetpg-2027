@@ -42,9 +42,15 @@ const pad = n => String(n).padStart(2, '0');
 export const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 export const today = () => iso(new Date());
-export const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
-export const dayDiff = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
-export const dow = s => parse(s).getDay();
+// Day arithmetic runs hundreds of thousands of times when plans are simulated, so dates are
+// turned into day numbers once (a table from 2024 to 2032) instead of building Date objects.
+const D0 = Date.UTC(2024, 0, 1) / 864e5, DAYS = [], IDX = new Map();
+for (let i = 0; i < 365 * 9; i++) { const d = new Date((D0 + i) * 864e5); const s = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; DAYS.push(s); IDX.set(s, i); }
+const dayNo = s => { const i = IDX.get(s); if (i !== undefined) return i; const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5 - D0; };
+const fromNo = i => i >= 0 && i < DAYS.length ? DAYS[i] : (() => { const d = new Date((D0 + i) * 864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; })();
+export const addDays = (s, n) => fromNo(dayNo(s) + n);
+export const dayDiff = (a, b) => dayNo(b) - dayNo(a);
+export const dow = s => ((dayNo(s) + 1) % 7 + 7) % 7; // 1 Jan 2024 was a Monday
 export const fmtDay = s => { const d = parse(s); return `${d.getDate()} ${MON[d.getMonth()]}`; };
 export const fmtDow = s => { const d = parse(s); return `${DOW_SHORT[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`; };
 export const fmtDayLong = s => { const d = parse(s); return `${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}`; };
@@ -324,7 +330,17 @@ export function revisionsOn(d) {
   return VIDS.map(v => ({ v, r: revInfo(v) })).filter(x => x.r?.k && x.r.due === d);
 }
 
+// Every screen asks for these numbers, often several times per redraw: work them out once per
+// change (any save) and per day.
+let mKey = '', mVal = null;
 export function metrics() {
+  const k = `${saveVersion}|${today()}`;
+  if (k === mKey) return mVal;
+  const v = metricsNow();
+  mKey = `${saveVersion}|${today()}`; mVal = v;
+  return v;
+}
+function metricsNow() {
   const t = today(), st = S.settings;
   let total = 0, done = 0, doneBefore = 0, frToday = 0, realAll = 0, wSpeed = 0, wMins = 0, doneCount = 0, recent = 0;
   const recentFrom = addDays(t, -13);

@@ -231,8 +231,10 @@ healthS.ingestFromUrl();
 historyV.startHistory();
 // Every launch starts on Today with a short welcome (not mid-way through some other screen).
 const fresh = !welcomeV.needed() && !/[?&]health=/.test(location.search) && helloV.startScreen();
-render({ top: true, enter: true });
-if (fresh) helloV.showHello();
+render({ top: true, enter: !fresh });
+if (fresh) helloV.showHello(true);
+// Hand over from the launch screen in one step: the welcome (or Today) is already drawn under it.
+requestAnimationFrame(() => { const b = document.getElementById('boot'); if (b) { b.classList.add('gone'); setTimeout(() => b.remove(), 320); } });
 startSync();
 updates.startUpdates();
 document.addEventListener('pg27:updated', e => toast(`Updated to version ${e.detail}`));

@@ -47,11 +47,9 @@ import { save } from '../core.js';
 
 function quoteStrip() {
   const x = QUOTES[quoteIndex(S.ui)];
-  const text = `“${h(x.q)}” — ${h(x.who)}`;
-  const dur = Math.max(14, Math.round(x.q.length * 0.2));
-  return `<button class="quote" data-act="quote-next" aria-label="Quote: ${h(x.q)} by ${h(x.who)}. Tap for another">
-    <div class="qm"><div class="qtrack" style="--dur:${dur}s"><span>${text}</span><span aria-hidden="true">${text}</span></div></div>
-    <div class="qsrc"><b>${h(x.who)}</b> · ${h(x.src)}<span class="qtap">Tap for another</span></div>
+  return `<button class="quote q2" data-act="quote-next" aria-label="Quote: ${h(x.q)} by ${h(x.who)}. Tap for another">
+    <span class="q2-t">“${h(x.q)}”</span>
+    <span class="q2-s">${h(x.who)} · ${h(x.src)}</span>
   </button>`;
 }
 

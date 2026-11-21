@@ -81,7 +81,7 @@ export function view() {
       <p class="hint">"Behind/ahead" is measured from this date. Set it to today for a fresh start.</p></div>
     <div class="field"><label for="s-target">Finish WOR first watch by</label><input id="s-target" type="date" data-set="target" value="${st.target}"></div>
     <div class="field"><label for="s-exam">Exam date</label><input id="s-exam" type="date" data-set="exam" value="${st.exam}">
-      <p class="hint">NBEMS hasn't announced NEET PG 2027. This estimate is based on 30 Aug 2026. Phases in Plan follow this date.</p></div>
+      <p class="hint">NBEMS hasn't announced the NEET PG 2027 date yet. Change this when it does: the phases in Plan and the final-weeks revision limits follow it.</p></div>
     <div class="field"><span class="lbl">Rest days</span><div class="days">${DOW.map((d, i) => `<button data-act="rest" data-v="${i}" aria-pressed="${st.rest.includes(i)}" aria-label="${DOW_LONG[i]}">${d}</button>`).join('')}</div></div>
     <div class="field"><span class="lbl">Usual watching speed</span>${seg('speed', SPEEDS.map(s => [s, sp(s)]), st.speed)}
       <p class="hint">Pre-selected when you mark a video.</p>

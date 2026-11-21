@@ -18,10 +18,19 @@ const busy = () => !!(S.focus || S.watch || document.querySelector('#sheet-root 
 
 export async function applyUpdate() {
   try { localStorage.setItem(KEY, String(upd.latest || '')); } catch { /* ignore */ }
-  // Second try in a row (the browser held on to old files): start the offline layer afresh.
-  if (upd.stuck) { try { for (const r of await navigator.serviceWorker?.getRegistrations() || []) await r.unregister(); } catch { /* ignore */ } }
-  try { const reg = await navigator.serviceWorker?.getRegistration(); await reg?.update(); } catch { /* offline */ }
-  // Drop the old offline copy so nothing stale can come back; the reload fetches everything fresh.
+  const reg = await navigator.serviceWorker?.getRegistration().catch(() => null);
+  if (reg && !upd.stuck) {
+    // Fetch the new version's worker; it saves every file of the new version, then takes over,
+    // and the app reloads into it (main.js reloads on controllerchange).
+    try { await reg.update(); } catch { /* offline */ }
+    const sw = reg.installing || reg.waiting;
+    if (sw) {
+      await new Promise(res => { const t = setTimeout(res, 15000); sw.addEventListener('statechange', () => { if (sw.state === 'activated' || sw.state === 'redundant') { clearTimeout(t); res(); } }); });
+      location.reload(); return;
+    }
+  }
+  // No new worker came (or a previous try didn't stick): start the offline copy afresh.
+  try { for (const r of await navigator.serviceWorker?.getRegistrations() || []) await r.unregister(); } catch { /* ignore */ }
   try { for (const k of await caches.keys()) if (k !== 'pg27-data') await caches.delete(k); } catch { /* ignore */ }
   location.reload();
 }

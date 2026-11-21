@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>PG 2027</title>
 <meta name="description" content="Personal NEET PG 2027 tracker: Marrow WOR videos, spaced revisions, tests and Anki.">
-<meta name="theme-color" content="#05070b" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a1016" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f5f8" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,8 +16,16 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css">
+<style>
+  /* Launch screen: painted before anything else loads, so the app never shows half-drawn. */
+  #boot { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #0a1016; transition: opacity .28s ease; }
+  @media (prefers-color-scheme: light) { #boot { background: #f2f5f8; } #boot b { color: #0c1a26; } }
+  #boot b { font: 700 22px/1 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -.02em; color: #fff; opacity: .92; }
+  #boot.gone { opacity: 0; pointer-events: none; }
+</style>
 </head>
 <body>
+<div id="boot"><b>PG 2027</b></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">

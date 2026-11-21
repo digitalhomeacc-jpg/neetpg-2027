@@ -1,5 +1,5 @@
 // Offline cache for the app, plus daily reminders. Bump VERSION whenever any file changes.
-const VERSION = 'pg27-v47';
+const VERSION = 'pg27-v48';
 const FILES = ['./', 'index.html', 'css/app.css', 'js/main.js', 'js/core.js', 'js/ui.js', 'js/notify.js',
   'js/views/today.js', 'js/views/plan.js', 'js/views/videos.js', 'js/views/tests.js', 'js/views/progress.js',
   'js/views/settings.js', 'js/views/video.js', 'js/views/revise.js', 'js/views/focus.js', 'js/history.js', 'js/views/planner.js', 'js/quotes.js', 'js/views/welcome.js', 'js/views/times.js', 'js/views/watch.js', 'js/views/health.js', 'js/views/pins.js', 'js/views/week.js', 'js/views/report.js', 'js/views/extras.js', 'js/views/revisions.js', 'js/views/backlog.js', 'js/sync.js', 'js/config.js', 'js/data-wor.js', 'js/data-anki.js', 'js/data-anki-lib.js', 'js/views/anki.js', 'js/views/ankilib.js', 'js/views/hello.js', 'js/views/duty.js', 'js/views/revtime.js', 'js/views/pyt.js', 'js/views/concepts.js', 'js/data-concepts.js', 'js/version.js', 'js/update.js', 'js/note.js', 'manifest.webmanifest',
@@ -13,14 +13,23 @@ self.addEventListener('activate', e => {
     .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== 'pg27-data').map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
-// Network first so updates show straight away; the cache when offline.
+// Cache first: the app opens instantly from this version's saved copy, even on a slow or no
+// connection. New versions arrive whole (a new service worker caches every file, then takes
+// over), so files from two versions never mix. Version checks always go to the network.
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(res => {
-    const copy = res.clone();
-    caches.open(VERSION).then(c => c.put(e.request, copy));
-    return res;
-  }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html'))));
+  const url = new URL(e.request.url);
+  if (e.request.method !== 'GET' || url.origin !== location.origin || url.searchParams.has('check')) return;
+  e.respondWith(caches.open(VERSION).then(async c => {
+    const hit = await c.match(e.request, { ignoreSearch: true });
+    if (hit) return hit;
+    try {
+      const res = await fetch(e.request);
+      if (res.ok) c.put(e.request, res.clone());
+      return res;
+    } catch {
+      return (e.request.mode === 'navigate' && await c.match('index.html')) || Response.error();
+    }
+  }));
 });
 
 /* ---------- reminders ---------- */
