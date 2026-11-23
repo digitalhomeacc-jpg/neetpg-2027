@@ -30,7 +30,7 @@ export function ledger(d, now = new Date()) {
   const other = Math.max(0, upTo - sleep - dutyNet - study);
   return { d, upTo, slot, sleep, duty: dutyNet, study, other, free: Math.max(0, upTo - sleep - dutyNet), sleepKnown: hl.sleep != null, timedSleep: !!hl.slp, dutyEntered: du.entered, dutyUntimed: du.untimed > 0 };
 }
-function bar(L) {
+export function bar(L) {
   // Runs of the same kind → one rectangle each.
   const COL = ['other', 'sleep', 'duty', 'study'], out = [];
   for (let i = 0; i < L.upTo;) { let j = i; while (j < L.upTo && L.slot[j] === L.slot[i]) j++; out.push(`<i class="tl-${COL[L.slot[i]]}" style="left:${(i / 14.4).toFixed(2)}%;width:${((j - i) / 14.4).toFixed(2)}%"></i>`); i = j; }

@@ -78,9 +78,10 @@ export function view() {
     // Simulated with revisions: the hours a day that make the deadline, cut by the skipped share.
     const finish = simulate((hoursNeeded() ?? 8) * 60 * share).finish || st.exam;
     const late = Math.max(0, dayDiff(st.target, finish));
-    const p2days = Math.max(0, dayDiff(finish, ph[1].end));
+    // Days left for R1 and BTR: from finishing WOR to the start of R2 (combined notes).
+    const p2days = Math.max(0, dayDiff(finish, ph[3].start));
     const catchUp = left ? (remReal / (left * share)) : 0;
-    return { s, finish, late, p2days, p2orig: Math.max(1, dayDiff(ph[1].start, ph[1].end)), catchUp };
+    return { s, finish, late, p2days, p2orig: Math.max(1, dayDiff(ph[1].start, ph[3].start)), catchUp };
   });
 
   // 3. Backlog right now
@@ -129,13 +130,13 @@ export function view() {
   ${sectionH('If it becomes a habit', 'skipping study days each week')}
   <section class="card">
     <div class="sc-table">
-      <div class="sc-row sc-head"><span>Skip</span><span>WOR done</span><span>Late by</span><span>Days left for BTR + PYQs + R1</span></div>
+      <div class="sc-row sc-head"><span>Skip</span><span>WOR done</span><span>Late by</span><span>Days left for R1 + BTR</span></div>
       ${scen.map(x => `<div class="sc-row${x.s ? (x.late > 14 ? ' bad' : x.late ? ' warn' : '') : ' good'}"><span>${x.s ? `${x.s} day${x.s > 1 ? 's' : ''}/week` : 'None'}</span><span class="num">${fmtDay(x.finish)}</span><span class="num">${x.late ? `${x.late} days` : 'on time'}</span><span class="num">${x.p2days} / ${x.p2orig} days</span></div>`).join('')}
     </div>
-    <p class="hint">At ${mins(T)} a study day (the share each needs), without making it up on other days. Phase 2 (BTR, topic-wise PYQs and R1) only starts once WOR is done, so every late day comes out of it. The last column is how many of its days would be left.</p>
+    <p class="hint">At ${mins(T)} a study day (the share each needs), without making it up on other days. R1 and then BTR only start once WOR is done, so every late day comes out of them. The last column is how many days would be left for both before R2.</p>
     <ul class="conseq">
-      ${scen[1] ? `<li><b>One skipped day a week</b> pushes WOR to ${fmtDay(scen[1].finish)}${scen[1].late ? ` and takes ${scen[1].late} days from BTR and PYQs` : ''}. To skip it and still finish on time, the other days need ${mins(scen[1].catchUp)} each.</li>` : ''}
-      ${scen[2] ? `<li><b>Two a week</b> means ${scen[2].late ? `finishing ${scen[2].late} days late` : 'finishing just in time'}, leaving ${scen[2].p2days} of ${scen[2].p2orig} days for Phase 2.</li>` : ''}
+      ${scen[1] ? `<li><b>One skipped day a week</b> pushes WOR to ${fmtDay(scen[1].finish)}${scen[1].late ? ` and takes ${scen[1].late} days from R1 and BTR` : ''}. To skip it and still finish on time, the other days need ${mins(scen[1].catchUp)} each.</li>` : ''}
+      ${scen[2] ? `<li><b>Two a week</b> means ${scen[2].late ? `finishing ${scen[2].late} days late` : 'finishing just in time'}, leaving ${scen[2].p2days} of ${scen[2].p2orig} days for R1 and BTR.</li>` : ''}
       <li><b>Revisions compound.</b> Every video you watch adds four revisions. When days are skipped, they pile up, recall falls, and each revision takes longer: the time you save by skipping comes back with interest.</li>
       <li><b>The last weeks get squeezed.</b> R3 and R4 have to finish before ${fmtDay(st.exam)}. Late starts mean shorter gaps and less time for grand tests, which toppers credit most.</li>
     </ul>

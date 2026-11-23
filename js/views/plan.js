@@ -1,5 +1,5 @@
 import {
-  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
+  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, phaseRoom, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
 import { sectionH, CHECK, seg, more, tools } from '../ui.js';
@@ -94,6 +94,7 @@ export function view() {
   <ul class="card flush list phases">${phaseList}</ul>
 
   ${m.remaining > 0 ? `
+  ${(() => { const r = phaseRoom(); return r.fits ? '' : `<section class="card note-card warn-card"><b>Tight:</b> between finishing WOR and the final sprint (${fmtDay(r.from)} – ${fmtDay(addDays(r.to, -1))}) there are <b>${r.span} days</b> for R1, BTR (about ${r.btrDays} days) and R2/R3. That doesn't fit. Options: finish WOR earlier (Settings), plan BTR alongside R1, or check the exam date. <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:8px">BTR takes about <input class="inp num" style="width:72px;min-height:32px;padding:4px 8px" type="number" min="20" max="120" data-btr-days value="${r.btrDays}"> days</label></section>`; })()}
   ${(() => { const R = roundsPlan(); return `${sectionH('Rounds', 'you pick the dates')}
   <section class="card rounds-card">
     <p class="small muted" style="margin:0 0 6px">Choose when each round happens. The time it takes comes from the lectures: first read 100% of the runtime, R1 50%, R2 35%, R3 25%, R4 15% (at your ${m.planSpeed.toFixed(2).replace(/0$/, '')}×). BTR: enter its total hours.</p>
@@ -157,6 +158,7 @@ function icsFile(days, revBy) {
 }
 
 export function onChange(e) {
+  if (e.target.hasAttribute?.('data-btr-days')) { const n = Math.round(+e.target.value); if (n >= 10 && n <= 150) { S.settings.btrDays = n; save(); } return true; }
   const k = e.target.dataset?.round; if (!k) return false;
   const edge = e.target.dataset.edge, v = e.target.value;
   const R = (S.settings.rounds ||= {}), r = (R[k] ||= {});

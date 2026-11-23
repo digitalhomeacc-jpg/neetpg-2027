@@ -3,9 +3,9 @@
 // revision, Study now and Focus session at its real time, a running timer live). Sleep from
 // Apple Health and duty shifts are drawn behind both. The summary compares plan with reality,
 // including how much of your study happened at the times you planned it.
-import { S, VIDS, BY, PASSES, PLABEL, FOCUS_KINDS, prog, passMins, dutyOn, addDays, today, iso, isRest, save, uid, h, mins, fmtDow, fmtDayLong, metrics, revisionsOn } from '../core.js';
+import { S, VIDS, BY, PASSES, PLABEL, FOCUS_KINDS, prog, passMins, dutyOn, freeMinutes, addDays, today, iso, isRest, save, uid, h, mins, fmtDow, fmtDayLong, metrics, revisionsOn } from '../core.js';
 import { sectionH, openSheet, closeSheet, toast } from '../ui.js';
-import { ledger } from './duty.js';
+import { ledger, bar } from './duty.js';
 
 const PX = 1.1;                       // pixels per minute on the timeline
 const KIND = Object.fromEntries([['lectures', 'New lectures'], ['revision', 'Revision'], ...FOCUS_KINDS]);
@@ -51,10 +51,10 @@ function onPlan(d, act) {
 
 function dayStrip(d) {
   const t = today(), start = addDays(d, -3);
-  return `<div class="dv-strip">${Array.from({ length: 7 }, (_, i) => addDays(start, i)).map(x => {
+  return `<div class="dv-strip"><button class="dv-arrow" data-act="dv-go" data-d="${addDays(d, -1)}" aria-label="Previous day">‹</button>${Array.from({ length: 7 }, (_, i) => addDays(start, i)).map(x => {
     const p = blocksOn(x).reduce((a, b) => a + b.mins, 0);
-    return `<button class="dv-d${x === d ? ' on' : ''}${x === t ? ' today' : ''}" data-act="dv-go" data-d="${x}"><span>${fmtDow(x).split(' ')[0]}</span><b class="num">${+x.slice(8)}</b><i>${p ? mins(p).replace(' min', 'm') : ''}</i></button>`;
-  }).join('')}</div>`;
+    return `<button class="dv-d${x === d ? ' on' : ''}${x === t ? ' today' : ''}" data-act="dv-go" data-d="${x}"><span>${fmtDow(x).split(' ')[0].slice(0, 2)}</span><b class="num">${+x.slice(8)}</b><i>${p ? '•' : ''}</i></button>`;
+  }).join('')}<button class="dv-arrow" data-act="dv-go" data-d="${addDays(d, 1)}" aria-label="Next day">›</button></div>`;
 }
 
 function timeline(d) {
@@ -73,6 +73,37 @@ function timeline(d) {
     <div class="dv-tl" style="height:${y(1440)}px">${hours}<div class="dv-slots">${Array.from({ length: 24 }, (_, i) => `<button class="dv-slot" data-act="dv-new" data-at="${i * 60}" style="top:${y(i * 60)}px" aria-label="Plan ${clock(i * 60)}"></button>`).join('')}</div>${bands}<div class="dv-lane l">${planned}</div><div class="dv-lane r">${done}</div>${nowLine}</div>` };
 }
 
+// The day at a glance: a 24-hour bar of where the hours went, the figures in one line, and plan
+// against reality. Future days show duty, free time and what's planned.
+function summary(d, L, act, x) {
+  const t = today(), fig = (cls, v, k) => `<span class="dv-f ${cls}"><i></i><b class="num">${v}</b> ${k}</span>`;
+  const blocks = blocksOn(d);
+  if (x.future) {
+    const du = dutyOn(d), free = freeMinutes(d);
+    return `<section class="card dv-sum"><div class="dv-figs dv-glance">${fig('duty', mins(du.mins), 'duty')}${fig('free', free != null ? mins(free) : '—', 'free to study')}${fig('study', mins(x.plannedMin), 'study planned')}</div>
+      <p class="dv-note">${x.need ? `The day needs about <b>${mins(x.need)}</b> (new lectures and revisions due).` : 'Nothing needed: rest day.'}${x.lecturesPlanned.length ? ` ${x.lecturesPlanned.length} lecture${x.lecturesPlanned.length > 1 ? 's' : ''} planned.` : ''}</p></section>`;
+  }
+  const n = new Date(), nowM = n.getHours() * 60 + n.getMinutes();
+  const still = d === t ? blocks.reduce((a, b) => { const s = toMin(b.from), e = s + b.mins; return a + Math.max(0, e - Math.max(s, nowM)); }, 0) : 0;
+  const timed = act.timed.reduce((a, y) => a + y.b - y.a, 0);
+  const pctPlan = x.plannedMin ? Math.round(Math.min(1, x.studied / x.plannedMin) * 100) : null;
+  return `<section class="card dv-sum">
+    ${bar(L)}
+    <div class="dv-figs dv-glance">
+      ${fig('sleep', L.sleepKnown ? mins(L.sleep) : '—', d === t ? 'slept so far' : 'slept')}
+      ${fig('duty', mins(L.duty), 'duty')}
+      ${fig('study', mins(L.study), 'studied')}
+      ${L.sleepKnown ? fig('other', mins(L.other), 'other') : ''}
+      ${d === t ? fig('left', mins(1440 - nowM), 'left in the day') : ''}
+    </div>
+    ${x.plannedMin ? `<div class="dv-plan"><div class="row"><span class="grow">Planned <b class="num">${mins(x.plannedMin)}</b> · done <b class="num">${mins(x.studied)}</b></span><b class="num">${pctPlan}%</b></div>
+      <div class="bar-line"><i style="width:${pctPlan}%"></i></div>
+      <p class="dv-note">${timed ? `${Math.round((x.on / timed) * 100)}% of your study happened at the planned times` : 'No timed study yet'}${d === t && still ? ` · ${mins(still)} planned still to come` : ''}${x.need ? ` · the day needed ${mins(x.need)}` : ''}.</p></div>`
+      : `<p class="dv-note">${d === t ? `No study blocks planned today${x.need ? `; today needs ${mins(x.need)}` : ''}. Tap an hour on the timeline to plan one.` : 'No study blocks were planned this day.'}</p>`}
+    ${!L.sleepKnown ? '<p class="dv-note faint">"Other" (time not spent sleeping, on duty or studying) shows once sleep is in, from Apple Health or the morning check-in.</p>' : ''}
+  </section>`;
+}
+
 export function view() {
   const t = today(), d = S.ui.dvDay || t, m = metrics();
   const tl = timeline(d), L = tl.L, act = tl.act;
@@ -85,23 +116,13 @@ export function view() {
     title: d === t ? 'Your day' : fmtDow(d),
     meta: d === t ? fmtDayLong(d) : past ? 'Looking back' : 'Planning ahead',
     html: `${dayStrip(d)}
-  <div class="row dv-nav"><button class="btn small-btn" data-act="dv-go" data-d="${addDays(d, -1)}">‹ ${fmtDow(addDays(d, -1)).split(' ')[0]}</button>
-    ${d !== t ? `<button class="btn small-btn" data-act="dv-go" data-d="${t}">Today</button>` : ''}<span class="grow"></span>
-    <button class="btn small-btn" data-act="dv-go" data-d="${addDays(d, 1)}">${fmtDow(addDays(d, 1)).split(' ')[0]} ›</button></div>
-  <section class="card">
-    <div class="stats" style="margin:0">
-      <div class="stat"><div class="v num">${plannedMin ? mins(plannedMin) : '—'}</div><div class="k">planned study${need ? ` · day needs ${mins(need)}` : ''}</div></div>
-      ${future ? `<div class="stat"><div class="v num">${lecturesPlanned.length}</div><div class="k">lecture${lecturesPlanned.length === 1 ? '' : 's'} planned</div></div>`
-        : `<div class="stat good"><div class="v num">${mins(studied)}</div><div class="k">studied${plannedMin ? ` · ${Math.round(Math.min(1, studied / plannedMin) * 100)}% of plan` : ''}</div></div>`}
-      ${future ? `<div class="stat"><div class="v num">${revisionsOn(d).length}</div><div class="k">revisions due</div></div>`
-        : `<div class="stat"><div class="v num">${plannedMin ? `${Math.round((on / Math.max(1, act.timed.reduce((a, x) => a + x.b - x.a, 0))) * 100) || 0}%` : '—'}</div><div class="k">of study at planned times</div></div>`}
-    </div>
-    ${!future ? `<div class="tl-key num" style="margin-top:12px"><span class="k-sleep">${L.sleepKnown ? `Slept ${mins(L.sleep)}` : 'Sleep not in'}</span><span class="k-duty">Duty ${mins(L.duty)}</span><span class="k-study">Studied ${mins(L.study)}</span>${L.sleepKnown ? `<span class="k-other">Other ${mins(L.other)}</span>` : ''}</div>` : ''}
-    ${past && plannedMin && studied < plannedMin * 0.8 ? `<p class="hint">You planned ${mins(plannedMin)} and studied ${mins(studied)}. Look at where the planned blocks sit against what happened: that's usually the lesson.</p>` : ''}
-  </section>
-  <div class="btns"><button class="btn primary" data-act="dv-new" data-at="${d === t ? Math.ceil((new Date().getHours() * 60 + new Date().getMinutes()) / 30) * 30 : 19 * 60}">+ Plan a block</button>
-    <button class="btn" data-act="du-edit" data-d="${d}">${S.duty[d] != null ? '🏥 Duty' : '+ Duty'}</button>
-    <button class="btn" data-act="dv-copy" data-d="${d}">Copy ${fmtDow(addDays(d, -1)).split(' ')[0]}’s</button></div>
+  ${summary(d, L, act, { plannedMin, studied, on, need, future, past, lecturesPlanned })}
+  <div class="dv-acts">
+    <button class="dv-pill primary" data-act="dv-new" data-at="${d === t ? Math.ceil((new Date().getHours() * 60 + new Date().getMinutes()) / 30) * 30 : 19 * 60}">＋ Study block</button>
+    <button class="dv-pill" data-act="du-edit" data-d="${d}">${S.duty[d] != null ? 'Duty' : '＋ Duty'}</button>
+    <button class="dv-pill" data-act="dv-copy" data-d="${d}">Copy ${fmtDow(addDays(d, -1)).split(' ')[0]}</button>
+    ${d !== t ? `<button class="dv-pill" data-act="dv-go" data-d="${t}">Today</button>` : ''}
+  </div>
   <section class="card flush dv-card">${tl.html}</section>
   ${act.untimed.length ? `${sectionH('Logged without a time', 'counted, not drawn')}<ul class="card flush list">${act.untimed.map(x => `<li class="item"><span class="rbadge" style="--h:${x.kind === 'lectures' ? 160 : 260}">${x.k ? (x.k === 'fr' ? 'FW' : x.k.toUpperCase()) : 'F'}</span><div class="grow"><div class="t">${h(x.label)}</div><div class="s">${x.sub} · ${mins(x.m)}</div></div><button class="btn small-btn" ${x.sid ? `data-act="pd-edit-s" data-id="${x.sid}"` : `data-act="pd-edit-p" data-id="${x.id}" data-k="${x.k}"`}>Edit</button></li>`).join('')}</ul>` : ''}
   <p class="hint center" style="margin-top:12px">Tap an empty hour to plan it. Lectures and revisions you time with <b>Study now</b>, and Focus sessions, appear in “Done” at the real times.</p>`,

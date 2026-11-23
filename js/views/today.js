@@ -80,8 +80,8 @@ function weekStrip(m, fc) {
     const frac = tgt ? real / tgt : real ? 1 : 0;
     const cls = [d === m.t ? 'now' : '', d > m.t ? 'future' : '', rest ? 'rest' : ''].join(' ');
     const sub = rest && !real ? 'rest' : d > m.t ? (tgt ? mins(tgt).replace(' min', 'm') : '') : real ? mins(real).replace(' min', 'm') : d < m.t && tgt ? 'missed' : '';
-    cells += `<div class="wd ${cls}"><div class="wl">${DOW[parse(d).getDay()]}</div>${miniRing(frac, rest ? 'restring' : '')}
-      <div class="wn num">${parse(d).getDate()}</div><div class="ws num">${sub}</div></div>`;
+    cells += `<button class="wd ${cls}" data-act="day" data-d="${d}" aria-label="Open ${d}"><div class="wl">${DOW[parse(d).getDay()]}</div>${miniRing(frac, rest ? 'restring' : '')}
+      <div class="wn num">${parse(d).getDate()}</div><div class="ws num">${sub}</div></button>`;
   }
   return `<section class="card week">${cells}</section>`;
 }

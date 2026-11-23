@@ -603,7 +603,8 @@ export const plannedOn = id => Object.keys(S.plan).filter(d => d >= today() && S
 /* ---------- rounds: you choose the dates, the app works out the time ---------- */
 // Each round's share of the lecture runtime: first read 100%, R1 50%, R2 35%, R3 25%, R4 15%.
 // BTR has its own total hours, which you enter.
-export const ROUNDS = [['fr', 'First read', 1], ['r1', 'R1', REV.r1.budget], ['r2', 'R2', REV.r2.budget], ['r3', 'R3', REV.r3.budget], ['r4', 'R4', REV.r4.budget], ['btr', 'BTR', null]];
+// In your order: WOR first read → R1 → BTR → R2, R3, R4 (from combined notes).
+export const ROUNDS = [['fr', 'First read', 1], ['r1', 'R1', REV.r1.budget], ['btr', 'BTR', null], ['r2', 'R2', REV.r2.budget], ['r3', 'R3', REV.r3.budget], ['r4', 'R4', REV.r4.budget]];
 export function roundsPlan() {
   const st = S.settings, m = metrics(), t = m.t, R = st.rounds || {};
   const rows = ROUNDS.map(([k, label, pct]) => {
@@ -632,58 +633,49 @@ export function roundsPlan() {
 
 /* ---------- phases from now to the exam ---------- */
 export function phases() {
-  const st = S.settings, R = st.rounds || {};
-  const exam = st.exam, p1end = st.target;
-  // Final sprint: the last 6 weeks. Phase 3 normally starts 4 months out, but never so early that
-  // it swallows Phase 2: Phase 2 always gets at least half the time between WOR and the sprint.
-  // Dates you've chosen for the rounds and BTR take priority.
+  // Your workflow: WOR first read → R1 of every subject (+ PYQs) → BTR → R2/R3 from combined
+  // notes with grand tests → final sprint (R4). Dates you choose in Rounds take priority.
+  // Otherwise BTR gets its usual length (55 days unless you change it) and R1 and R2/R3 share
+  // the rest equally; if it can't all fit, everything is shared out in proportion.
+  const st = S.settings, R = st.rounds || {}, exam = st.exam, p1end = st.target;
   const ok = k => R[k]?.from && R[k]?.to;
-  let p4start = ok('r4') ? R.r4.from : addDays(exam, -42);
-  const between = Math.max(0, dayDiff(addDays(p1end, 1), p4start));
-  let p3start = ok('r2') ? R.r2.from : [addDays(exam, -120), addDays(p1end, 1 + Math.round(between / 2))].sort()[1];
-  if (p3start > p4start) p3start = p4start;
+  const btrDays = st.btrDays ?? 55;
+  const p5start = ok('r4') ? R.r4.from : addDays(exam, -42);
+  const span = Math.max(3, dayDiff(addDays(p1end, 1), p5start));
+  const fits = span - btrDays >= 20;
+  const r1Days = fits ? Math.round((span - btrDays) / 2) : Math.round(span * 0.25);
+  const btrLen = fits ? btrDays : Math.round(span * 0.5);
+  const p2start = ok('r1') ? (R.r1.from > p1end ? R.r1.from : addDays(p1end, 1)) : addDays(p1end, 1);
+  let p3start = ok('btr') ? R.btr.from : ok('r1') ? addDays(R.r1.to, 1) : addDays(p2start, r1Days);
+  // Phases follow one another: if BTR is set to start with (or before) R1, BTR's phase begins after R1.
+  if (p3start <= p2start) p3start = ok('r1') && R.r1.to >= p2start ? addDays(R.r1.to, 1) : addDays(p2start, Math.max(1, r1Days));
+  let p4start = ok('r2') ? R.r2.from : ok('btr') ? addDays(R.btr.to, 1) : addDays(p3start, btrLen);
+  if (p3start > p5start) p3start = p5start;
+  if (p4start <= p3start) p4start = addDays(p3start, 1);
+  if (p4start > p5start) p4start = p5start;
   return [
-    {
-      id: 'p1', name: 'WOR first watch', start: st.start, end: p1end,
-      blurb: 'Watch every WOR video once and unsuspend its Anki cards the same day.',
-      goals: [
-        ['p1-wor', 'Finish all 271 WOR videos'],
-        ['p1-anki', 'Unsuspend Anki cards for each video on the day you watch it'],
-        ['p1-reviews', 'Clear Anki reviews every day (FSRS, ~0.90 retention)'],
-        ['p1-pyq', 'Do the previous-year questions for each subject after its last video'],
-      ],
-    },
-    {
-      id: 'p2', name: 'BTR + PYQs + R1', start: addDays(p1end, 1), end: addDays(p3start, -1),
-      blurb: 'Second source, topic-wise previous-year questions, first revision.',
-      goals: [
-        ['p2-btr', 'Finish BTR videos'],
-        ['p2-pyq', 'Previous-year questions for every subject, topic-wise'],
-        ['p2-r1', 'R1 of every subject'],
-        ['p2-gt', 'One grand test a month, reviewed within 24 hours'],
-      ],
-    },
-    {
-      id: 'p3', name: 'Grand tests + R2/R3', start: p3start, end: addDays(p4start, -1),
-      blurb: 'Test weekly, then twice a week. Reviewing each test matters more than taking it.',
-      goals: [
-        ['p3-gt', 'A grand test every week, then two a week'],
-        ['p3-review', 'Log every wrong answer in the mistakes diary'],
-        ['p3-r2', 'R2 of every subject'],
-        ['p3-r3', 'R3 of weak subjects'],
-      ],
-    },
-    {
-      id: 'p4', name: 'Final sprint', start: p4start, end: exam,
+    { id: 'p1', name: 'WOR first read', start: st.start, end: p1end,
+      blurb: 'Watch every Marrow WOR video once and unsuspend its Anki cards the same day.',
+      goals: [['p1-wor', 'Finish all 271 WOR videos'], ['p1-anki', 'Unsuspend Anki cards for each video on the day you watch it'], ['p1-reviews', 'Clear Anki reviews every day (FSRS, ~0.90 retention)'], ['p1-pyq', 'Do the previous-year questions for each subject after its last video']] },
+    { id: 'p2', name: 'R1 + PYQs', start: p2start, end: addDays(p3start, -1),
+      blurb: 'First revision of every subject, with its previous-year questions topic-wise.',
+      goals: [['p2-r1', 'R1 of every subject'], ['p2-pyq', 'Previous-year questions for every subject, topic-wise'], ['p2-gt', 'One grand test a month, reviewed within 24 hours']] },
+    { id: 'p3', name: 'BTR', start: p3start, end: addDays(p4start, -1),
+      blurb: 'Second source. Add what BTR has to your WOR notes, so R2 onwards is one combined set.',
+      goals: [['p2-btr', 'Finish BTR videos'], ['p3-merge', 'Combine BTR points into your notes, subject by subject']] },
+    { id: 'p4', name: 'R2/R3 + grand tests', start: p4start, end: addDays(p5start, -1),
+      blurb: 'Revise from the combined notes. Test weekly, then twice a week; reviewing each test matters more than taking it.',
+      goals: [['p3-r2', 'R2 of every subject'], ['p3-r3', 'R3 of every subject (weak ones first)'], ['p3-gt', 'A grand test every week, then two a week'], ['p3-review', 'Log every wrong answer in the mistakes diary']] },
+    { id: 'p5', name: 'Final sprint (R4)', start: p5start, end: exam,
       blurb: 'Fast revision, mistakes diary, and tests every few days. Nothing new.',
-      goals: [
-        ['p4-r4', 'R4: last fast pass of everything'],
-        ['p4-diary', 'Go through the whole mistakes diary twice'],
-        ['p4-gt', 'A grand test every 3 days, at exam time of day'],
-        ['p4-sleep', 'Fix sleep to the exam schedule in the last 2 weeks'],
-      ],
-    },
+      goals: [['p4-r4', 'R4: last fast pass of everything'], ['p4-diary', 'Go through the whole mistakes diary twice'], ['p4-gt', 'A grand test every 3 days, at exam time of day'], ['p4-sleep', 'Fix sleep to the exam schedule in the last 2 weeks']] },
   ];
+}
+// Does the stretch between WOR and the final sprint hold R1, BTR and R2/R3 at BTR's usual length?
+export function phaseRoom() {
+  const st = S.settings, ps = phases(), btrDays = st.btrDays ?? 55;
+  const span = Math.max(0, dayDiff(ps[1].start, ps[4].start));
+  return { span, btrDays, fits: span - btrDays >= 20, from: ps[1].start, to: ps[4].start };
 }
 export const currentPhase = (t = today()) => phases().find(p => t >= p.start && t <= p.end) || (t < S.settings.start ? phases()[0] : null);
 
