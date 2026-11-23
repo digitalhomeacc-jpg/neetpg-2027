@@ -13,7 +13,7 @@ const toMin = s => { const [a, b] = String(s).split(':').map(Number); return a *
 const hhmm = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 const clock = m => { const hh = Math.floor(m / 60) % 24, mm = m % 60; return `${hh % 12 || 12}${mm ? `:${String(mm).padStart(2, '0')}` : ''}${hh < 12 ? 'a' : 'p'}`; };
 const minOf = (t, d) => { const x = new Date(t); return iso(x) === d ? x.getHours() * 60 + x.getMinutes() : null; };
-const blocksOn = d => (S.blocks?.[d] || []).slice().sort((a, b) => toMin(a.from) - toMin(b.from));
+export const blocksOn = d => (S.blocks?.[d] || []).slice().sort((a, b) => toMin(a.from) - toMin(b.from));
 
 // What happened on day d, with clock times where they were saved.
 export function actual(d) {
@@ -40,7 +40,7 @@ export function actual(d) {
 }
 
 // Minutes of real study that fell inside planned blocks.
-function onPlan(d, act) {
+export function onPlan(d, act) {
   const plan = new Uint8Array(1440);
   for (const b of blocksOn(d)) for (let i = toMin(b.from); i < Math.min(1440, toMin(b.from) + b.mins); i++) plan[i] = 1;
   const did = new Uint8Array(1440);

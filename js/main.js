@@ -128,7 +128,7 @@ function render({ top = false, enter = false } = {}) {
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;
   const view = document.getElementById('view');
   const fq = quoteFor(tab);
-  view.innerHTML = `<div class="large-title">${meta ? `<div class="eyebrow">${meta}</div>` : ''}<h1>${h(title)}</h1></div>${html}${fq ? `<p class="page-q">“${h(fq.q)}”<span>${h(fq.who)} · ${h(fq.src)}</span></p>` : ''}`;
+  view.innerHTML = `<div class="large-title">${meta ? `<div class="eyebrow">${meta}</div>` : ''}<h1>${h(title)}</h1></div>${html}${fq ? `<p class="page-q">${/^[“"]/.test(fq.q) ? h(fq.q) : `“${h(fq.q)}”`}<span>${h(fq.who)} · ${h(fq.src)}</span></p>` : ''}`;
   if (enter) { view.classList.remove('enter'); void view.offsetWidth; view.classList.add('enter'); }
   const m = metrics();
   document.querySelectorAll('#tabs button').forEach(b => {

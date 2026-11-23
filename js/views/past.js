@@ -3,7 +3,10 @@
 // "behind schedule" number. Every entry can be corrected, moved to another day or removed right
 // here, and anything forgotten can be added to the day it happened; all numbers follow at once.
 import { S, VIDS, BY, PASSES, PLABEL, FOCUS_KINDS, metrics, prog, passMins, isRest, addDays, today, save, uid, h, mins, hrs, fmtDow, fmtDay } from '../core.js';
-import { sectionH, openSheet, closeSheet, toast } from '../ui.js';
+import { sectionH, openSheet, closeSheet, toast, more } from '../ui.js';
+import { ledger, bar } from './duty.js';
+import { actual, onPlan, blocksOn } from './dayview.js';
+import { DOW_SHORT, weekStart, dow, plural } from '../core.js';
 
 const KIND = Object.fromEntries(FOCUS_KINDS);
 
@@ -52,13 +55,95 @@ function itemRow(it) {
     <button class="btn small-btn" data-act="pd-edit-p" data-id="${it.v.id}" data-k="${it.k}">Edit</button></li>`;
 }
 
+/* ---------- self-analysis: everything since your start date ---------- */
+// Every day from the start date to today goes through the same day ledger as the Day planner
+// (sleep from Health or the check-in, duty shifts, study logged), so the totals here are exactly
+// the sum of the days.
+export function analysis() {
+  const st = S.settings, t = today(), now = new Date(), days = [];
+  for (let d = st.start, g = 0; d <= t && g < 1500; d = addDays(d, 1), g++) days.push(d);
+  const A = { days: days.length, study: 0, sleep: 0, duty: 0, other: 0, unknown: 0, hours: 0, sleepDays: 0, studied: 0, rest: 0, restStudied: 0, missed: 0,
+    kinds: { fr: 0, r1: 0, r2: 0, r3: 0, r4: 0 }, focus: {}, frCount: 0, revCount: 0, best: null, planned: 0, plannedDone: 0, onPlan: 0, timed: 0, dow: Array.from({ length: 7 }, () => ({ n: 0, m: 0 })), weeks: {} };
+  let run = 0, longest = 0;
+  for (const d of days) {
+    const L = ledger(d, now), rest = isRest(d);
+    A.hours += L.upTo; A.duty += L.duty; A.study += L.study;
+    if (L.sleepKnown) { A.sleep += L.sleep; A.other += L.other; A.sleepDays++; } else A.unknown += L.upTo - L.duty - L.study;
+    if (rest) { A.rest++; if (L.study) A.restStudied++; }
+    if (L.study) { A.studied++; run++; longest = Math.max(longest, run); } else if (!rest && d < t) { A.missed++; run = 0; }
+    if (!A.best || L.study > A.best.m) A.best = { d, m: L.study };
+    const w = dow(d);
+    if (!rest || L.study) { A.dow[w].n++; A.dow[w].m += L.study; }
+    const wk = weekStart(d); A.weeks[wk] = (A.weeks[wk] || 0) + L.study;
+    const pl = blocksOn(d).reduce((a, b) => a + b.mins, 0);
+    if (pl) { const act = actual(d); A.planned += pl; A.plannedDone += L.study; A.onPlan += onPlan(d, act); A.timed += act.timed.reduce((a, x) => a + x.b - x.a, 0); }
+  }
+  for (const v of VIDS) for (const k of PASSES) { const x = prog(v.id)[k]; if (x && x.d >= st.start && x.d <= t) { A.kinds[k] += passMins(v, x); if (k === 'fr') A.frCount++; else A.revCount++; } }
+  for (const x of S.sessions) if (x.d >= st.start && x.d <= t) A.focus[x.kind] = (A.focus[x.kind] || 0) + x.m;
+  A.longest = longest; A.current = metrics().streak;
+  return A;
+}
+
+function overview() {
+  const A = analysis(), m = metrics(), st = S.settings;
+  if (!A.days) return '';
+  const avg = (x, n) => n ? mins(x / n) : '—';
+  const fig = (cls, v, k) => `<span class="dv-f ${cls}"><i></i><b class="num">${v}</b> ${k}</span>`;
+  // One bar for every hour since day 1.
+  const H = A.hours || 1, seg = (cls, x) => x > 0 ? `<i class="tl-${cls}" style="position:relative;display:inline-block;height:100%;width:${(x / H * 100).toFixed(2)}%"></i>` : '';
+  const studyRows = [['First watch', A.kinds.fr, `${A.frCount} lecture${A.frCount === 1 ? '' : 's'}`], ...['r1', 'r2', 'r3', 'r4'].map(k => [k.toUpperCase(), A.kinds[k], '']),
+    ...FOCUS_KINDS.map(([k, l]) => [l, A.focus[k] || 0, 'focus sessions'])].filter(x => x[1] > 0);
+  const studyMax = Math.max(1, ...studyRows.map(x => x[1]));
+  const dows = [1, 2, 3, 4, 5, 6, 0].map(i => ({ l: DOW_SHORT[i], v: A.dow[i].n ? A.dow[i].m / A.dow[i].n : 0, n: A.dow[i].n }));
+  const dmax = Math.max(1, ...dows.map(x => x.v));
+  const weeks = Object.entries(A.weeks).sort(([a], [b]) => a.localeCompare(b)).slice(-10);
+  const wmax = Math.max(1, ...weeks.map(x => x[1]));
+  return `
+  <section class="card an-hero">
+    <div class="an-day">Day <b class="num">${A.days}</b> <span>since you started on ${fmtDay(st.start)}</span></div>
+    <div class="an-sub small muted num">${plural(A.days - A.rest, 'study day')} · ${plural(A.rest, 'rest day')} · sleep known for ${A.sleepDays} of ${A.days} days</div>
+    <div class="tl an-bar">${seg('sleep', A.sleep)}${seg('duty', A.duty)}${seg('study', A.study)}${seg('other', A.other)}${A.unknown > 0 ? `<i class="tl-unknown" style="position:relative;display:inline-block;height:100%;width:${(A.unknown / H * 100).toFixed(2)}%"></i>` : ''}</div>
+    <div class="dv-figs">${fig('sleep', hrs(A.sleep), 'slept')}${fig('duty', hrs(A.duty), 'duty')}${fig('study', hrs(A.study), 'studied')}${A.sleepDays ? fig('other', hrs(A.other), 'other') : ''}${A.unknown > 0 ? fig('unknown', hrs(A.unknown), 'sleep not known') : ''}</div>
+    <div class="an-grid">
+      <div><span>Sleep a night</span><b class="num">${avg(A.sleep, A.sleepDays)}</b></div>
+      <div><span>Study a day</span><b class="num">${avg(A.study, A.days)}</b></div>
+      <div><span>Study a study day</span><b class="num">${avg(A.study, A.days - A.rest)}</b></div>
+      <div><span>Duty a day</span><b class="num">${avg(A.duty, A.days)}</b></div>
+      <div><span>Other a day</span><b class="num">${avg(A.other, A.sleepDays)}</b></div>
+      <div><span>Total studied</span><b class="num">${hrs(A.study)}</b></div>
+    </div>
+  </section>
+
+  ${sectionH('Consistency')}
+  <section class="card an-grid an-grid-card">
+    <div><span>Days you studied</span><b class="num">${A.studied} / ${A.days}</b></div>
+    <div><span>Study days missed</span><b class="num ${A.missed ? 'bad-t' : ''}">${A.missed}</b></div>
+    <div><span>Current streak</span><b class="num">${A.current}</b></div>
+    <div><span>Longest streak</span><b class="num">${A.longest}</b></div>
+    <div><span>Best day</span><b class="num">${A.best?.m ? mins(A.best.m) : '—'}</b><em>${A.best?.m ? fmtDow(A.best.d) : ''}</em></div>
+    <div><span>Behind schedule</span><b class="num ${m.behind > 60 ? 'bad-t' : ''}">${m.behind > 0 ? hrs(m.behind / m.planSpeed) : 'none'}</b></div>
+  </section>
+
+  ${sectionH('Where the study time went', hrs(A.study))}
+  <section class="card">${studyRows.length ? studyRows.map(([l, v, s]) => `<div class="hbar wide"><span class="hl">${l}</span><span class="hb"><i style="width:${(v / studyMax) * 100}%;background:var(--accent)"></i></span><span class="hn num">${mins(v)}</span><span class="ha small muted">${s}</span></div>`).join('') : '<p class="small muted" style="margin:0">Nothing logged yet.</p>'}</section>
+
+  ${more('past-patterns', 'Patterns: by weekday, week by week, plan vs reality', `
+  ${sectionH('By weekday', 'average study')}
+  <section class="card"><div class="an-dow">${dows.map(x => `<div><span class="an-col"><i style="height:${Math.max(3, (x.v / dmax) * 100)}%"></i></span><b class="num">${x.n ? mins(x.v).replace(' min', 'm') : '—'}</b><em>${x.l}</em></div>`).join('')}</div></section>
+  ${sectionH('Week by week', 'hours studied')}
+  <section class="card"><div class="an-dow">${weeks.map(([w, v]) => `<div><span class="an-col"><i style="height:${Math.max(3, (v / wmax) * 100)}%"></i></span><b class="num">${hrs(v)}</b><em>${fmtDay(w)}</em></div>`).join('')}</div></section>
+  ${sectionH('Plan vs reality', 'days with study blocks')}
+  <section class="card">${A.planned ? `<p class="small" style="margin:0">You planned <b>${hrs(A.planned)}</b> and studied <b>${hrs(A.plannedDone)}</b> on those days (${Math.round(Math.min(1, A.plannedDone / A.planned) * 100)}%). <b>${A.timed ? Math.round((A.onPlan / A.timed) * 100) : 0}%</b> of the timed study happened at the planned times.</p>` : '<p class="small muted" style="margin:0">Plan study blocks in the Day planner to see how plans compare with what happens.</p>'}</section>`)}`;
+}
+
 export function view() {
   const P = pastDays(), sp = P.speed, open = S.ui.pastOpen || {};
   const worst = P.rows.filter(r => !r.today && r.gap > 0).sort((a, b) => b.gap - a.gap).slice(0, 3);
   return {
     title: 'Past days',
-    meta: 'Where your backlog came from',
-    html: `
+    meta: 'Everything since you started',
+    html: `${overview()}
+  ${sectionH('Backlog', 'where it came from')}
   <section class="card">
     <div class="stats" style="margin:0">
       <div class="stat ${P.behind > 0 ? 'bad' : 'good'}"><div class="v num">${P.behind > 0 ? wh(P.behind, sp) : `+${wh(-P.behind, sp)}`}</div><div class="k">${P.behind > 0 ? 'behind schedule' : 'ahead of schedule'}</div></div>
