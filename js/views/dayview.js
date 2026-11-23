@@ -89,12 +89,15 @@ function summary(d, L, act, x) {
   const pctPlan = x.plannedMin ? Math.round(Math.min(1, x.studied / x.plannedMin) * 100) : null;
   return `<section class="card dv-sum">
     ${bar(L)}
-    <div class="dv-figs dv-glance">
-      ${fig('sleep', L.sleepKnown ? mins(L.sleep) : '—', d === t ? 'slept so far' : 'slept')}
+    <div class="dv-split">
+      <div><span class="dv-f sleep"><i></i>${d === t ? 'Slept so far' : 'Slept'}</span><b class="num">${L.sleepKnown ? mins(L.sleep) : '—'}</b></div>
+      <div><span class="dv-f awake"><i></i>${d === t ? 'Awake so far' : 'Awake'}</span><b class="num">${L.sleepKnown ? mins(L.upTo - L.sleep) : '—'}</b></div>
+      ${d === t ? `<div><span class="dv-f left"><i></i>Left today</span><b class="num">${mins(1440 - nowM)}</b></div>` : ''}
+    </div>
+    <div class="dv-figs dv-glance"><span class="dv-of">${L.sleepKnown ? 'Of the awake hours:' : 'So far:'}</span>
       ${fig('duty', mins(L.duty), 'duty')}
       ${fig('study', mins(L.study), 'studied')}
       ${L.sleepKnown ? fig('other', mins(L.other), 'other') : ''}
-      ${d === t ? fig('left', mins(1440 - nowM), 'left in the day') : ''}
     </div>
     ${x.plannedMin ? `<div class="dv-plan"><div class="row"><span class="grow">Planned <b class="num">${mins(x.plannedMin)}</b> · done <b class="num">${mins(x.studied)}</b></span><b class="num">${pctPlan}%</b></div>
       <div class="bar-line"><i style="width:${pctPlan}%"></i></div>
