@@ -2,7 +2,7 @@ import {
   S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
-import { sectionH, CHECK, seg } from '../ui.js';
+import { sectionH, CHECK, seg, more, tools } from '../ui.js';
 
 function timeline(t) {
   const ps = phases(), start = ps[0].start, end = ps[ps.length - 1].end;
@@ -72,12 +72,13 @@ export function view() {
   });
   const maxW = Math.max(60, ...revWeeks.map(w => w.tot));
 
-  const dayHtml = soon.map(d => { const rv = revBy[d.date] || []; const rvMins = rv.reduce((a, x) => a + x.r.budget, 0); return `<li class="day">
+  const dayRow = d => { const rv = revBy[d.date] || []; const rvMins = rv.reduce((a, x) => a + x.r.budget, 0); return `<li class="day">
     <div class="day-h"><span class="t num">${d.date === t ? 'Today' : fmtDow(d.date)} ${d.planned ? '<span class="pill accent">Your plan</span>' : '<span class="pill">Suggested</span>'}</span>
       <span class="row" style="gap:10px"><span class="small faint num">${mins(d.total + rvMins)}</span><button class="link" data-act="plan-day" data-v="${d.date}">Edit</button></span></div>
     ${rv.length ? `<ul class="list">${rv.map(({ v, r }) => `<li><button class="day-v" data-act="revise" data-id="${v.id}"><span class="rtag">${r.k.toUpperCase()}</span><span class="grow">${h(v.title)}</span><span class="small faint num">${mins(r.budget)}</span></button></li>`).join('')}</ul>` : ''}
     <ul class="list">${d.items.map(({ v, real }) => `<li><button class="day-v" data-act="open-video" data-id="${v.id}">${subjDot(v.subject)}<span class="grow">${h(v.title)}</span><span class="small faint num">${mins(real)}</span></button></li>`).join('')}</ul>
-  </li>`; }).join('');
+  </li>`; };
+  const dayHtml = soon.slice(0, 4).map(dayRow).join(''), dayHtmlLater = soon.slice(4).map(dayRow).join('');
 
   return {
     title: 'Plan',
@@ -118,23 +119,23 @@ export function view() {
     <p class="small faint" style="margin:4px 0 0">Change the deadline or rest days in Settings.</p>
   </section>
 
-  ${sectionH('Revision load', 'next 8 weeks')}
+  ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
+  <button class="btn primary block" data-act="plan-week" style="margin:0 0 10px">Plan the week</button>
+  ${tools([['day', '🗓', 'Day planner'], ['duty-open', '🏥', 'Duty'], ['revisions', '🔁', 'Revisions', 'data-v="r1"'], ['backlog', '⚠️', 'Backlogs'], ['ics', '📅', 'Calendar'], ['rehearsals', '🎯', 'GT rehearsal'], ['final-preview', '🏁', 'Final 7 days'], ['past', '📈', 'Past days']])}
+  <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.perDay)} a study day.</p>
+  <ul class="card flush list daylist">${dayHtml}</ul>
+  ${dayHtmlLater ? more('plan-days', `The ${soon.length - 4} study days after that`, `<ul class="card flush list daylist">${dayHtmlLater}</ul>`) : ''}
+
+  ${more('plan', 'More: revision load by week, and the weeks after', `  ${sectionH('Revision load', 'next 8 weeks')}
   <section class="card">
     <div class="wbars">${revWeeks.map(w => `<div class="wbar"><span class="wb" style="height:${Math.max(3, (w.tot / maxW) * 100)}%" title="${w.n} revisions"></span><span class="wv num">${w.tot ? hrs(w.tot) : ''}</span><span class="wl num">${fmtDay(w.w)}</span></div>`).join('')}</div>
     <p class="small faint" style="margin:10px 0 0">Every video you watch adds 4 revisions, each shorter than the last. This load grows as you watch more, so keep clearing what's due.</p>
   </section>
 
-  ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
-  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="day">🗓 Day planner</button><button class="btn" data-act="duty-open">🏥 Duty & free time</button></div>
-  <div class="btns" style="margin:0 0 8px"><button class="btn primary" data-act="plan-week">🗓️ Plan the week</button><button class="btn" data-act="ics">📅 To Calendar</button></div>
-  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
-  <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="rehearsals">🎯 GT rehearsals</button><button class="btn" data-act="final-preview">🏁 Final 7 days</button></div>
-  <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.perDay)} a study day.</p>
-  <ul class="card flush list daylist">${dayHtml}</ul>
-
   ${weeks.length ? `${sectionH('After that')}
   <ul class="card flush list">${weeks.map(w => `<li class="item"><div class="grow"><div class="t num">Week of ${fmtDay(w.w)}</div>
     <div class="s">${w.subjects.map(s => `${subjDot(s)}${h(s)}`).join(' · ')}</div></div><div class="end num">${hrs(w.total)}<br>${w.n} videos</div></li>`).join('')}</ul>` : ''}
+  `)}
   ` : ''}`,
   };
 }

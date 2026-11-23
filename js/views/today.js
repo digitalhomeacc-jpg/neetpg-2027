@@ -2,7 +2,7 @@ import {
   today, S, VIDS, BY, PASSES, prog, metrics, forecast, currentPhase, isRest, addDays, weekStart, parse, DOW,
   h, mins, hrs, sp, pct, fmtDay, fmtDayLong, fmtDayYear, subjDot, subjHue, ankiQuery, vTags, ANKI, ankiOf, REASONS, plural,
 } from '../core.js';
-import { ring, miniRing, videoItem, sectionH, ICON } from '../ui.js';
+import { ring, miniRing, videoItem, sectionH, ICON, more } from '../ui.js';
 import { focusPill } from './focus.js';
 import { watchPill } from './watch.js';
 import { checkinCard } from './health.js';
@@ -126,7 +126,6 @@ export function view() {
     title: 'Today',
     meta: fmtDayLong(m.t),
     html: `
-  ${quoteStrip()}
   ${finalCard(m)}
   ${m.examDays <= 42 && m.examDays > 7 ? `<section class="card note-card"><b>Final sprint:</b> every revision now gets 30% less time. Revise only what you got wrong in recall.</section>` : ''}
   ${rehearsalCard()}
@@ -164,17 +163,16 @@ export function view() {
   ${new Date().getDay() === 0 ? `<button class="card tomorrow" data-act="report"><span class="rbadge" style="--h:250">📊</span><span class="grow"><span class="t">Your week in review</span><span class="s">Two minutes: what went well, what didn't, one change</span></span><span class="faint">›</span></button>` : ''}
 
   ${dayCard()}
-  ${backlogCard(m)}
   ${sectionH('Revise today', `${nDue ? `<span class="num">${nDue} due · ${mins(m.dueMins)}</span> · ` : ''}<button class="link" data-act="revisions" data-v="r1">All revisions</button>`)}
-  ${nDue ? `<ul class="card flush list">${m.due.map(({ v, r }, i) => {
+  ${nDue ? `<ul class="card flush list">${m.due.slice(0, 5).map(({ v, r }, i) => {
     const extra = false; // every due revision is part of today's target
     return `<li class="item rev${extra ? ' extra' : ''}"><span class="rbadge" style="--h:${subjHue(v.subject)}">${r.k.toUpperCase()}</span>
       <button class="open" data-act="revise" data-id="${v.id}"><div class="t">${h(v.title)}</div>
       <div class="s num">${subjDot(v.subject)}${mins(r.budget)} limit · ${r.overdue > 0 ? `<span class="bad-t">${r.overdue}d overdue</span>` : 'due today'}${r.pulled ? ' · from a mistake' : ''}${extra ? ' · if you have time' : ''}</div></button>
       <button class="btn small-btn" data-act="revise" data-id="${v.id}">Start</button></li>`;
-  }).join('')}</ul>` : `<section class="card empty small">${m.revDoneCount ? `<div class="ei">🎉</div><div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="ei">🧠</div><div class="e1">Nothing to revise yet</div>${blockMode() ? 'A subject\'s R1 starts once all its videos are watched. Then it goes round by round, R1 to R4, at the revision time you set each day.' : 'Each video\'s R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.'}`}</section>`}
-  ${revTimeChips(m.t)}
-  ${upNextHtml()}
+  }).join('')}</ul>${nDue > 5 ? more('rev-all', `${nDue - 5} more due today`, `<ul class="card flush list">${m.due.slice(5).map(({ v, r }) => `<li class="item rev"><span class="rbadge" style="--h:${subjHue(v.subject)}">${r.k.toUpperCase()}</span>
+      <button class="open" data-act="revise" data-id="${v.id}"><div class="t">${h(v.title)}</div><div class="s num">${subjDot(v.subject)}${mins(r.budget)} limit${r.overdue > 0 ? ` · <span class="bad-t">${r.overdue}d overdue</span>` : ''}</div></button>
+      <button class="btn small-btn" data-act="revise" data-id="${v.id}">Start</button></li>`).join('')}</ul>`) : ''}` : `<section class="card empty small">${m.revDoneCount ? `<div class="ei">🎉</div><div class="e1">Revisions done for today</div>${m.revDoneCount} finished. Nice.` : `<div class="ei">🧠</div><div class="e1">Nothing to revise yet</div>${blockMode() ? 'A subject\'s R1 starts once all its videos are watched. Then it goes round by round, R1 to R4, at the revision time you set each day.' : 'Each video\'s R1 falls due 3 days after you first watch it. Later ones get longer gaps and shorter time limits.'}`}</section>`}
 
   ${m.remaining > 0 ? `
   ${sectionH(mineToday ? "Today's plan" : bonus ? 'Suggested · bonus' : 'Suggested for today',
@@ -193,6 +191,10 @@ export function view() {
   </button>
   ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], false))}">${ICON.copy}Copy tomorrow's topics for Anki</button>` : ''}` : ''}
 
+  ${more('today', 'More for today: revision time, extra time, mistakes, done today, totals', `
+  ${backlogCard(m)}
+  ${revTimeChips(m.t)}
+  ${upNextHtml()}
   ${openMistakes.length ? `
   ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}
   <ul class="card flush list">${openMistakes.slice(0, 3).map(x => `<li class="item">
@@ -226,6 +228,7 @@ export function view() {
   </section>
 
   ${(() => { const p = pace(); return p ? `<p class="small faint center">At your last two weeks' pace (${mins(p.perDay)} a study day, revisions included), WOR first watch finishes ${p.finish ? fmtDayYear(p.finish) : 'after the exam'}.</p>` : ''; })()}
+`)}
   `,
   };
 }

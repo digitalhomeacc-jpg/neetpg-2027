@@ -160,4 +160,8 @@ export async function copy(text, msg = 'Copied. Paste it into Anki search.') {
 export const seg = (act, opts, cur, extra = '') =>
   `<div class="seg">${opts.map(([v, l]) => `<button type="button" data-act="${act}" data-v="${h(v)}" ${extra} aria-pressed="${String(v) === String(cur)}">${l}</button>`).join('')}</div>`;
 
+// Secondary content, folded away until you want it. Remembers open/closed per screen.
+export const more = (id, label, html) => !String(html).trim() ? '' : `<div class="more"><button class="more-h" data-act="more" data-v="${id}" aria-expanded="${!!S.ui.more?.[id]}"><span class="grow">${label}</span><svg viewBox="0 0 24 24" class="ic"><path d="M7 10l5 5 5-5"/></svg></button>${S.ui.more?.[id] ? `<div class="more-b">${html}</div>` : ''}</div>`;
+// A compact grid of shortcuts: [act, icon, label, extra attributes].
+export const tools = items => `<div class="tools">${items.map(([act, ic, label, attrs = '']) => `<button class="tool" data-act="${act}" ${attrs}><span class="tool-i">${ic}</span><span class="tool-l">${label}</span></button>`).join('')}</div>`;
 export const sectionH = (title, aside = '') => `<div class="section-h"><h2>${title}</h2>${aside ? `<span class="aside">${aside}</span>` : ''}</div>`;

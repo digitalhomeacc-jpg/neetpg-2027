@@ -64,6 +64,7 @@ function quickActions() {
 const ACTIONS = Object.assign({
   tab: el => { const changed = S.ui.tab !== el.dataset.v; S.ui.tab = el.dataset.v; closeSheet(); return changed ? 'enter' : 'top'; },
   close: () => closeSheet(),
+  more: el => { const m = (S.ui.more ||= {}); m[el.dataset.v] = !m[el.dataset.v]; save(); },
   copy: el => copy(el.dataset.q),
   settings: () => { S.ui.back = S.ui.tab; S.ui.tab = 'settings'; return 'enter'; },
   back: () => {
@@ -126,7 +127,7 @@ function render({ top = false, enter = false } = {}) {
     : `<button class="icon-btn" data-act="settings" aria-label="Settings">${ICON.gear}</button>
        <button class="icon-btn accent" data-act="quick" aria-label="Quick add">${ICON.plus}</button>`;
   const view = document.getElementById('view');
-  const fq = tab === 'today' ? null : quoteFor(tab);
+  const fq = quoteFor(tab);
   view.innerHTML = `<div class="large-title">${meta ? `<div class="eyebrow">${meta}</div>` : ''}<h1>${h(title)}</h1></div>${html}${fq ? `<p class="page-q">“${h(fq.q)}”<span>${h(fq.who)} · ${h(fq.src)}</span></p>` : ''}`;
   if (enter) { view.classList.remove('enter'); void view.offsetWidth; view.classList.add('enter'); }
   const m = metrics();

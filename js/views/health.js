@@ -197,9 +197,9 @@ function alarmSetup(c) {
     <p class="small muted" style="margin:4px 0 8px">Duty shifts and study blocks with an alarm (set them in the Day planner or Duty & free time) become real alarms in the Clock app, so they ring even through silent mode and sleep.</p>
     ${up.length ? `<ul class="list mini-list">${up.slice(0, 6).map(a => `<li class="item"><span class="grow small">⏰ <b>${h(when(a))}</b> · ${h(a.label)}</span></li>`).join('')}</ul>` : '<p class="small faint" style="margin:0 0 8px">No alarms set for the next two days.</p>'}
     <div class="btns" style="margin:4px 0 10px"><button class="btn" data-act="hk-test-alarm">Test alarm (in 3 min)</button><button class="btn" data-act="hk-resend">Send upcoming again</button></div>
-    <div class="hk-row"><span class="hk-l">Alarms URL</span><code class="hk-v">${h(c.url)}/rest/v1/rpc/pg27_alarms</code><button class="btn small-btn" data-act="hk-copy" data-k="alarms">Copy</button></div>
+    <div class="hk-row"><span class="hk-l">Alarms URL</span><code class="hk-v">${h(c.url)}/rest/v1/rpc/pg27_alarms?apikey=${h(c.key)}</code><button class="btn small-btn" data-act="hk-copy" data-k="alarms">Copy</button></div>
     <details class="setup"><summary>Add alarms to your Shortcut (5 minutes, once)</summary><ol class="small">
-      <li>In the <b>Sleep</b> Shortcut, at the end, add another <b>Get Contents of URL</b>: paste the Alarms URL, <b>›</b> → Method <b>POST</b>, header <code>apikey</code> (same as before), Request Body <b>JSON</b> with one Text field <code>k</code> = your key.</li>
+      <li>In the <b>Sleep</b> Shortcut, at the end, add another <b>Get Contents of URL</b>: paste the Alarms URL, <b>›</b> → Method <b>POST</b> (no header needed), Request Body <b>JSON</b> with one Text field <code>k</code> = your key.</li>
       <li>Add <b>Repeat with Each</b>; it repeats with each item in <i>Contents of URL</i>.</li>
       <li>Inside the repeat: <b>Get Dictionary Value</b> → Value for <code>local</code> in <i>Repeat Item</i>. Then <b>Get Dates from Input</b>.</li>
       <li>Still inside: <b>Get Dictionary Value</b> → Value for <code>label</code> in <i>Repeat Item</i>.</li>
@@ -211,7 +211,8 @@ function alarmSetup(c) {
 export function healthSettings() {
   if (sync.account()) sync.healthCheck(false);
   const st = sync.status, acct = sync.account(), c = sync.syncConf();
-  const rpc = `${c.url}/rest/v1/rpc/pg27_health_push`;
+  // The key rides in the address itself, so the Shortcut needs no header (one less thing to go wrong).
+  const rpc = `${c.url}/rest/v1/rpc/pg27_health_push?apikey=${c.key}`;
   const field = (label, val, k) => `<div class="hk-row"><span class="hk-l">${label}</span><code class="hk-v">${h(val)}</code><button class="btn small-btn" data-act="hk-copy" data-k="${k}">Copy</button></div>`;
   let top;
   if (!acct) top = `<p class="small">Sign in under <b>Sync between devices</b> above first. Health data travels through your account, so it reaches every device without opening Safari.</p>`;
@@ -222,12 +223,13 @@ export function healthSettings() {
   else if (!st.healthKey) top = `<p class="small" style="margin:0 0 10px">Your iPhone sends sleep (with exact times) to your account in the background, every time the Shortcut runs. The app picks it up whenever it's open, and every 15 minutes while it stays open.</p>
       <button class="btn primary block" data-act="hk-setup">Turn on automatic Health</button>`;
   else top = `<p class="small" style="margin:0 0 10px">${st.health?.at ? `Last delivery: <b>${new Date(st.health.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</b>.` : 'Waiting for the first delivery from your Shortcut.'} Copy these three into the Shortcut (they're yours: don't share the key).</p>
-      ${field('URL', rpc, 'url')}${field('apikey', c.key, 'apikey')}${field('k (your key)', st.healthKey, 'key')}
+      ${field('URL', rpc, 'url')}${field('k (your key)', st.healthKey, 'key')}
+      <p class="hint">The URLs now include the apikey, so the Shortcut doesn't need an apikey header. If you already added one, it can stay; just paste the new URLs in both Get Contents of URL actions.</p>
       <details class="setup" open><summary>Build the Shortcut (10 minutes, once)</summary><ol class="small">
         <li><b>Find Health Samples</b>: Type <i>Sleep</i>, Start Date <i>is in the last</i> <b>2 days</b>. With an Apple Watch, add two filters <i>Value · is not</i> and type <code>In Bed</code> and <code>Awake</code>. Without a Watch, no filters.</li>
         <li><b>Get Details of Health Samples</b> → <i>Start Date</i>. Then <b>Format Date</b> → Date Format <i>ISO 8601</i>, <i>Include Time</i> on. Then <b>Combine Text</b> → <i>Custom</i>, type a comma <code>,</code>. Then <b>Set Variable</b> named <code>Starts</code>.</li>
         <li>Again for the end: <b>Get Details of Health Samples</b> → <i>End Date</i> (tap its input and pick the <i>Health Samples</i> from step 1), <b>Format Date</b> ISO 8601, <b>Combine Text</b> with <code>,</code>, <b>Set Variable</b> <code>Ends</code>.</li>
-        <li><b>Get Contents of URL</b>: paste the URL above. Tap <i>Show More</i>: Method <b>POST</b>. Headers: add <code>apikey</code> with the apikey above. Request Body <b>JSON</b>: add Text fields <code>k</code> (your key), <code>ss</code> = variable <i>Starts</i>, <code>se</code> = variable <i>Ends</i>.</li>
+        <li><b>Get Contents of URL</b>: paste the URL above. Tap <i>Show More</i>: Method <b>POST</b>. No header needed (the URL carries it). Request Body <b>JSON</b>: add Text fields <code>k</code> (your key), <code>ss</code> = variable <i>Starts</i>, <code>se</code> = variable <i>Ends</i>.</li>
         <li>Run it once. Add <b>Show Result</b> at the end the first time: it should say <code>ok</code>. Then open this app: Today shows the sleep, and Duty & free time shows when you slept.</li>
         <li><b>Run it by itself</b>: Automation tab → <b>+</b> → <i>Time of Day</i> → pick a time → <i>Daily</i> → <b>Run Immediately</b> (turn off <i>Notify When Run</i>) → this Shortcut. Make a few: e.g. 9 am, 1 pm, 6 pm, 11 pm. Also <b>+</b> → <i>Sleep</i> → <i>Waking Up</i> for right after you wake.</li>
       </ol><p class="hint">iPhone only lets Shortcuts read Health while the phone is unlocked, so a run while it's locked may send nothing; the next one catches up (each run covers the last 2 days).</p></details>`;
@@ -261,5 +263,5 @@ export const actions = {
     try { await sync.syncNow(); await sync.resendAlarms(); toast('Done. The next Shortcut run creates all upcoming alarms again.'); }
     catch (e) { toast(/alarms_sent/.test(e.message) ? 'Run tools/supabase_alarms.sql in Supabase first' : `Couldn't do that: ${e.message}`); }
   },
-  'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push` : k === 'alarms' ? `${c.url}/rest/v1/rpc/pg27_alarms` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
+  'hk-copy': el => { const c = sync.syncConf(), k = el.dataset.k; copy(k === 'url' ? `${c.url}/rest/v1/rpc/pg27_health_push?apikey=${c.key}` : k === 'alarms' ? `${c.url}/rest/v1/rpc/pg27_alarms?apikey=${c.key}` : k === 'apikey' ? c.key : sync.status.healthKey, 'Copied'); },
 };

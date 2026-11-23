@@ -2,7 +2,7 @@ import {
   S, VIDS, SUBJECTS, PASSES, prog, metrics, isRest, addDays, dayDiff, parse, studyDays,
   h, mins, hrs, sp, pct, fmtDay, MON, subjDot, subjHue, level, achievements,
 } from '../core.js';
-import { ring, sectionH } from '../ui.js';
+import { ring, sectionH, more, tools } from '../ui.js';
 import { sleepCard } from './health.js';
 import { bestHours } from './report.js';
 
@@ -103,29 +103,19 @@ export function view() {
     </div>
   </section>
 
-  <div class="btns"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
-  <div class="btns" style="margin-top:8px"><button class="btn block" data-act="past">📅 Past days: what you did, day by day</button></div>
-  <div class="btns" style="margin-top:8px"><button class="btn" data-act="report">📊 Weekly report</button><button class="btn" data-act="share-card">Share card</button></div>
-  <button class="card tomorrow" data-act="anki">
-    <span class="rbadge" style="--h:200">🗂️</span>
-    <span class="grow"><span class="t">Anki</span><span class="s">Your cards at a glance: tagged, deck-only, frozen, unsure, and by video</span></span>
-    <span class="faint">›</span>
-  </button>
-  <button class="card tomorrow" data-act="times">
-    <span class="rbadge" style="--h:30">⏱️</span>
-    <span class="grow"><span class="t">Revision times</span><span class="s">How long your first watch and R1–R4 took for every topic</span></span>
-    <span class="faint">›</span>
-  </button>
+  ${tools([['revisions', '🔁', 'Revisions', 'data-v="r1"'], ['backlog', '⚠️', 'Backlogs'], ['past', '📈', 'Past days'], ['day', '🗓', 'Day planner'], ['report', '📊', 'Weekly report'], ['share-card', '📤', 'Share card'], ['anki', '🗂️', 'Anki'], ['times', '⏱️', 'Revision times']])}
 
-  ${sectionH('Syllabus map', 'every video, by pass')}
+  ${sectionH('Pace', `${fmtDay(S.settings.start)} – ${fmtDay(S.settings.target)}`)}
+  <section class="card">${paceChart(m)}</section>
+
+  ${sectionH('Subjects')}
+  <ul class="card flush list">${subj}</ul>
+  ${more('progress', 'More: syllabus map, achievements, best hours, sleep, activity, passes', `  ${sectionH('Syllabus map', 'every video, by pass')}
   <section class="card"><div class="mosaic">${mosaic}</div>
     <div class="mz-key"><span>Not watched</span><i style="opacity:.15"></i><i style="opacity:.42"></i><i style="opacity:.56"></i><i style="opacity:.68"></i><i style="opacity:.75"></i><i></i><span>All 4 revisions</span></div></section>
 
   ${sectionH('Achievements', `${badges.filter(b => b.got).length} of ${badges.length}`)}
   <section class="card"><div class="badges">${badges.map(b => `<div class="badge${b.got ? ' got' : ''}"><div class="bi">${b.icon}</div><div class="bn">${h(b.name)}</div><div class="bd">${h(b.desc)}</div></div>`).join('')}</div></section>
-
-  ${sectionH('Pace', `${fmtDay(S.settings.start)} – ${fmtDay(S.settings.target)}`)}
-  <section class="card">${paceChart(m)}</section>
 
   ${sectionH('Your best hours', 'when you study and recall best')}
   ${bestHours()}
@@ -141,8 +131,7 @@ export function view() {
     ${PASSES.map((k, i) => `<div class="stat"><div class="v num">${passCounts[i]}</div><div class="k">${k === 'fr' ? 'First' : k.toUpperCase()}</div></div>`).join('')}
   </div></section>
 
-  ${sectionH('Subjects')}
-  <ul class="card flush list">${subj}</ul>`,
+`)}`,
   };
 }
 
