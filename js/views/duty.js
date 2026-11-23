@@ -82,7 +82,7 @@ const CHIPS = [0, 4, 6, 8, 10, 12, 24];
 function needOn(m, d) {
   // Today: what's still due plus what you've already revised today (the whole day's need).
   const rev = d === m.t ? m.dueMins + m.revDoneToday : revisionsOn(d).reduce((a, x) => a + x.r.budget, 0);
-  const fresh = isRest(d) ? 0 : m.target;
+  const fresh = isRest(d) ? 0 : d === m.t ? m.target : m.perDay;
   return { rev, fresh, total: rev + fresh };
 }
 

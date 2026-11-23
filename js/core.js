@@ -462,7 +462,7 @@ const metricsRemaining = () => VIDS.reduce((a, v) => a + (prog(v.id).fr ? 0 : v.
 // Lectures you've planned for a day go on that day. Planned ones you didn't get to
 // carry over to the front of the queue. Days you haven't planned are filled with
 // suggestions in sheet order, up to the day's required time.
-export function forecast(m, realPerDay = m.target) {
+export function forecast(m, realPerDay = m.perDay) {
   const t = m.t, days = [];
   const watched = id => !!prog(id).fr;
   const plannedAhead = new Set();
@@ -600,15 +600,48 @@ export function freeMinutes(d) {
 
 export const plannedOn = id => Object.keys(S.plan).filter(d => d >= today() && S.plan[d].includes(id)).sort()[0] || null;
 
+/* ---------- rounds: you choose the dates, the app works out the time ---------- */
+// Each round's share of the lecture runtime: first read 100%, R1 50%, R2 35%, R3 25%, R4 15%.
+// BTR has its own total hours, which you enter.
+export const ROUNDS = [['fr', 'First read', 1], ['r1', 'R1', REV.r1.budget], ['r2', 'R2', REV.r2.budget], ['r3', 'R3', REV.r3.budget], ['r4', 'R4', REV.r4.budget], ['btr', 'BTR', null]];
+export function roundsPlan() {
+  const st = S.settings, m = metrics(), t = m.t, R = st.rounds || {};
+  const rows = ROUNDS.map(([k, label, pct]) => {
+    const r = k === 'fr' ? { from: st.start, to: st.target } : R[k] || {};
+    let total, left;
+    if (k === 'btr') { total = (+r.hours || 0) * 60; left = Math.max(0, total - (+r.done || 0) * 60); }
+    else {
+      total = VIDS.reduce((a, v) => a + v.mins * pct, 0) / m.planSpeed;
+      left = VIDS.reduce((a, v) => a + (prog(v.id)[k] ? 0 : v.mins * pct), 0) / m.planSpeed;
+    }
+    const set = !!(r.from && r.to && r.from <= r.to);
+    const from = set ? (r.from > t ? r.from : t) : null;
+    const days = set && r.to >= t ? studyDays(from, r.to) : 0;
+    return { k, label, pct, from: r.from || '', to: r.to || '', hours: r.hours ?? '', set, total, left, days, perDay: days ? left / days : null, late: set && r.to < t && left > 0 };
+  });
+  // The busiest study day when rounds overlap: the sum of what each round needs that day.
+  let peak = { mins: 0, d: null, ks: [] };
+  for (let d = t, g = 0; d <= st.exam && g < 800; d = addDays(d, 1), g++) {
+    if (isRest(d)) continue;
+    const on = rows.filter(x => x.set && x.perDay && d >= x.from && d <= x.to && d >= t);
+    const sum = on.reduce((a, x) => a + x.perDay, 0);
+    if (sum > peak.mins) peak = { mins: sum, d, ks: on.map(x => x.label) };
+  }
+  return { rows, peak };
+}
+
 /* ---------- phases from now to the exam ---------- */
 export function phases() {
-  const st = S.settings;
+  const st = S.settings, R = st.rounds || {};
   const exam = st.exam, p1end = st.target;
   // Final sprint: the last 6 weeks. Phase 3 normally starts 4 months out, but never so early that
   // it swallows Phase 2: Phase 2 always gets at least half the time between WOR and the sprint.
-  const p4start = addDays(exam, -42);
+  // Dates you've chosen for the rounds and BTR take priority.
+  const ok = k => R[k]?.from && R[k]?.to;
+  let p4start = ok('r4') ? R.r4.from : addDays(exam, -42);
   const between = Math.max(0, dayDiff(addDays(p1end, 1), p4start));
-  const p3start = [addDays(exam, -120), addDays(p1end, 1 + Math.round(between / 2))].sort()[1];
+  let p3start = ok('r2') ? R.r2.from : [addDays(exam, -120), addDays(p1end, 1 + Math.round(between / 2))].sort()[1];
+  if (p3start > p4start) p3start = p4start;
   return [
     {
       id: 'p1', name: 'WOR first watch', start: st.start, end: p1end,

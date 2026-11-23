@@ -11,7 +11,7 @@ let ctx = null; // { date, subject, q }
 function needed(m, d) {
   // New-video time is the same every study day; revisions depend on what's due that day.
   const rev = VIDS.map(v => revInfo(v, m.t)).filter(r => r?.k && (d === m.t ? r.due <= d : r.due === d));
-  return { newMins: isRest(d) ? 0 : m.target, revMins: rev.reduce((a, r) => a + r.budget, 0), revN: rev.length };
+  return { newMins: isRest(d) ? 0 : d === m.t ? m.target : m.perDay, revMins: rev.reduce((a, r) => a + r.budget, 0), revN: rev.length };
 }
 
 function candidates(m) {

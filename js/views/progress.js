@@ -47,7 +47,7 @@ function heatmap(m) {
   const start = addDays(end, -(weeks * 7) + 1);
   let cells = '';
   for (let d = start; d <= end; d = addDays(d, 1)) {
-    const val = (m.byDay[d] || 0) + (m.sessDay[d] || 0), ref = S.days[d]?.t || m.target || 180;
+    const val = (m.byDay[d] || 0) + (m.sessDay[d] || 0), ref = S.days[d]?.t || m.perDay || 180;
     const l = val <= 0 ? 0 : val < ref * .35 ? 1 : val < ref * .7 ? 2 : val < ref ? 3 : 4;
     const cls = [d > m.t ? 'future' : '', isRest(d) && !val ? 'rest' : '', d === m.t ? 'today' : ''].filter(Boolean).join(' ');
     cells += `<i data-l="${l}"${cls ? ` class="${cls}"` : ''} title="${fmtDay(d)}: ${mins(val)}"></i>`;

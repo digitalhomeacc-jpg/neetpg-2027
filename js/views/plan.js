@@ -1,5 +1,5 @@
 import {
-  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
+  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
 import { sectionH, CHECK, seg } from '../ui.js';
@@ -37,7 +37,7 @@ export function view() {
   }).join('');
 
   // What-if: hours a day you can give, and when that gets WOR done.
-  const whatif = S.ui.whatif ?? (Math.round((m.target / 60) * 4) / 4 || 3);
+  const whatif = S.ui.whatif ?? (Math.round((m.perDay / 60) * 4) / 4 || 3);
   // Revisions come out of the same hours, so simulate day by day rather than divide.
   const withRev = S.ui.whatifRev !== false;
   // New videos only: every hour goes to first watches (runtime at your speed), no revisions.
@@ -93,6 +93,18 @@ export function view() {
   <ul class="card flush list phases">${phaseList}</ul>
 
   ${m.remaining > 0 ? `
+  ${(() => { const R = roundsPlan(); return `${sectionH('Rounds', 'you pick the dates')}
+  <section class="card rounds-card">
+    <p class="small muted" style="margin:0 0 6px">Choose when each round happens. The time it takes comes from the lectures: first read 100% of the runtime, R1 50%, R2 35%, R3 25%, R4 15% (at your ${m.planSpeed.toFixed(2).replace(/0$/, '')}×). BTR: enter its total hours.</p>
+    ${R.rows.map(r => `<div class="rd-row">
+      <div class="rd-h"><b>${r.label}</b><span class="small muted num">${r.k === 'btr' ? (r.total ? `${hrs(r.total)} total` : 'enter hours') : `${Math.round(r.pct * 100)}% · ${hrs(r.total)}`}${r.left !== r.total && r.total ? ` · ${hrs(r.left)} left` : ''}</span></div>
+      <div class="rd-d">${r.k === 'fr' ? `<span class="small num">${fmtDay(r.from)} – ${fmtDay(r.to)}</span><span class="small muted">set in Settings</span>` : `<input type="date" class="num" data-round="${r.k}" data-edge="from" value="${r.from}" aria-label="${r.label} from"><span class="muted">to</span><input type="date" class="num" data-round="${r.k}" data-edge="to" value="${r.to}" aria-label="${r.label} to">${r.k === 'btr' ? `<input type="number" class="inp num rd-hrs" inputmode="decimal" min="0" step="1" data-round="btr" data-edge="hours" value="${r.hours}" placeholder="hours">` : ''}`}</div>
+      <div class="rd-n small num">${r.late ? `<span class="bad-t">Ended with ${hrs(r.left)} not done</span>` : r.left <= 0 && r.total ? '<span class="good-t">Done</span>' : r.perDay != null ? `<b>${mins(r.perDay)}</b> a study day for ${r.days} days` : r.set ? '' : '<span class="faint">Pick dates</span>'}</div>
+    </div>`).join('')}
+    ${R.peak.mins ? `<p class="small" style="margin:10px 0 0">Busiest study day: <b class="${R.peak.mins > 8 * 60 ? 'bad-t' : ''}">${mins(R.peak.mins)}</b> on ${fmtDay(R.peak.d)} (${R.peak.ks.join(' + ')}).</p>` : ''}
+    <p class="hint">Rounds can overlap; the busiest day adds them up. The phases above follow these dates. Revisions are still scheduled for you subject by subject on Today; these dates are your targets for finishing each round.</p>
+  </section>`; })()}
+
   ${sectionH('What if', 'real hours a day')}
   <section class="card">
     <div class="row"><input type="range" id="whatif" min="1" max="8" step="0.25" value="${whatif}" aria-label="Hours a day"><span class="whatif-v num">${whatif}h</span></div>
@@ -117,7 +129,7 @@ export function view() {
   <div class="btns" style="margin:0 0 8px"><button class="btn primary" data-act="plan-week">🗓️ Plan the week</button><button class="btn" data-act="ics">📅 To Calendar</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="revisions" data-v="r1">🔁 Revisions</button><button class="btn" data-act="backlog">⚠️ Backlogs</button></div>
   <div class="btns" style="margin:0 0 8px"><button class="btn" data-act="rehearsals">🎯 GT rehearsals</button><button class="btn" data-act="final-preview">🏁 Final 7 days</button></div>
-  <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.target)} a day.</p>
+  <p class="small faint" style="margin:0 4px 8px">Days you plan keep exactly your lectures. The rest are filled in sheet order at ${mins(m.perDay)} a study day.</p>
   <ul class="card flush list daylist">${dayHtml}</ul>
 
   ${weeks.length ? `${sectionH('After that')}
@@ -141,6 +153,15 @@ function icsFile(days, revBy) {
       'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc('PG 2027: today\'s plan')}`, 'TRIGGER:PT7H', 'END:VALARM', 'END:VEVENT'].join('\r\n');
   });
   return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PG 2027//EN', 'CALSCALE:GREGORIAN', ...ev, 'END:VCALENDAR'].join('\r\n');
+}
+
+export function onChange(e) {
+  const k = e.target.dataset?.round; if (!k) return false;
+  const edge = e.target.dataset.edge, v = e.target.value;
+  const R = (S.settings.rounds ||= {}), r = (R[k] ||= {});
+  if (edge === 'hours') r.hours = v === '' ? '' : Math.max(0, +v);
+  else if (v) r[edge] = v; else delete r[edge];
+  save(); return true;
 }
 
 export const actions = {

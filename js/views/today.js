@@ -188,7 +188,7 @@ export function view() {
   <button class="card tomorrow" data-act="plan-day" data-v="${tmr}">
     <span class="rbadge" style="--h:215">${ICON.cal}</span>
     <span class="grow"><span class="t">${tmrIds.length ? `Tomorrow: ${tmrIds.length} lecture${tmrIds.length > 1 ? 's' : ''} · ${mins(tmrMins)}` : 'Plan tomorrow'}</span>
-      <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.target)} it needs`}</span></span>
+      <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.perDay)} it needs`}</span></span>
     <span class="faint">${ICON.chev}</span>
   </button>
   ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], false))}">${ICON.copy}Copy tomorrow's topics for Anki</button>` : ''}` : ''}

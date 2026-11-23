@@ -79,7 +79,7 @@ export function view() {
   const plannedMin = blocksOn(d).reduce((a, b) => a + b.mins, 0);
   const studied = L.study, on = onPlan(d, act);
   const past = d < t, future = d > t;
-  const need = d === t ? m.goal : future ? (isRest(d) ? 0 : m.target) + revisionsOn(d).reduce((a, x) => a + x.r.budget, 0) : S.days[d]?.t;
+  const need = d === t ? m.goal : future ? (isRest(d) ? 0 : m.perDay) + revisionsOn(d).reduce((a, x) => a + x.r.budget, 0) : S.days[d]?.t;
   const lecturesPlanned = (S.plan[d] || []).filter(id => BY[id]);
   return {
     title: d === t ? 'Your day' : fmtDow(d),
