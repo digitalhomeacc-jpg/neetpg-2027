@@ -10,7 +10,7 @@ import { rehearsalCard, finalCard } from './extras.js';
 import { backlogCard } from './backlog.js';
 import { todayCard as dayCard } from './dayview.js';
 import { account } from '../sync.js';
-import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode } from '../core.js';
+import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode, exams } from '../core.js';
 import { revTimeChips, upNextHtml } from './revtime.js';
 import { todayCard } from './pyt.js';
 
@@ -224,7 +224,7 @@ export function view() {
     <div class="tile"><div class="k">Study days</div><div class="v num">${m.daysLeft}</div><div class="s">to ${fmtDay(st.target)} deadline</div></div>
   </section>
   <section class="card tiles" style="grid-template-columns:1fr;margin-top:-4px">
-    <div class="tile"><div class="k">Exam</div><div class="v num">${m.examDays} days</div><div class="s">${fmtDayYear(st.exam)} (est.)</div></div>
+    ${exams().filter(x => x.date >= m.t).map(x => `<div class="tile"><div class="k">${h(x.name || 'Exam')}</div><div class="v num">${dayDiff(m.t, x.date)} days</div><div class="s">${fmtDayYear(x.date)}</div></div>`).join('')}
   </section>
 
   ${(() => { const p = pace(); return p ? `<p class="small faint center">At your last two weeks' pace (${mins(p.perDay)} a study day, revisions included), WOR first watch finishes ${p.finish ? fmtDayYear(p.finish) : 'after the exam'}.</p>` : ''; })()}

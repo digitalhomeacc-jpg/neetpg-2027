@@ -677,6 +677,12 @@ export function phaseRoom() {
   const span = Math.max(0, dayDiff(ps[1].start, ps[4].start));
   return { span, btrDays, fits: span - btrDays >= 20, from: ps[1].start, to: ps[4].start };
 }
+// All your exams, soonest first: the first exam (the plan aims here) plus any later ones.
+export function exams() {
+  const st = S.settings;
+  return [{ name: st.examName || 'NEET PG', date: st.exam, main: true }, ...(st.exams || []).filter(x => x.date)].sort((a, b) => a.date.localeCompare(b.date));
+}
+export const nextExam = (t = today()) => exams().find(x => x.date >= t) || null;
 export const currentPhase = (t = today()) => phases().find(p => t >= p.start && t <= p.end) || (t < S.settings.start ? phases()[0] : null);
 
 /* ---------- tests ---------- */

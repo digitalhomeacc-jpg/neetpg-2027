@@ -80,8 +80,13 @@ export function view() {
     <div class="field"><label for="s-start">Started on</label><input id="s-start" type="date" data-set="start" value="${st.start}">
       <p class="hint">"Behind/ahead" is measured from this date. Set it to today for a fresh start.</p></div>
     <div class="field"><label for="s-target">Finish WOR first watch by</label><input id="s-target" type="date" data-set="target" value="${st.target}"></div>
-    <div class="field"><label for="s-exam">Exam date</label><input id="s-exam" type="date" data-set="exam" value="${st.exam}">
-      <p class="hint">NBEMS hasn't announced the NEET PG 2027 date yet. Change this when it does: the phases in Plan and the final-weeks revision limits follow it.</p></div>
+    <div class="field"><label for="s-exam">First exam</label><input id="s-exam" type="date" data-set="exam" value="${st.exam}">
+      <input class="inp" style="grid-column:1 / -1;margin-top:8px" data-set="examName" value="${h(st.examName || '')}" placeholder="Name, e.g. INICET May">
+      <p class="hint">Your plan aims here: phases, the final sprint and the final-weeks revision limits follow this date.</p></div>
+    <div class="field"><span class="lbl">Later exams</span>
+      ${(st.exams || []).map((x, i) => `<div class="row" style="gap:8px;margin:0 0 8px"><input class="inp" style="flex:1" data-exam-i="${i}" data-exam-k="name" value="${h(x.name || '')}" placeholder="Name"><input type="date" class="inp" style="flex:0 0 150px" data-exam-i="${i}" data-exam-k="date" value="${x.date || ''}"><button class="btn small-btn danger" data-act="exam-rm" data-i="${i}">✕</button></div>`).join('')}
+      <button class="btn small-btn" data-act="exam-add">＋ Add an exam</button>
+      <p class="hint">Countdowns show the next exam by name and move on to the following one once it's past.</p></div>
     <div class="field"><span class="lbl">Rest days</span><div class="days">${DOW.map((d, i) => `<button data-act="rest" data-v="${i}" aria-pressed="${st.rest.includes(i)}" aria-label="${DOW_LONG[i]}">${d}</button>`).join('')}</div></div>
     <div class="field"><span class="lbl">Usual watching speed</span>${seg('speed', SPEEDS.map(s => [s, sp(s)]), st.speed)}
       <p class="hint">Pre-selected when you mark a video.</p>
@@ -183,6 +188,8 @@ function authAct(kind) {
 export const actions = {
   'speed': el => { S.settings.speed = +el.dataset.v; save(); },
   'check-update': async el => { el.textContent = 'Checking…'; const r = await checkForUpdate(true); if (r === 'latest') { el.textContent = 'Check for updates'; toast(`You're on the latest version (${APP_VERSION.v})`); } else if (r === 'offline') { el.textContent = 'Check for updates'; toast('No connection. Try again when you\'re online.'); } },
+  'exam-add': () => { (S.settings.exams ||= []).push({ name: '', date: '' }); save(); },
+  'exam-rm': el => { S.settings.exams.splice(+el.dataset.i, 1); save(); },
   'planby': el => { S.settings.planBy = el.dataset.v; save(); },
   'questions': el => { S.settings.questions = +el.dataset.v; save(); },
   'minpct': el => { S.settings.minPct = +el.dataset.v; save(); },
@@ -264,6 +271,7 @@ export function onInput(e) {
 
 export function onChange(e) {
   const el = e.target;
+  if (el.dataset.examI != null) { const x = S.settings.exams?.[+el.dataset.examI]; if (x) { x[el.dataset.examK] = el.value.trim(); save(); } return true; }
   if (el.dataset.set === 'name') { S.settings.name = el.value.trim(); save(); return true; }
   if (el.dataset.set && el.value) {
     if (!['start', 'target', 'exam'].includes(el.dataset.set)) { S.settings[el.dataset.set] = el.value.trim(); save(); return true; }

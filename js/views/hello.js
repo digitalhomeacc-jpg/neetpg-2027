@@ -1,6 +1,6 @@
 // A short welcome each time the app starts (or comes back after a long break): a greeting,
 // the day ahead and the quote of the day. Tap anywhere to begin on Today.
-import { S, metrics, today, dayDiff, h, mins, plural, fmtDayLong } from '../core.js';
+import { S, metrics, today, dayDiff, h, mins, plural, fmtDayLong, nextExam, exams } from '../core.js';
 import { QUOTES, quoteIndex } from '../quotes.js';
 
 let open = false, hiddenAt = 0;
@@ -14,13 +14,14 @@ function greeting() {
 function body() {
   const m = metrics(), st = S.settings, t = today();
   const name = (st.name || '').trim();
-  const toExam = dayDiff(t, st.exam);
+  const nx = nextExam(t) || { name: 'the exam', date: st.exam }, toExam = dayDiff(t, nx.date);
+  const later = exams().filter(x => x.date > nx.date);
   const q = QUOTES[quoteIndex(S.ui)];
   const doneToday = m.frRealToday >= m.target - 0.5 && m.target > 0;
   return `<div class="pgw-card">
     <div class="pgw-date">${fmtDayLong(t)}</div>
     <h1 class="pgw-hi">${greeting()}${name ? `,<br><span>${h(name)}</span>` : ''}</h1>
-    <div class="pgw-count"><b class="num">${toExam}</b><span>${toExam === 1 ? 'day' : 'days'} to NEET PG</span></div>
+    <div class="pgw-count"><b class="num">${toExam}</b><span>${toExam === 1 ? 'day' : 'days'} to ${h(nx.name)}</span></div>${later.length ? `<div class="pgw-later small">${later.map(x => `${h(x.name || 'Exam')} in ${dayDiff(t, x.date)} days`).join(' · ')}</div>` : ''}
     <ul class="pgw-today">
       <li><span class="hi-ic">🎯</span><span>${m.restToday ? 'Rest day today. Revisions only if you feel like it.' : doneToday ? '<b>Today’s target is done.</b> Anything more is a head start.' : `<b>${mins(Math.max(0, m.target - m.frRealToday))}</b> of new videos today`}</span></li>
       <li><span class="hi-ic">🧠</span><span>${m.due.length ? `<b>${plural(m.due.length, 'revision')}</b> due` : 'No revisions due'}</span></li>

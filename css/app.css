@@ -1335,3 +1335,4 @@ button.wd { font: inherit; color: inherit; background: none; border: 0; padding:
 .tl-study, .k-study::before { background: var(--accent); }
 /* Five phases: WOR, R1, BTR, R2/R3, final sprint (calmer palette) */
 .p1 { background: var(--accent); color: var(--accent); } .p2 { background: #4f8cf0; color: #4f8cf0; } .p3 { background: #7c6fe0; color: #7c6fe0; } .p4 { background: #c27bd6; color: #c27bd6; } .p5 { background: #e08a4c; color: #e08a4c; }
+.pgw-later { margin: -6px 0 16px; color: var(--muted); }

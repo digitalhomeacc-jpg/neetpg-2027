@@ -1,5 +1,5 @@
 import {
-  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, phaseRoom, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
+  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, phaseRoom, nextExam, exams, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
 import { sectionH, CHECK, seg, more, tools } from '../ui.js';
@@ -86,7 +86,7 @@ export function view() {
     html: `
   <section class="card">
     <div class="row" style="margin-bottom:12px"><div class="grow"><div class="small muted">Now</div><div class="status">${cur ? h(cur.name) : 'Exam done'}</div></div>
-      <div style="text-align:right"><div class="small muted">Exam (est.)</div><div class="status num">${m.examDays} days</div></div></div>
+      ${(() => { const nx = nextExam(t); return nx ? `<div style="text-align:right"><div class="small muted">${h(nx.name)}</div><div class="status num">${dayDiff(t, nx.date)} days</div></div>` : ''; })()}</div>
     ${timeline(t)}
   </section>
 
