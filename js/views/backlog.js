@@ -31,13 +31,13 @@ function weekData(m, overdueMins) {
     return ids.length ? ids.reduce((a, id) => a + BY[id].mins / m.planSpeed, 0) : null;
   });
   const plannedDays = planned.filter(x => x != null).length;
-  const weekPlan = planned.reduce((a, x) => a + (x ?? m.target), 0);
-  const base = m.target * days.length;
+  const weekPlan = planned.reduce((a, x) => a + (x ?? m.perDay), 0);
+  const base = m.perDay * days.length;
   const behind = Math.max(0, m.behind) / m.planSpeed;
   return { days, plannedDays, weekPlan, base, planExtra: weekPlan - base, behind, overdueMins, backlog: behind + overdueMins,
     // What was left at the start of today: today's target is a share of this, so lectures
     // already watched today mustn't be taken off twice.
-    remReal: (m.remaining + m.frToday) / m.planSpeed, left: m.daysLeft, T: m.target };
+    remReal: (m.remaining + m.frToday) / m.planSpeed, left: m.daysLeft, T: m.perDay };
 }
 function pullOut(w, x) {
   const n = w.days.length, extraWeek = x * n;
@@ -60,7 +60,7 @@ function pullOut(w, x) {
 
 export function view() {
   const m = metrics(), st = S.settings, t = m.t;
-  const T = m.target, remReal = (m.remaining + m.frToday) / m.planSpeed; // left at the start of today
+  const T = m.perDay, remReal = (m.remaining + m.frToday) / m.planSpeed; // left at the start of today
   const left = m.daysLeft;
   // 1. Skip today
   const due = m.due;
@@ -129,10 +129,10 @@ export function view() {
   ${sectionH('If it becomes a habit', 'skipping study days each week')}
   <section class="card">
     <div class="sc-table">
-      <div class="sc-row sc-head"><span>Skip</span><span>WOR done</span><span>Late by</span><span>Phase 2 left</span></div>
+      <div class="sc-row sc-head"><span>Skip</span><span>WOR done</span><span>Late by</span><span>Days left for BTR + PYQs + R1</span></div>
       ${scen.map(x => `<div class="sc-row${x.s ? (x.late > 14 ? ' bad' : x.late ? ' warn' : '') : ' good'}"><span>${x.s ? `${x.s} day${x.s > 1 ? 's' : ''}/week` : 'None'}</span><span class="num">${fmtDay(x.finish)}</span><span class="num">${x.late ? `${x.late} days` : 'on time'}</span><span class="num">${x.p2days} / ${x.p2orig} days</span></div>`).join('')}
     </div>
-    <p class="hint">At today's target of ${mins(T)} a study day, without making it up on other days. Phase 2 (BTR, PYQs, R1) only starts once WOR is done, so every late day comes out of it.</p>
+    <p class="hint">At ${mins(T)} a study day (the share each needs), without making it up on other days. Phase 2 (BTR, topic-wise PYQs and R1) only starts once WOR is done, so every late day comes out of it. The last column is how many of its days would be left.</p>
     <ul class="conseq">
       ${scen[1] ? `<li><b>One skipped day a week</b> pushes WOR to ${fmtDay(scen[1].finish)}${scen[1].late ? ` and takes ${scen[1].late} days from BTR and PYQs` : ''}. To skip it and still finish on time, the other days need ${mins(scen[1].catchUp)} each.</li>` : ''}
       ${scen[2] ? `<li><b>Two a week</b> means ${scen[2].late ? `finishing ${scen[2].late} days late` : 'finishing just in time'}, leaving ${scen[2].p2days} of ${scen[2].p2orig} days for Phase 2.</li>` : ''}

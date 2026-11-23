@@ -604,7 +604,11 @@ export const plannedOn = id => Object.keys(S.plan).filter(d => d >= today() && S
 export function phases() {
   const st = S.settings;
   const exam = st.exam, p1end = st.target;
-  const p3start = addDays(exam, -120), p4start = addDays(exam, -42);
+  // Final sprint: the last 6 weeks. Phase 3 normally starts 4 months out, but never so early that
+  // it swallows Phase 2: Phase 2 always gets at least half the time between WOR and the sprint.
+  const p4start = addDays(exam, -42);
+  const between = Math.max(0, dayDiff(addDays(p1end, 1), p4start));
+  const p3start = [addDays(exam, -120), addDays(p1end, 1 + Math.round(between / 2))].sort()[1];
   return [
     {
       id: 'p1', name: 'WOR first watch', start: st.start, end: p1end,
