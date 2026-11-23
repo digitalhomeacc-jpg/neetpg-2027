@@ -1,8 +1,8 @@
 import {
-  S, VIDS, PASSES, metrics, forecast, simulate, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
+  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
-import { sectionH, CHECK } from '../ui.js';
+import { sectionH, CHECK, seg } from '../ui.js';
 
 function timeline(t) {
   const ps = phases(), start = ps[0].start, end = ps[ps.length - 1].end;
@@ -39,7 +39,9 @@ export function view() {
   // What-if: hours a day you can give, and when that gets WOR done.
   const whatif = S.ui.whatif ?? (Math.round((m.target / 60) * 4) / 4 || 3);
   // Revisions come out of the same hours, so simulate day by day rather than divide.
-  const sim = m.remaining > 0 ? simulate(whatif * 60) : null;
+  const withRev = S.ui.whatifRev !== false;
+  // New videos only: every hour goes to first watches (runtime at your speed), no revisions.
+  const sim = m.remaining > 0 ? (withRev ? simulate(whatif * 60) : { finish: finishDate(whatif * 60 * m.planSpeed), newOnly: true }) : null;
   const wEnd = sim ? (sim.finish || st.exam) : t;
   const wDiff = dayDiff(st.target, wEnd);
   const wMsg = !m.remaining ? 'WOR is done.' : wDiff <= 0
@@ -95,9 +97,11 @@ export function view() {
   <section class="card">
     <div class="row"><input type="range" id="whatif" min="1" max="8" step="0.25" value="${whatif}" aria-label="Hours a day"><span class="whatif-v num">${whatif}h</span></div>
     <p class="small" style="margin:10px 0 0">${sim?.finish ? wMsg : `At ${whatif}h a day the first watch doesn't finish before the exam.`}</p>
-    ${sim ? `<p class="small muted" style="margin:6px 0 0">Counts revisions too: they come out of the same ${whatif}h, up to <b class="num">${mins(sim.revPeak)}</b> on the busiest day. Over the whole plan, revisions take <b class="num">${hrs(sim.revTotal)}</b> and new videos <b class="num">${hrs(sim.newTotal)}</b>.</p>` : ''}
-    ${(() => { const need = hoursNeeded(); return `<p class="small" style="margin:8px 0 0">${need ? `To finish by ${fmtDay(st.target)} you need about <b class="num">${need}h</b> every study day, revisions included` : `Your ${fmtDay(st.target)} deadline can't be met even at 14h a day`}. Today's new-video target alone is ${mins(m.target)}; revisions come on top.</p>`; })()}
-    ${sim ? `<div class="rounds">${[['First watch', sim.finish, 0], ...PASSES.slice(1).map(k => [k.toUpperCase(), sim.passDone[k], sim.passLeft[k]])].map(([l, d, left]) => `<div class="round${d ? '' : ' miss'}"><span>${l}</span><b class="num">${d ? fmtDay(d) : 'Not by the exam'}</b>${d ? '' : `<em class="num">${left} left</em>`}</div>`).join('')}</div>
+    ${seg('whatif-rev', [['1', 'Revisions included'], ['0', 'New videos only']], withRev ? '1' : '0')}
+    ${sim?.newOnly ? '<p class="small muted" style="margin:6px 0 0">Every hour goes to new videos here. In reality revisions also need time, so switch back to see the honest date.</p>' : ''}
+    ${sim && !sim.newOnly ? `<p class="small muted" style="margin:6px 0 0">Counts revisions too: they come out of the same ${whatif}h, up to <b class="num">${mins(sim.revPeak)}</b> on the busiest day. Over the whole plan, revisions take <b class="num">${hrs(sim.revTotal)}</b> and new videos <b class="num">${hrs(sim.newTotal)}</b>.</p>` : ''}
+    ${(() => { const need = hoursNeeded(); return `<p class="small" style="margin:8px 0 0">${need ? `To finish by ${fmtDay(st.target)} you need about <b class="num">${need}h</b> every study day, revisions included` : `Your ${fmtDay(st.target)} deadline can't be met even at 14h a day`}. Each study day's new-video share alone is ${mins(m.perDay)}; revisions come on top.</p>`; })()}
+    ${sim && !sim.newOnly ? `<div class="rounds">${[['First watch', sim.finish, 0], ...PASSES.slice(1).map(k => [k.toUpperCase(), sim.passDone[k], sim.passLeft[k]])].map(([l, d, left]) => `<div class="round${d ? '' : ' miss'}"><span>${l}</span><b class="num">${d ? fmtDay(d) : 'Not by the exam'}</b>${d ? '' : `<em class="num">${left} left</em>`}</div>`).join('')}</div>
     <p class="hint">When every video has had each round, at ${whatif}h a day. A round "not by the exam" means some videos won't get it in time: add hours, start revisions earlier, or accept fewer rounds for weak-yield topics.</p>` : ''}
     <p class="small faint" style="margin:4px 0 0">Change the deadline or rest days in Settings.</p>
   </section>
@@ -140,6 +144,7 @@ function icsFile(days, revBy) {
 }
 
 export const actions = {
+  'whatif-rev': el => { S.ui.whatifRev = el.dataset.v === '1'; },
   'ics': () => {
     const m = metrics(), t = m.t, revBy = {};
     for (const v of VIDS) { const r = revInfo(v, t); if (r?.k && r.due) { const d = r.due < t ? t : r.due; (revBy[d] ||= []).push({ v, r }); } }

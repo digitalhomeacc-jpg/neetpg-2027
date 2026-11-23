@@ -1,7 +1,7 @@
 // Duty hours: enter each day's hospital duty for the next two weeks and see the free time
 // you'll have against what that day needs (new videos + revisions due). It only informs:
 // your targets and plan stay as they are. Move lectures yourself in the planner.
-import { S, VIDS, PASSES, metrics, today, addDays, isRest, revisionsOn, revisionsDue, freeMinutes, dutyOn, dutyHours, shiftMins, passMins, iso, save, h, mins, hrs, fmtDow, fmtDay } from '../core.js';
+import { S, VIDS, PASSES, shiftsOf, metrics, today, addDays, isRest, revisionsOn, revisionsDue, freeMinutes, dutyOn, dutyHours, shiftMins, passMins, iso, save, h, mins, hrs, fmtDow, fmtDay } from '../core.js';
 import { sectionH, openSheet, closeSheet, toast } from '../ui.js';
 
 /* ---------- where the day went: sleep, duty, study, everything else ---------- */
@@ -37,7 +37,8 @@ function bar(L) {
   return `<div class="tl">${out.join('')}${L.upTo < 1440 ? `<b class="tl-now" style="left:${(L.upTo / 14.4).toFixed(2)}%"></b>` : ''}</div>
     <div class="tl-ticks"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>12a</span></div>`;
 }
-const dutyLabel = x => x == null ? '' : typeof x === 'number' ? (x ? `${x}h` : 'Off') : `${x.from}–${x.to}${shiftMins(x) + +x.from.slice(0, 2) * 60 + +x.from.slice(3) > 1440 ? ' (next day)' : ''}`;
+const oneShift = x => `${x.from}–${x.to}${shiftMins(x) + +x.from.slice(0, 2) * 60 + +x.from.slice(3) > 1440 ? ' (next day)' : ''}`;
+const dutyLabel = x => x == null ? '' : typeof x === 'number' ? (x ? `${x}h` : 'Off') : shiftsOf(x).map(oneShift).join(', ');
 function pastRow(L, t) {
   const x = S.duty[L.d], ess = (S.settings.essentials ?? 3) * 60 * (L.upTo / 1440);
   return `<li class="duty-row past">
@@ -51,15 +52,26 @@ function pastRow(L, t) {
 
 const PRESETS = [['09:00', '21:00', '9a–9p'], ['08:00', '16:00', '8a–4p'], ['08:00', '14:00', '8a–2p'], ['21:00', '09:00', 'Night 9p–9a'], ['08:00', '08:00', '24h from 8a']];
 let edit = null, dAlarm = null;
+// Add a shift to the day (several shifts a day are fine); hours-only duty is replaced by shifts.
+function addShift(z) {
+  if (dAlarm != null) z.alarm = dAlarm;
+  const list = [...shiftsOf(S.duty[edit]), z].sort((a, b) => a.from.localeCompare(b.from));
+  S.duty[edit] = list.length === 1 ? list[0] : list;
+  save();
+  toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])}`);
+}
 const ALARMS = [[null, 'None'], [0, 'At start'], [30, '30 min before'], [60, '1 hour'], [90, '1½ hours'], [120, '2 hours']];
 function editSheet() {
-  const x = S.duty[edit], tm = x && typeof x === 'object' ? x : { from: '09:00', to: '21:00' };
-  return `<h3>Duty · ${fmtDow(edit)}</h3><div class="sub">Times place it on the day's timeline; a shift that ends before it starts runs into the next day.</div>
-    <div class="field"><span class="lbl">Wake-up alarm before the shift</span><div class="chips">${ALARMS.map(([v, l]) => `<button class="chip" data-act="du-alarm" data-v="${v ?? ''}" aria-pressed="${dAlarm === v}">${l}</button>`).join('')}</div>
+  const x = S.duty[edit], list = shiftsOf(x), last = list[list.length - 1];
+  const tm = last ? { from: last.to, to: last.to } : { from: '09:00', to: '21:00' };
+  return `<h3>Duty · ${fmtDow(edit)}</h3><div class="sub">Add each shift of the day; a shift that ends before it starts runs into the next day.</div>
+    ${list.length ? `<ul class="list mini-list">${list.map((z, i) => `<li class="item"><span class="grow"><b class="num">${h(oneShift(z))}</b> <span class="small muted">· ${mins(shiftMins(z))}${z.alarm != null ? ` · ⏰ ${z.alarm ? `${z.alarm} min before` : 'at start'}` : ''}</span></span><button class="btn small-btn danger" data-act="du-rm" data-i="${i}">Remove</button></li>`).join('')}</ul>
+      <p class="small muted" style="margin:4px 0 0">Add another shift below, or leave it at that.</p>` : ''}
+    <div class="field"><span class="lbl">Wake-up alarm for the shift you add</span><div class="chips">${ALARMS.map(([v, l]) => `<button class="chip" data-act="du-alarm" data-v="${v ?? ''}" aria-pressed="${dAlarm === v}">${l}</button>`).join('')}</div>
       <p class="hint">A real alarm in the Clock app, so it rings even if you're asleep at an odd hour. Your Shortcut creates it (Settings → Apple Health & alarms). Applies to shifts with times.</p></div>
-    <div class="field"><span class="lbl">Quick</span><div class="chips">${PRESETS.map(([a, b, l]) => `<button class="chip" data-act="du-preset" data-a="${a}" data-b="${b}" aria-pressed="${x?.from === a && x?.to === b}">${l}</button>`).join('')}</div></div>
+    <div class="field"><span class="lbl">${list.length ? 'Add a shift: quick' : 'Quick'}</span><div class="chips">${PRESETS.map(([a, b, l]) => `<button class="chip" data-act="du-preset" data-a="${a}" data-b="${b}" aria-pressed="${x?.from === a && x?.to === b}">${l}</button>`).join('')}</div></div>
     <div class="field"><span class="lbl">Shift times</span><div class="row" style="gap:8px"><input id="du-from" class="inp num" type="time" value="${tm.from}"><span class="muted">to</span><input id="du-to" class="inp num" type="time" value="${tm.to}"></div>
-      <button class="btn primary block" data-act="du-save" style="margin-top:10px">Save times</button></div>
+      <button class="btn primary block" data-act="du-save" style="margin-top:10px">${list.length ? 'Add this shift' : 'Save shift'}</button></div>
 
     <div class="field"><span class="lbl">Or just hours</span><div class="chips">${CHIPS.map(c => `<button class="chip" data-act="du-hours" data-v="${c}" aria-pressed="${x === c}">${c === 0 ? 'Off' : `${c}h`}</button>`).join('')}<button class="chip" data-act="duty-other" data-d="${edit}">Other…</button></div></div>
     ${x != null ? '<button class="btn ghost danger block" data-act="du-clear">Clear this day</button>' : ''}`;
@@ -134,13 +146,18 @@ export const actions = {
   'duty-open': () => { closeSheet(); S.ui.dutyBack = S.ui.tab === 'duty' ? S.ui.dutyBack : S.ui.tab; S.ui.tab = 'duty'; return 'enter'; },
   duty: el => { S.duty[el.dataset.d] = +el.dataset.v; save(); },
   'duty-clear': el => { delete S.duty[el.dataset.d]; save(); },
-  'du-edit': el => { edit = el.dataset.d; const x = S.duty[edit]; dAlarm = x && typeof x === 'object' ? (x.alarm ?? null) : (S.settings.dutyAlarm ?? 60); openSheet(editSheet); },
-  'du-alarm': el => { dAlarm = el.dataset.v === '' ? null : +el.dataset.v; const x = S.duty[edit]; if (x && typeof x === 'object') { if (dAlarm == null) delete x.alarm; else x.alarm = dAlarm; save(); } S.settings.dutyAlarm = dAlarm; },
-  'du-preset': el => { S.duty[edit] = { from: el.dataset.a, to: el.dataset.b, ...(dAlarm != null ? { alarm: dAlarm } : {}) }; save(); closeSheet(); toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])}`); },
+  'du-edit': el => { edit = el.dataset.d; dAlarm = S.settings.dutyAlarm === undefined ? 60 : S.settings.dutyAlarm; openSheet(editSheet); },
+  'du-alarm': el => { dAlarm = el.dataset.v === '' ? null : +el.dataset.v; S.settings.dutyAlarm = dAlarm; },
+  'du-preset': el => { addShift({ from: el.dataset.a, to: el.dataset.b }); },
+  'du-rm': el => {
+    const list = shiftsOf(S.duty[edit]).filter((_, i) => i !== +el.dataset.i);
+    if (list.length) S.duty[edit] = list.length === 1 ? list[0] : list; else delete S.duty[edit];
+    save();
+  },
   'du-save': () => {
     const a = document.getElementById('du-from').value, b = document.getElementById('du-to').value;
     if (!/^\d{2}:\d{2}$/.test(a) || !/^\d{2}:\d{2}$/.test(b)) { toast('Pick both times'); return; }
-    S.duty[edit] = { from: a, to: b, ...(dAlarm != null ? { alarm: dAlarm } : {}) }; save(); closeSheet(); toast(`Duty ${fmtDow(edit)}: ${dutyLabel(S.duty[edit])} · ${mins(shiftMins(S.duty[edit]))}`);
+    addShift({ from: a, to: b });
   },
   'du-hours': el => { S.duty[edit] = +el.dataset.v; save(); closeSheet(); },
   'du-clear': () => { delete S.duty[edit]; save(); closeSheet(); },

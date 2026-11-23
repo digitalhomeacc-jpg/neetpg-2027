@@ -183,7 +183,7 @@ export function view() {
   ${!mineToday && todayPlan.length ? `<p class="small faint" style="margin:6px 4px 0">These follow your sheet's order. Tap “Choose myself” to pick your own lectures.</p>` : ''}
   ${todayCard([...new Set([...todayPlan.map(x => x.v.id), ...VIDS.filter(v => prog(v.id).fr?.d === m.t).map(v => v.id)])])}
   ${(() => { const ids = [...new Set([...todayPlan.map(x => x.v.id), ...VIDS.filter(v => prog(v.id).fr?.d === m.t).map(v => v.id)])];
-    return ids.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(ids.flatMap(id => vTags(BY[id])))], true))}">${ICON.copy}Copy today's Anki cards · still suspended</button>` : ''; })()}
+    return ids.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(ids.flatMap(id => vTags(BY[id])))], false))}">${ICON.copy}Copy today's topics for Anki</button>` : ''; })()}
 
   <button class="card tomorrow" data-act="plan-day" data-v="${tmr}">
     <span class="rbadge" style="--h:215">${ICON.cal}</span>
@@ -191,7 +191,7 @@ export function view() {
       <span class="s">${tmrIds.length ? tmrIds.slice(0, 2).map(id => h(BY[id].title)).join(', ') + (tmrIds.length > 2 ? ` +${tmrIds.length - 2}` : '') : `Pick lectures for ${fmtDay(tmr)} against the ${mins(m.target)} it needs`}</span></span>
     <span class="faint">${ICON.chev}</span>
   </button>
-  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], true))}">${ICON.copy}Copy tomorrow's Anki cards · still suspended</button>` : ''}` : ''}
+  ${tmrIds.length ? `<button class="btn block anki-tmr" data-act="copy" data-q="${h(ankiQuery([...new Set(tmrIds.flatMap(id => vTags(BY[id])))], false))}">${ICON.copy}Copy tomorrow's topics for Anki</button>` : ''}` : ''}
 
   ${openMistakes.length ? `
   ${sectionH('Mistakes to revisit', `<button class="link" data-act="tab" data-v="tests">${plural(openMistakes.length, 'open')}</button>`)}
@@ -208,10 +208,9 @@ export function view() {
   ${frTodayVids.length ? `
   ${sectionH("Anki for today's videos", ANKI ? plural(frTodayVids.reduce((a, v) => a + (ankiOf(v)?.c || 0), 0), 'card') : plural(tagsToday.length, 'tag'))}
   <section class="card">
-    <p class="small muted" style="margin:0 0 12px">Paste into the Anki browser search, select all, then unsuspend (Ctrl/⌘+J on desktop).</p>
+    <p class="small muted" style="margin:0 0 12px">Paste into Anki's Browse search, select all, then unsuspend (Ctrl/⌘+J on desktop).</p>
     <div class="btns">
-      <button class="btn primary" data-act="copy" data-q="${h(ankiQuery(tagsToday, true))}">${ICON.copy}Still suspended</button>
-      <button class="btn" data-act="copy" data-q="${h(ankiQuery(tagsToday, false))}">All cards</button>
+      <button class="btn primary block" data-act="copy" data-q="${h(ankiQuery(tagsToday, false))}">${ICON.copy}Copy today's topics for Anki</button>
     </div>
     <div class="spacer"></div>
     <div class="note"><b>Draft mapping.</b> These tags come from the sheet and haven't been checked against your collection yet.</div>

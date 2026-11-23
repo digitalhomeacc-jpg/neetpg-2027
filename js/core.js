@@ -148,8 +148,7 @@ function alarmsOut() {
   // if the app isn't opened for days; the Shortcut only creates the ones due in the next 36 hours.
   const days = new Set([...Object.keys(S.duty || {}), ...Object.keys(S.blocks || {})].filter(d => d >= addDays(t, -1) && d <= addDays(t, 60)));
   for (const d of days) {
-    const x = S.duty?.[d];
-    if (x && typeof x === 'object' && x.alarm != null) push(d, x.from, x.alarm, `Duty ${x.from}–${x.to}${x.alarm ? ` (in ${x.alarm} min)` : ''}`, 'duty');
+    for (const x of shiftsOf(S.duty?.[d])) if (x.alarm != null) push(d, x.from, x.alarm, `Duty ${x.from}–${x.to}${x.alarm ? ` (in ${x.alarm} min)` : ''}`, 'duty');
     for (const b of S.blocks?.[d] || []) if (b.alarm != null) push(d, b.from, b.alarm, `Study: ${ALARM_KIND[b.kind] || 'Study'} at ${b.from}${b.alarm ? ` (in ${b.alarm} min)` : ''}`, `b${b.id}`);
   }
   // A test alarm from Settings, a few minutes ahead.
@@ -401,6 +400,8 @@ function metricsNow() {
   let target = 0;
   if (overdue) target = Math.min(remaining / planSpeed, 6 * 60);
   else if (daysLeft > 0 && !restToday) target = (remaining + frToday) / planSpeed / daysLeft;
+  // What each study day needs from here, even when today itself is a rest day.
+  const perDay = overdue ? target : daysLeft > 0 ? (remaining + frToday) / planSpeed / daysLeft : 0;
   // Revisions: everything due today or overdue, plus what you've already revised today.
   const due = revisionsDue(t);
   let revDoneToday = 0, revDoneCount = 0;
@@ -443,7 +444,7 @@ function metricsNow() {
     wMins,
     t, total, done, doneCount, remaining, frToday, realToday, frRealToday, realAll, avgSpeed, planSpeed, byDay, sessDay, otherToday, otherAll,
     due, dueMins, must, mustMins, revDoneToday, revDoneCount, goal, minimum,
-    restToday, daysLeft, overdue, target, totalDays, elapsed, expected, behind, recentRate, projected, streak,
+    restToday, daysLeft, overdue, target, perDay, totalDays, elapsed, expected, behind, recentRate, projected, streak,
     examDays: dayDiff(t, st.exam),
   };
 }
@@ -573,15 +574,20 @@ export function pace() {
 // that ends at or before it starts runs past midnight into the next day.
 const hhmm = s => { const [a, b] = String(s).split(':').map(Number); return a * 60 + (b || 0); };
 export const shiftMins = x => { let n = hhmm(x.to) - hhmm(x.from); if (n <= 0) n += 1440; return n; };
-export const dutyHours = x => x == null ? null : typeof x === 'number' ? x : shiftMins(x) / 60;
-// Duty inside calendar day d: its own shift (up to midnight) plus the part of yesterday's
-// shift that ran past midnight. segs are minutes from 00:00; hours-only duty has no place.
+// A day's duty: hours (8), one shift ({ from, to, alarm }) or several shifts (an array of those).
+export const shiftsOf = x => Array.isArray(x) ? x : x && typeof x === 'object' ? [x] : [];
+export const dutyHours = x => x == null ? null : typeof x === 'number' ? x : shiftsOf(x).reduce((a, y) => a + shiftMins(y), 0) / 60;
+// Duty inside calendar day d: its own shifts (up to midnight) plus any of yesterday's that ran past
+// midnight. Overlapping shifts count once. segs are minutes from 00:00; hours-only duty has no place.
 export function dutyOn(d) {
-  const segs = []; let untimed = 0, entered = false;
+  const raw = []; let untimed = 0, entered = false;
   const x = S.duty?.[d], y = S.duty?.[addDays(d, -1)];
   if (typeof x === 'number') { untimed = x * 60; entered = true; }
-  else if (x) { const a = hhmm(x.from); segs.push([a, Math.min(1440, a + shiftMins(x))]); entered = true; }
-  if (y && typeof y === 'object') { const end = hhmm(y.from) + shiftMins(y) - 1440; if (end > 0) { segs.push([0, end]); entered = true; } }
+  for (const z of shiftsOf(x)) { const a = hhmm(z.from); raw.push([a, Math.min(1440, a + shiftMins(z))]); entered = true; }
+  for (const z of shiftsOf(y)) { const end = hhmm(z.from) + shiftMins(z) - 1440; if (end > 0) { raw.push([0, end]); entered = true; } }
+  raw.sort((a, b) => a[0] - b[0]);
+  const segs = [];
+  for (const r of raw) { const l = segs[segs.length - 1]; if (l && r[0] <= l[1]) l[1] = Math.max(l[1], r[1]); else segs.push([...r]); }
   return { segs, untimed, mins: untimed + segs.reduce((a, [p, q]) => a + q - p, 0), entered };
 }
 // Free study time on a day from the duty you entered (null if none entered).

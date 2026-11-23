@@ -44,7 +44,7 @@ export function ankiBlock(v) {
   if (!ANKI) {
     return `<div class="field"><span class="lbl">Anki tags · ${v.tags.length}</span>
       ${v.tags.length ? `<div class="tags">${v.tags.map(t => `<div class="tag">${h(t)}</div>`).join('')}</div>
-      <div class="btns"><button class="btn primary" data-act="copy" data-q="${h(ankiQuery([v], true))}">Copy search · still suspended</button>
+      <div class="btns"><button class="btn primary" data-act="copy" data-q="${h(ankiQuery([v], false))}">Copy search</button>
       <button class="btn" data-act="copy" data-q="${h(ankiQuery([v], false))}">Copy search · all cards</button></div>` : '<p class="small muted">No tags mapped yet.</p>'}</div>`;
   }
   const pk = pickFor(v), items = pickItems(v), on = items.filter(x => !pk.off.has(x.k));
@@ -60,9 +60,8 @@ export function ankiBlock(v) {
         <button class="link" data-act="ak-all">${on.length === items.length ? 'Select none' : 'Select all'}</button></div>
       <ul class="pick-list">${items.map(x => `<li><button class="pick-row${pk.off.has(x.k) ? '' : ' on'}${x.sub ? ' sub' : ''}" data-act="ak-pick" data-v="${x.k}" aria-pressed="${!pk.off.has(x.k)}">
         <span class="box">${pk.off.has(x.k) ? '' : '✓'}</span><span class="grow"><span class="pl">${h(x.label)}</span>${x.full ? `<span class="pf mono">${h(x.full)}</span>` : ''}</span><span class="num faint">${x.n}</span></button></li>`).join('')}</ul>
-      <div class="seg pick-seg"><button data-act="ak-susp" data-v="1" aria-pressed="${pk.susp}">Only still suspended</button><button data-act="ak-susp" data-v="0" aria-pressed="${!pk.susp}">All cards</button></div>
-      <button class="btn primary block" data-act="copy" data-q="${h(on.length ? ankiQuery(on.map(x => x.tag), pk.susp) : '')}" ${on.length ? '' : 'disabled'}>Copy Anki search · ${plural(on.length, 'tag')}</button>
-      <p class="hint">${pk.susp ? '"Only still suspended" finds just the cards you haven\'t unsuspended yet, so after you unsuspend them they no longer show up. Use it to get new cards ready.' : '"All cards" finds every card under these tags, suspended or not. Use it to review or browse.'}
+      <button class="btn primary block" data-act="copy" data-q="${h(on.length ? ankiQuery(on.map(x => x.tag), false) : '')}" ${on.length ? '' : 'disabled'}>Copy Anki search · ${plural(on.length, 'tag')}</button>
+      <p class="hint">
         Paste it in Anki's Browse search.${usePg() ? '' : ' The video and chapter tags appear here once you\'ve added the PG27 tags in Anki (Library → Anki).'}</p>
     </div>` : ''}</div>`;
 }
@@ -174,7 +173,7 @@ export function view() {
       </div>
     </div>
     <div class="btns" style="margin-top:12px">
-      ${hit.length ? `<button class="btn primary" data-act="copy" data-q="${h(bulkQuery(hit.map(x => x.v), true))}">${ICON.copy}Suspended cards of everything watched</button>` : ''}
+      ${hit.length ? `<button class="btn primary" data-act="copy" data-q="${h(bulkQuery(hit.map(x => x.v), false))}">${ICON.copy}Topics of everything watched</button>` : ''}
     </div>
     <p class="hint">Marking a video watched marks its tag hit. Cards were placed on videos automatically from the card text, your tags and Marrow's chapter list, so a few sit under a neighbouring video. Retag those in Anki when you meet them.</p>
   </section>

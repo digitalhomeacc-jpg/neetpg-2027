@@ -103,6 +103,8 @@ export function applyHealth(q, at = Date.now()) {
     else {
       for (const [d, x] of Object.entries(r.days)) {
         const o = d === runDay ? rec : { ...(S.health[d] || {}), src: 'health' };
+        // Today with no sleep yet (the Shortcut ran before you slept) isn't "0h": leave it open.
+        if (d === runDay && !x.mins) { delete o.sleep; delete o.slp; delete o.err; delete o.raw; continue; }
         o.sleep = Math.round(x.mins / 6) / 10; o.slp = x.segs; o.upTo = x.upTo; delete o.err; delete o.raw;
         if (d !== runDay) S.health[d] = o;
       }
@@ -154,9 +156,9 @@ export function checkinCard() {
     return `<button class="checkin done" data-act="ci-edit"><span>🌙 <b class="num">${hm(x.sleep)}</b> sleep${x.hrv ? ` · HRV <b class="num">${x.hrv}</b>` : ''} · energy ${ENERGY[x.energy - 1][1]}</span><span class="faint small">Edit</span></button>`;
   }
   return `<section class="card checkin">
-    <div class="ci-q">How did you sleep?${x.src === 'health' ? ` <span class="pill accent">from Health${x.sleep != null ? `: ${hm(x.sleep)}` : ''}</span>` : ''}</div>
+    <div class="ci-q">How did you sleep?${x.src === 'health' ? ` <span class="pill accent">from Health${x.sleep ? `: ${hm(x.sleep)}` : ''}</span>` : ''}</div>
     ${x.src === 'health' && x.err ? `<p class="small warn-t" style="margin:4px 0 8px">The Shortcut ran, but sleep wasn't saved: ${h(x.err)}${x.raw != null && !/it sent/.test(x.err) ? ` (it sent "${h(x.raw)}")` : ''}. Pick your hours below, and see Settings → Apple Health.</p>` : ''}
-    <div class="chips">${[5, 6, 7, 8, 9].map(n => `<button class="chip" data-act="ci-sleep" data-v="${n}" aria-pressed="${x.sleep != null && Math.min(9, Math.max(5, Math.round(x.sleep))) === n}">${n === 5 ? '≤5h' : n === 9 ? '9h+' : `${n}h`}</button>`).join('')}</div>
+    <div class="chips">${[5, 6, 7, 8, 9].map(n => `<button class="chip" data-act="ci-sleep" data-v="${n}" aria-pressed="${!!x.sleep && Math.min(9, Math.max(5, Math.round(x.sleep))) === n}">${n === 5 ? '≤5h' : n === 9 ? '9h+' : `${n}h`}</button>`).join('')}</div>
     <div class="ci-q" style="margin-top:12px">Energy right now?</div>
     <div class="chips energy">${ENERGY.map(([n, e]) => `<button class="chip" data-act="ci-energy" data-v="${n}" aria-pressed="${x.energy === n}">${e}</button>`).join('')}</div>
   </section>`;

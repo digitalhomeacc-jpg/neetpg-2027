@@ -14,7 +14,7 @@ function body() {
   const rows = days.map(d => {
     const ids = (S.plan[d] || []).filter(id => BY[id]);
     const real = ids.reduce((a, id) => a + (prog(id).fr ? 0 : BY[id].mins / m.planSpeed), 0);
-    const need = isRest(d) ? 0 : m.target, past = d < t;
+    const need = isRest(d) ? 0 : m.perDay, past = d < t;
     const subj = [...new Set(ids.map(id => BY[id].subject))];
     return `<li><button class="wk-day${past ? ' past' : ''}" data-act="wk-open" data-v="${d}" ${past ? 'disabled' : ''}>
       <span class="wk-l"><b>${d === t ? 'Today' : fmtDow(d)}</b>${isRest(d) ? '<span class="pill">rest</span>' : ''}</span>
@@ -34,7 +34,7 @@ function body() {
 export function openWeek(start) { ctx = { start: start || weekStart(today()), mode: S.ui.weekMode || 'mix' }; openSheet(body); }
 
 function fill() {
-  const m = metrics(), t = m.t, target = m.target || 120;
+  const m = metrics(), t = m.t, target = m.perDay || 120;
   const taken = new Set(Object.values(S.plan).flat());
   const pool = VIDS.filter(v => !prog(v.id).fr && !taken.has(v.id));
   const take = pred => { const i = pool.findIndex(pred); return i < 0 ? null : pool.splice(i, 1)[0]; };
