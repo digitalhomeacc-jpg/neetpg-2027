@@ -84,7 +84,7 @@ export function view() {
       <input class="inp" style="grid-column:1 / -1;margin-top:8px" data-set="examName" value="${h(st.examName || '')}" placeholder="Name, e.g. INICET May">
       <p class="hint">Your plan aims here: phases, the final sprint and the final-weeks revision limits follow this date.</p></div>
     <div class="field"><span class="lbl">Later exams</span>
-      ${(st.exams || []).map((x, i) => `<div class="row" style="gap:8px;margin:0 0 8px"><input class="inp" style="flex:1" data-exam-i="${i}" data-exam-k="name" value="${h(x.name || '')}" placeholder="Name"><input type="date" class="inp" style="flex:0 0 150px" data-exam-i="${i}" data-exam-k="date" value="${x.date || ''}"><button class="btn small-btn danger" data-act="exam-rm" data-i="${i}">✕</button></div>`).join('')}
+      ${(st.exams || []).map((x, i) => `<div class="row" style="gap:8px;margin:0 0 8px"><input class="inp" style="flex:1" data-exam-i="${i}" data-exam-k="name" value="${h(x.name || '')}" placeholder="Name"><input type="date" class="inp" style="flex:0 0 150px" data-exam-i="${i}" data-exam-k="date" value="${x.date || ''}"><button class="btn small-btn danger" data-act="exam-rm" data-i="${i}">✕</button></div>${x.date && x.date < today() ? `<p class="small warn-t" style="margin:-4px 0 8px">This date has already passed, so it isn't shown anywhere. <button class="link" data-act="exam-year" data-i="${i}">Change it to ${+x.date.slice(0, 4) + 1}</button></p>` : x.date && x.date < st.exam ? '<p class="small muted" style="margin:-4px 0 8px">Before your first exam: it is counted down, but the plan aims at the first exam.</p>' : ''}`).join('')}
       <button class="btn small-btn" data-act="exam-add">＋ Add an exam</button>
       <p class="hint">Countdowns show the next exam by name and move on to the following one once it's past.</p></div>
     <div class="field"><span class="lbl">Rest days</span><div class="days">${DOW.map((d, i) => `<button data-act="rest" data-v="${i}" aria-pressed="${st.rest.includes(i)}" aria-label="${DOW_LONG[i]}">${d}</button>`).join('')}</div></div>
@@ -188,6 +188,7 @@ function authAct(kind) {
 export const actions = {
   'speed': el => { S.settings.speed = +el.dataset.v; save(); },
   'check-update': async el => { el.textContent = 'Checking…'; const r = await checkForUpdate(true); if (r === 'latest') { el.textContent = 'Check for updates'; toast(`You're on the latest version (${APP_VERSION.v})`); } else if (r === 'offline') { el.textContent = 'Check for updates'; toast('No connection. Try again when you\'re online.'); } },
+  'exam-year': el => { const x = S.settings.exams[+el.dataset.i]; x.date = `${+x.date.slice(0, 4) + 1}${x.date.slice(4)}`; save(); toast(`${x.name || 'Exam'} moved to ${x.date.slice(0, 4)}`); },
   'exam-add': () => { (S.settings.exams ||= []).push({ name: '', date: '' }); save(); },
   'exam-rm': el => { S.settings.exams.splice(+el.dataset.i, 1); save(); },
   'planby': el => { S.settings.planBy = el.dataset.v; save(); },
