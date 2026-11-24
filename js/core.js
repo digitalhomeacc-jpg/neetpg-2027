@@ -631,30 +631,63 @@ export function roundsPlan() {
   return { rows, peak };
 }
 
+/* ---------- roadmap: each stage's hours a day → days → dates, and where each exam falls ---------- */
+// Your order: first read → R1 → BTR → R2 → R3 → R4. Lecture stages take their share of the
+// runtime (100/50/35/25/15%) at your speed, minus what's already done, at the hours a day you
+// set; BTR has no runtimes yet, so it's set in days. Stages follow one another on study days.
+export const ROAD = [['fr', 'First read'], ['r1', 'R1'], ['btr', 'BTR'], ['r2', 'R2'], ['r3', 'R3'], ['r4', 'R4']];
+let roadKey = '', roadVal = null;
+export function roadmap() {
+  const key = `${saveVersion}|${today()}`;
+  if (key === roadKey) return roadVal;
+  const st = S.settings, m = metrics(), t = m.t, R = st.road || {};
+  const frDefault = Math.min(12, Math.max(0.5, Math.round(((m.perDay || 150) / 60) * 2) / 2));
+  const stages = ROAD.map(([k, label]) => {
+    if (k === 'btr') return { k, label, days: Math.max(0, Math.round(R.btr ?? st.btrDays ?? 55)), mins: null, h: null };
+    // First read: runtime at your speed. Revisions: the same per-lecture limit the rest of the app
+    // uses (passBudget: 50/35/25/15% of runtime in real minutes, rounded, at least 2 min).
+    const per = v => k === 'fr' ? v.mins / m.planSpeed : passBudget(v, k, t);
+    const total = VIDS.reduce((a, v) => a + per(v), 0);
+    const mins = VIDS.reduce((a, v) => a + (prog(v.id)[k] ? 0 : per(v)), 0);
+    const h = R[k] ?? (k === 'fr' ? frDefault : 3);
+    return { k, label, total, mins, h, days: mins > 0 ? Math.ceil(mins / (h * 60)) : 0 };
+  });
+  // Lay the stages on study days, from today.
+  let cur = t;
+  for (const s of stages) {
+    if (!s.days) { s.from = s.to = null; continue; }
+    let d = cur, n = 0, from = null, to = null;
+    for (let g = 0; g < 3000 && n < s.days; d = addDays(d, 1), g++) if (!isRest(d)) { if (!from) from = d; to = d; n++; }
+    s.from = from; s.to = to; cur = addDays(to, 1);
+  }
+  // Where each exam falls: which stages are done by then, and how far into the one in progress.
+  const ex = exams().filter(x => x.date >= t).map(x => {
+    const done = [], part = [];
+    for (const s of stages) {
+      if (!s.days || (s.to && s.to < x.date)) { done.push(s.label); continue; }
+      if (s.from && s.from < x.date) part.push({ label: s.label, pct: Math.round((studyDays(s.from, addDays(x.date, -1)) / s.days) * 100) });
+    }
+    return { ...x, done, part, all: done.length === stages.length };
+  });
+  roadKey = key; roadVal = { stages, exams: ex, end: [...stages].reverse().find(s => s.to)?.to || t };
+  return roadVal;
+}
+
 /* ---------- phases from now to the exam ---------- */
 export function phases() {
-  // Your workflow: WOR first read → R1 of every subject (+ PYQs) → BTR → R2/R3 from combined
-  // notes with grand tests → final sprint (R4). Dates you choose in Rounds take priority.
-  // Otherwise BTR gets its usual length (55 days unless you change it) and R1 and R2/R3 share
-  // the rest equally; if it can't all fit, everything is shared out in proportion.
-  const st = S.settings, R = st.rounds || {}, exam = st.exam, p1end = st.target;
-  const ok = k => R[k]?.from && R[k]?.to;
-  const btrDays = st.btrDays ?? 55;
-  const p5start = ok('r4') ? R.r4.from : addDays(exam, -42);
-  const span = Math.max(3, dayDiff(addDays(p1end, 1), p5start));
-  const fits = span - btrDays >= 20;
-  const r1Days = fits ? Math.round((span - btrDays) / 2) : Math.round(span * 0.25);
-  const btrLen = fits ? btrDays : Math.round(span * 0.5);
-  const p2start = ok('r1') ? (R.r1.from > p1end ? R.r1.from : addDays(p1end, 1)) : addDays(p1end, 1);
-  let p3start = ok('btr') ? R.btr.from : ok('r1') ? addDays(R.r1.to, 1) : addDays(p2start, r1Days);
-  // Phases follow one another: if BTR is set to start with (or before) R1, BTR's phase begins after R1.
-  if (p3start <= p2start) p3start = ok('r1') && R.r1.to >= p2start ? addDays(R.r1.to, 1) : addDays(p2start, Math.max(1, r1Days));
-  let p4start = ok('r2') ? R.r2.from : ok('btr') ? addDays(R.btr.to, 1) : addDays(p3start, btrLen);
-  if (p3start > p5start) p3start = p5start;
+  // The phases follow the roadmap's stages (your order and your hours a day).
+  const st = S.settings, exam = st.exam, R = roadmap().stages, by = k => R.find(s => s.k === k);
+  const t = today(), fr = by('fr'), r1 = by('r1'), btr = by('btr'), r2 = by('r2'), r3 = by('r3'), r4 = by('r4');
+  const p1end = fr.to || addDays(t, -1);
+  let p2start = r1.from || addDays(p1end, 1), p3start = btr.from || addDays(r1.to || p2start, 1);
+  let p4start = r2.from || addDays(btr.to || p3start, 1), p5start = r4.from || addDays(r3.to || p4start, 1);
+  // Keep them in order even when a stage is already done or has no days.
+  if (p3start <= p2start) p3start = addDays(p2start, 1);
   if (p4start <= p3start) p4start = addDays(p3start, 1);
-  if (p4start > p5start) p4start = p5start;
+  if (p5start <= p4start) p5start = addDays(p4start, 1);
+  const p5end = r4.to && r4.to > exam ? r4.to : exam;
   return [
-    { id: 'p1', name: 'WOR first read', start: st.start, end: p1end,
+    { id: 'p1', name: 'WOR first read', start: st.start, end: p1end < st.start ? st.start : p1end,
       blurb: 'Watch every Marrow WOR video once and unsuspend its Anki cards the same day.',
       goals: [['p1-wor', 'Finish all 271 WOR videos'], ['p1-anki', 'Unsuspend Anki cards for each video on the day you watch it'], ['p1-reviews', 'Clear Anki reviews every day (FSRS, ~0.90 retention)'], ['p1-pyq', 'Do the previous-year questions for each subject after its last video']] },
     { id: 'p2', name: 'R1 + PYQs', start: p2start, end: addDays(p3start, -1),
@@ -666,7 +699,7 @@ export function phases() {
     { id: 'p4', name: 'R2/R3 + grand tests', start: p4start, end: addDays(p5start, -1),
       blurb: 'Revise from the combined notes. Test weekly, then twice a week; reviewing each test matters more than taking it.',
       goals: [['p3-r2', 'R2 of every subject'], ['p3-r3', 'R3 of every subject (weak ones first)'], ['p3-gt', 'A grand test every week, then two a week'], ['p3-review', 'Log every wrong answer in the mistakes diary']] },
-    { id: 'p5', name: 'Final sprint (R4)', start: p5start, end: exam,
+    { id: 'p5', name: 'R4 + final sprint', start: p5start, end: p5end,
       blurb: 'Fast revision, mistakes diary, and tests every few days. Nothing new.',
       goals: [['p4-r4', 'R4: last fast pass of everything'], ['p4-diary', 'Go through the whole mistakes diary twice'], ['p4-gt', 'A grand test every 3 days, at exam time of day'], ['p4-sleep', 'Fix sleep to the exam schedule in the last 2 weeks']] },
   ];

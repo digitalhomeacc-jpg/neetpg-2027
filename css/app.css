@@ -1365,3 +1365,29 @@ button.wd { font: inherit; color: inherit; background: none; border: 0; padding:
 .an-col i { display: block; width: 100%; background: var(--accent); border-radius: 6px; }
 .an-dow b { font-size: 11.5px; font-weight: 600; }
 .an-dow em { font-style: normal; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* Roadmap */
+.road { padding: 14px 16px; }
+.road-bar { position: relative; height: 16px; border-radius: 8px; background: var(--surface-3); margin: 22px 0 4px; }
+.road-bar > i { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.road-ex { position: absolute; top: -20px; bottom: -3px; width: 0; border-left: 2px solid var(--text); }
+.road-ex span { position: absolute; top: -2px; left: 4px; font-size: 10.5px; font-weight: 700; white-space: nowrap; color: var(--text); }
+.road-ex:nth-last-of-type(1) span { left: auto; right: 4px; }
+.road-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-bottom: 6px; }
+.road-row { padding: 12px 0 10px; border-top: .5px solid var(--line); }
+.road-h { display: flex; align-items: center; gap: 8px; }
+.road-h b { font-size: 16px; font-weight: 600; }
+.road-meta { margin-left: auto; font-size: 13px; color: var(--muted); }
+.road-dot { width: 10px; height: 10px; border-radius: 50%; }
+.road-ctl { display: flex; align-items: center; gap: 12px; margin: 8px 0 4px; }
+.road-ctl input[type="range"] { flex: 1; accent-color: var(--accent); }
+.road-v { width: 64px; text-align: right; font-weight: 600; font-size: 15px; }
+.road-out { color: var(--muted); }
+.road-out b { color: var(--text); font-weight: 600; }
+.road-exams { margin-top: 6px; padding-top: 10px; border-top: .5px solid var(--line); display: grid; gap: 10px; }
+.road-exam b { font-size: 15px; }
+.road-note { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); font-size: 13px; line-height: 1.45; }
+.p4b { background: #9b7fd1; color: #9b7fd1; }
+.road-bar { margin-top: 40px; }
+.road-ex:nth-of-type(even) { top: -36px; }
+.road-ex span { background: var(--surface); padding: 0 3px; border-radius: 3px; }

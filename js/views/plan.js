@@ -1,8 +1,35 @@
 import {
-  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roundsPlan, phaseRoom, nextExam, exams, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
+  S, VIDS, PASSES, metrics, forecast, simulate, finishDate, roadmap, ROAD, nextExam, exams, hoursNeeded, phases, currentPhase, save, dayDiff, addDays, weekStart, studyDays, revInfo,
   h, mins, hrs, sp, fmtDay, fmtDow, fmtDayYear, subjDot, MON, parse,
 } from '../core.js';
 import { sectionH, CHECK, seg, more, tools } from '../ui.js';
+
+// Roadmap: each stage's hours a day (a slider) → how many days → its dates; one bar of the stages
+// with your exams marked, what each exam catches you with, and the note about questions.
+const RCOL = { fr: 'p1', r1: 'p2', btr: 'p3', r2: 'p4', r3: 'p4b', r4: 'p5' };
+function roadmapCard(m, t) {
+  const R = roadmap(), st = S.settings, S0 = R.stages.filter(s => s.from), start = t, end = [R.end, ...R.exams.map(x => x.date)].sort().pop();
+  const span = Math.max(1, dayDiff(start, end)), x = d => Math.max(0, Math.min(100, (dayDiff(start, d) / span) * 100));
+  const range = (a, b) => `${fmtDay(a)} – ${fmtDay(b)}`;
+  return `${sectionH('Roadmap', 'hours a day → days')}
+  <section class="card road">
+    <div class="road-bar">${S0.map(s => `<i class="${RCOL[s.k]}" style="left:${x(s.from)}%;width:${Math.max(0.6, x(addDays(s.to, 1)) - x(s.from))}%" title="${s.label}"></i>`).join('')}
+      ${R.exams.map(e => `<b class="road-ex" style="left:${x(e.date)}%"><span>${h(e.name)}</span></b>`).join('')}</div>
+    <div class="road-axis"><span>Today</span><span>${fmtDay(end)}</span></div>
+    ${R.stages.map(s => `<div class="road-row">
+      <div class="road-h"><span class="road-dot ${RCOL[s.k]}"></span><b>${s.label}</b>
+        <span class="road-meta num">${s.k === 'btr' ? `${s.days} study days` : s.mins > 0 ? `${hrs(s.mins)} left` : 'done'}</span></div>
+      ${s.k === 'btr'
+        ? `<div class="road-ctl"><input type="range" min="10" max="120" step="5" value="${s.days}" data-road="btr" aria-label="BTR days"><span class="road-v num">${s.days} d</span></div>`
+        : s.mins > 0 ? `<div class="road-ctl"><input type="range" min="0.5" max="12" step="0.5" value="${s.h}" data-road="${s.k}" aria-label="${s.label} hours a day"><span class="road-v num">${s.h}h/day</span></div>` : ''}
+      <div class="road-out small num">${s.from ? `<b>${s.days} study day${s.days > 1 ? 's' : ''}</b> · ${range(s.from, s.to)}` : s.k === 'btr' ? 'Set its days once BTR details are in' : '<span class="good-t">Done</span>'}
+        ${s.k === 'fr' && s.to && s.to > st.target ? ` · <span class="warn-t">after your ${fmtDay(st.target)} deadline</span>` : ''}</div>
+    </div>`).join('')}
+    ${R.exams.length ? `<div class="road-exams">${R.exams.map(e => `<div class="road-exam"><b>${h(e.name)}</b> <span class="small muted num">${fmtDay(e.date)} · ${dayDiff(t, e.date)} days</span>
+      <div class="small">${e.all ? '<span class="good-t">Everything done before it.</span>' : `${e.done.length ? `Done by then: ${e.done.join(', ')}.` : 'Nothing finished by then.'}${e.part.length ? ` In progress: ${e.part.map(p => `${p.label} (${Math.min(99, p.pct)}%)`).join(', ')}.` : ''}`}</div></div>`).join('')}</div>` : ''}
+    <p class="road-note">These are hours of <b>watching lectures and revising</b> only. Questions (Q-bank, PYQs, grand tests) need their own time on top, and as the exam nears, more time than the videos.</p>
+  </section>`;
+}
 
 function timeline(t) {
   const ps = phases(), start = ps[0].start, end = ps[ps.length - 1].end;
@@ -90,23 +117,13 @@ export function view() {
     ${timeline(t)}
   </section>
 
+  ${roadmapCard(m, t)}
+
+  ${more('plan-detail', 'Phases with goals, and the day-by-day “what if”', `
   ${sectionH('Phases', 'tap to see goals')}
   <ul class="card flush list phases">${phaseList}</ul>
 
   ${m.remaining > 0 ? `
-  ${(() => { const r = phaseRoom(); return r.fits ? '' : `<section class="card note-card warn-card"><b>Tight:</b> between finishing WOR and the final sprint (${fmtDay(r.from)} – ${fmtDay(addDays(r.to, -1))}) there are <b>${r.span} days</b> for R1, BTR (about ${r.btrDays} days) and R2/R3. That doesn't fit. Options: finish WOR earlier (Settings), plan BTR alongside R1, or check the exam date. <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:8px">BTR takes about <input class="inp num" style="width:72px;min-height:32px;padding:4px 8px" type="number" min="20" max="120" data-btr-days value="${r.btrDays}"> days</label></section>`; })()}
-  ${(() => { const R = roundsPlan(); return `${sectionH('Rounds', 'you pick the dates')}
-  <section class="card rounds-card">
-    <p class="small muted" style="margin:0 0 6px">Choose when each round happens. The time it takes comes from the lectures: first read 100% of the runtime, R1 50%, R2 35%, R3 25%, R4 15% (at your ${m.planSpeed.toFixed(2).replace(/0$/, '')}×). BTR: enter its total hours.</p>
-    ${R.rows.map(r => `<div class="rd-row">
-      <div class="rd-h"><b>${r.label}</b><span class="small muted num">${r.k === 'btr' ? (r.total ? `${hrs(r.total)} total` : 'enter hours') : `${Math.round(r.pct * 100)}% · ${hrs(r.total)}`}${r.left !== r.total && r.total ? ` · ${hrs(r.left)} left` : ''}</span></div>
-      <div class="rd-d">${r.k === 'fr' ? `<span class="small num">${fmtDay(r.from)} – ${fmtDay(r.to)}</span><span class="small muted">set in Settings</span>` : `<input type="date" class="num" data-round="${r.k}" data-edge="from" value="${r.from}" aria-label="${r.label} from"><span class="muted">to</span><input type="date" class="num" data-round="${r.k}" data-edge="to" value="${r.to}" aria-label="${r.label} to">${r.k === 'btr' ? `<input type="number" class="inp num rd-hrs" inputmode="decimal" min="0" step="1" data-round="btr" data-edge="hours" value="${r.hours}" placeholder="hours">` : ''}`}</div>
-      <div class="rd-n small num">${r.late ? `<span class="bad-t">Ended with ${hrs(r.left)} not done</span>` : r.left <= 0 && r.total ? '<span class="good-t">Done</span>' : r.perDay != null ? `<b>${mins(r.perDay)}</b> a study day for ${r.days} days` : r.set ? '' : '<span class="faint">Pick dates</span>'}</div>
-    </div>`).join('')}
-    ${R.peak.mins ? `<p class="small" style="margin:10px 0 0">Busiest study day: <b class="${R.peak.mins > 8 * 60 ? 'bad-t' : ''}">${mins(R.peak.mins)}</b> on ${fmtDay(R.peak.d)} (${R.peak.ks.join(' + ')}).</p>` : ''}
-    <p class="hint">Rounds can overlap; the busiest day adds them up. The phases above follow these dates. Revisions are still scheduled for you subject by subject on Today; these dates are your targets for finishing each round.</p>
-  </section>`; })()}
-
   ${sectionH('What if', 'real hours a day')}
   <section class="card">
     <div class="row"><input type="range" id="whatif" min="1" max="8" step="0.25" value="${whatif}" aria-label="Hours a day"><span class="whatif-v num">${whatif}h</span></div>
@@ -119,7 +136,10 @@ export function view() {
     <p class="hint">When every video has had each round, at ${whatif}h a day. A round "not by the exam" means some videos won't get it in time: add hours, start revisions earlier, or accept fewer rounds for weak-yield topics.</p>` : ''}
     <p class="small faint" style="margin:4px 0 0">Change the deadline or rest days in Settings.</p>
   </section>
+  ` : ''}
+  `)}
 
+  ${m.remaining > 0 ? `
   ${sectionH('Next two weeks', `<button class="link" data-act="plan-day" data-v="${addDays(t, 1)}">Plan a day</button>`)}
   <button class="btn primary block" data-act="plan-week" style="margin:0 0 10px">Plan the week</button>
   ${tools([['day', '🗓', 'Day planner'], ['duty-open', '🏥', 'Duty'], ['revisions', '🔁', 'Revisions', 'data-v="r1"'], ['backlog', '⚠️', 'Backlogs'], ['ics', '📅', 'Calendar'], ['rehearsals', '🎯', 'GT rehearsal'], ['final-preview', '🏁', 'Final 7 days'], ['past', '📈', 'Past days']])}
@@ -158,6 +178,7 @@ function icsFile(days, revBy) {
 }
 
 export function onChange(e) {
+  if (e.target.dataset?.road) { const k = e.target.dataset.road; (S.settings.road ||= {})[k] = +e.target.value; save(); return true; }
   if (e.target.hasAttribute?.('data-btr-days')) { const n = Math.round(+e.target.value); if (n >= 10 && n <= 150) { S.settings.btrDays = n; save(); } return true; }
   const k = e.target.dataset?.round; if (!k) return false;
   const edge = e.target.dataset.edge, v = e.target.value;
@@ -180,3 +201,11 @@ export const actions = {
   'phase': el => { S.ui.phase = S.ui.phase === el.dataset.v ? '' : el.dataset.v; save(); },
   'goal': el => { const id = el.dataset.v; if (S.goals[id]) delete S.goals[id]; else S.goals[id] = true; save(); },
 };
+
+// While a roadmap slider moves, show its value; the days and dates follow when you let go.
+export function onInput(e) {
+  const k = e.target.dataset?.road; if (!k) return false;
+  const v = e.target.parentElement?.querySelector('.road-v');
+  if (v) v.textContent = k === 'btr' ? `${e.target.value} d` : `${e.target.value}h/day`;
+  return true;
+}
