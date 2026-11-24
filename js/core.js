@@ -641,16 +641,21 @@ export function roadmap() {
   const key = `${saveVersion}|${today()}`;
   if (key === roadKey) return roadVal;
   const st = S.settings, m = metrics(), t = m.t, R = st.road || {};
-  const frDefault = Math.min(12, Math.max(0.5, Math.round(((m.perDay || 150) / 60) * 2) / 2));
+  // First read starts from what was left at the start of today (the same base as today's target),
+  // and by default runs at exactly what the deadline needs, so both screens agree to the minute.
+  const frDefault = m.perDay > 0 ? m.perDay / 60 : 2.5;
+  const todayStudy = !isRest(t);
   const stages = ROAD.map(([k, label]) => {
     if (k === 'btr') return { k, label, days: Math.max(0, Math.round(R.btr ?? st.btrDays ?? 55)), mins: null, h: null };
     // First read: runtime at your speed. Revisions: the same per-lecture limit the rest of the app
     // uses (passBudget: 50/35/25/15% of runtime in real minutes, rounded, at least 2 min).
     const per = v => k === 'fr' ? v.mins / m.planSpeed : passBudget(v, k, t);
     const total = VIDS.reduce((a, v) => a + per(v), 0);
-    const mins = VIDS.reduce((a, v) => a + (prog(v.id)[k] ? 0 : per(v)), 0);
+    const left = v => { const x = prog(v.id)[k]; return !x || (k === 'fr' && todayStudy && x.d === t); };
+    const mins = VIDS.reduce((a, v) => a + (left(v) ? per(v) : 0), 0);
     const h = R[k] ?? (k === 'fr' ? frDefault : 3);
-    return { k, label, total, mins, h, days: mins > 0 ? Math.ceil(mins / (h * 60)) : 0 };
+    // Whole study days; the tiny tolerance stops float rounding from adding a phantom day.
+    return { k, label, total, mins, h, days: mins > 0 ? Math.ceil(mins / (h * 60) - 1e-6) : 0, ...(k === 'fr' ? { needH: frDefault } : {}) };
   });
   // Lay the stages on study days, from today.
   let cur = t;

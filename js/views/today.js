@@ -10,7 +10,7 @@ import { rehearsalCard, finalCard } from './extras.js';
 import { backlogCard } from './backlog.js';
 import { todayCard as dayCard } from './dayview.js';
 import { account } from '../sync.js';
-import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode, exams } from '../core.js';
+import { finishDate, studyDays, dayDiff, pace, hoursNeeded, blockMode, exams, roadmap } from '../core.js';
 import { revTimeChips, upNextHtml } from './revtime.js';
 import { todayCard } from './pyt.js';
 
@@ -219,7 +219,7 @@ export function view() {
   </section>` : ''}
 
   <section class="card tiles">
-    <button class="tile" data-act="tab" data-v="plan"><div class="k">WOR done by</div><div class="v num">${fc.length ? fmtDay(fc[fc.length - 1].date) : '—'}</div><div class="s">if you hit each day's target</div></button>
+    <button class="tile" data-act="tab" data-v="plan"><div class="k">WOR done by</div><div class="v num">${roadmap().stages[0].to ? fmtDay(roadmap().stages[0].to) : '—'}</div><div class="s">at your roadmap pace</div></button>
     <button class="tile" data-act="tab" data-v="tests"><div class="k">Last test</div><div class="v num">${lastTest ? `${4 * lastTest.c - lastTest.w}/${4 * lastTest.n}` : '—'}</div><div class="s">${lastTest ? h(lastTest.name) : 'Log one from Tests'}</div></button>
     <div class="tile"><div class="k">Study days</div><div class="v num">${m.daysLeft}</div><div class="s">to ${fmtDay(st.target)} deadline</div></div>
   </section>

@@ -21,9 +21,10 @@ function roadmapCard(m, t) {
         <span class="road-meta num">${s.k === 'btr' ? `${s.days} study days` : s.mins > 0 ? `${hrs(s.mins)} left` : 'done'}</span></div>
       ${s.k === 'btr'
         ? `<div class="road-ctl"><input type="range" min="10" max="120" step="5" value="${s.days}" data-road="btr" aria-label="BTR days"><span class="road-v num">${s.days} d</span></div>`
+        : s.k === 'fr' && s.mins > 0 ? `<div class="road-ctl"><input type="range" min="30" max="720" step="1" value="${Math.round(s.h * 60)}" data-road="fr" data-unit="min" aria-label="First read minutes a day"><span class="road-v num">${mins(Math.round(s.h * 60))}</span></div>`
         : s.mins > 0 ? `<div class="road-ctl"><input type="range" min="0.5" max="12" step="0.5" value="${s.h}" data-road="${s.k}" aria-label="${s.label} hours a day"><span class="road-v num">${s.h}h/day</span></div>` : ''}
       <div class="road-out small num">${s.from ? `<b>${s.days} study day${s.days > 1 ? 's' : ''}</b> · ${range(s.from, s.to)}` : s.k === 'btr' ? 'Set its days once BTR details are in' : '<span class="good-t">Done</span>'}
-        ${s.k === 'fr' && s.to && s.to > st.target ? ` · <span class="warn-t">after your ${fmtDay(st.target)} deadline</span>` : ''}</div>
+        ${s.k === 'fr' && s.to && s.to > st.target ? ` · <span class="warn-t">after your ${fmtDay(st.target)} deadline, which needs ${mins(Math.ceil(s.needH * 60))} a day</span> <button class="link" data-act="road-fit">Use it</button>` : ''}</div>
     </div>`).join('')}
     ${R.exams.length ? `<div class="road-exams">${R.exams.map(e => `<div class="road-exam"><b>${h(e.name)}</b> <span class="small muted num">${fmtDay(e.date)} · ${dayDiff(t, e.date)} days</span>
       <div class="small">${e.all ? '<span class="good-t">Everything done before it.</span>' : `${e.done.length ? `Done by then: ${e.done.join(', ')}.` : 'Nothing finished by then.'}${e.part.length ? ` In progress: ${e.part.map(p => `${p.label} (${Math.min(99, p.pct)}%)`).join(', ')}.` : ''}`}</div></div>`).join('')}</div>` : ''}
@@ -109,7 +110,7 @@ export function view() {
 
   return {
     title: 'Plan',
-    meta: fc.length ? `WOR done by ${fmtDay(fc[fc.length - 1].date)}` : '',
+    meta: (() => { const fr = roadmap().stages[0]; return fr.to ? `WOR done by ${fmtDay(fr.to)}` : 'WOR watched'; })(),
     html: `
   <section class="card">
     <div class="row" style="margin-bottom:12px"><div class="grow"><div class="small muted">Now</div><div class="status">${cur ? h(cur.name) : 'Exam done'}</div></div>
@@ -178,7 +179,7 @@ function icsFile(days, revBy) {
 }
 
 export function onChange(e) {
-  if (e.target.dataset?.road) { const k = e.target.dataset.road; (S.settings.road ||= {})[k] = +e.target.value; save(); return true; }
+  if (e.target.dataset?.road) { const k = e.target.dataset.road, v = +e.target.value; (S.settings.road ||= {})[k] = e.target.dataset.unit === 'min' ? v / 60 : v; save(); return true; }
   if (e.target.hasAttribute?.('data-btr-days')) { const n = Math.round(+e.target.value); if (n >= 10 && n <= 150) { S.settings.btrDays = n; save(); } return true; }
   const k = e.target.dataset?.round; if (!k) return false;
   const edge = e.target.dataset.edge, v = e.target.value;
@@ -189,6 +190,7 @@ export function onChange(e) {
 }
 
 export const actions = {
+  'road-fit': () => { if (S.settings.road) delete S.settings.road.fr; save(); },
   'whatif-rev': el => { S.ui.whatifRev = el.dataset.v === '1'; },
   'ics': () => {
     const m = metrics(), t = m.t, revBy = {};
@@ -206,6 +208,6 @@ export const actions = {
 export function onInput(e) {
   const k = e.target.dataset?.road; if (!k) return false;
   const v = e.target.parentElement?.querySelector('.road-v');
-  if (v) v.textContent = k === 'btr' ? `${e.target.value} d` : `${e.target.value}h/day`;
+  if (v) v.textContent = k === 'btr' ? `${e.target.value} d` : e.target.dataset.unit === 'min' ? mins(+e.target.value) : `${e.target.value}h/day`;
   return true;
 }

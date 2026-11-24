@@ -1,6 +1,6 @@
 // Backlogs and self-improvement: what skipping costs, today and as a habit, what's piled up,
 // and what your own data says to change. All numbers come from your plan and history.
-import { S, VIDS, BY, PASSES, REV, prog, passMins, metrics, simulate, hoursNeeded, phases, revisionsDue, studyDays, isRest, addDays, dayDiff, today, parse,
+import { S, VIDS, BY, PASSES, REV, prog, passMins, metrics, simulate, hoursNeeded, phases, roadmap, revisionsDue, studyDays, isRest, addDays, dayDiff, today, parse,
   DOW_LONG, h, mins, hrs, pct, fmtDay, fmtDayYear } from '../core.js';
 import { sectionH, closeSheet } from '../ui.js';
 
@@ -70,20 +70,30 @@ export function view() {
   const dueRecallSkip = due.length ? due.reduce((a, x) => a + recall(x.r.gap || 3, Math.max(0, x.r.overdue) + 1), 0) / due.length : null;
   const dueRecallWeek = due.length ? due.reduce((a, x) => a + recall(x.r.gap || 3, Math.max(0, x.r.overdue) + 7), 0) / due.length : null;
 
-  // 2. As a habit: skip s of your study days each week, without studying more on the others.
+  // 2. As a habit. Your own pattern: study days in the last 4 weeks (from your start date) with
+  // nothing logged. Each scenario keeps each study day's share (what the deadline needs) and drops
+  // that many study days a week, without making them up. WOR then needs ceil(left ÷ (share × kept
+  // fraction)) study days from today, exactly as the roadmap counts them; R1 and BTR follow at the
+  // roadmap's lengths, so "R2 starts" shows how far everything after slides.
   const studyPerWeek = 7 - st.rest.length;
-  const ph = phases();
-  const scen = [0, 1, 2, 3].filter(s => s < studyPerWeek).map(s => {
+  const RM = roadmap(), frS = RM.stages[0], r1S = RM.stages[1], btrS = RM.stages[2];
+  const histFrom = [addDays(t, -28), st.start].sort()[1];
+  let histDays = 0, histMissed = 0;
+  for (let d = histFrom; d < t; d = addDays(d, 1)) if (!isRest(d)) { histDays++; if (!((m.byDay[d] || 0) + (m.sessDay[d] || 0))) histMissed++; }
+  const myRate = histDays >= 5 ? Math.round((histMissed / histDays) * studyPerWeek * 2) / 2 : null;
+  const nthStudyDay = (from, n) => { let d = from, k = 0, last = from; for (let g = 0; g < 4000 && k < n; d = addDays(d, 1), g++) if (!isRest(d)) { last = d; k++; } return last; };
+  const startMins = frS.mins;  // left at the start of today, in real minutes at your speed
+  const rates = [...new Set([0, ...(myRate ? [myRate] : []), (myRate ?? 0) + 1, ...(myRate ? [] : [2])])].filter(x => x < studyPerWeek).sort((x, y) => x - y);
+  const scen = rates.map(s => {
     const share = (studyPerWeek - s) / studyPerWeek;
-    // Simulated with revisions: the hours a day that make the deadline, cut by the skipped share.
-    const finish = simulate((hoursNeeded() ?? 8) * 60 * share).finish || st.exam;
+    const need = m.perDay * share;
+    const n = startMins > 0 && need > 0 ? Math.ceil(startMins / need - 1e-6) : 0;
+    const finish = n ? nthStudyDay(t, n) : t;
     const late = Math.max(0, dayDiff(st.target, finish));
-    // Days left for R1 and BTR: from finishing WOR to the start of R2 (combined notes).
-    const p2days = Math.max(0, dayDiff(finish, ph[3].start));
-    const catchUp = left ? (remReal / (left * share)) : 0;
-    return { s, finish, late, p2days, p2orig: Math.max(1, dayDiff(ph[1].start, ph[3].start)), catchUp };
+    const r2 = nthStudyDay(addDays(finish, 1), r1S.days + btrS.days + 1);
+    const catchUp = left ? remReal / (left * share) : 0;
+    return { s, finish, late, r2, mine: s === myRate, catchUp };
   });
-
   // 3. Backlog right now
   const overdue = due.filter(x => x.r.overdue > 0);
   const overdueMins = overdue.reduce((a, x) => a + x.r.budget, 0);
@@ -115,33 +125,6 @@ export function view() {
     title: 'Backlogs',
     meta: 'and self-improvement',
     html: `
-  ${sectionH('If you skip today')}
-  <section class="card skip">
-    <p class="small" style="margin:0 0 12px">Today needs <b>${mins(m.goal)}</b>${due.length ? `: ${mins(T)} of new videos and ${due.length} revision${due.length > 1 ? 's' : ''} (${mins(m.dueMins)})` : ' of new videos'}. Skipping it means:</p>
-    <ul class="conseq">
-      <li><b>Every remaining study day gets heavier.</b> Your new-video target goes from ${mins(perDayNow)} to <b>${mins(perDaySkip)}</b> a day for the next ${Math.max(0, left - 1)} study days, until ${fmtDay(st.target)}.</li>
-      ${due.length ? `<li><b>${due.length} revision${due.length > 1 ? 's' : ''} land on tomorrow</b> on top of tomorrow's own, and every later revision of ${due.length > 1 ? 'those videos' : 'that video'} slides a day too.</li>
-      <li><b>Memory drops while they wait.</b> Estimated recall for today's revisions: about ${pct(dueRecallNow)} if done today, ${pct(dueRecallSkip)} tomorrow, ${pct(dueRecallWeek)} if they wait a week. The lower it gets, the longer the revision takes.</li>` : ''}
-      <li><b>Your ${m.streak}-day streak resets</b>${m.streak >= 3 ? `. Your best so far is ${best} days` : ''}.</li>
-      ${!isRest(t) ? `<li><b>Missing one day is fine; missing two in a row is how a habit breaks.</b> If today can't be a full day, ${mins(Math.min(30, m.goal))} still counts and keeps the streak.</li>` : ''}
-    </ul>
-  </section>
-
-  ${sectionH('If it becomes a habit', 'skipping study days each week')}
-  <section class="card">
-    <div class="sc-table">
-      <div class="sc-row sc-head"><span>Skip</span><span>WOR done</span><span>Late by</span><span>Days left for R1 + BTR</span></div>
-      ${scen.map(x => `<div class="sc-row${x.s ? (x.late > 14 ? ' bad' : x.late ? ' warn' : '') : ' good'}"><span>${x.s ? `${x.s} day${x.s > 1 ? 's' : ''}/week` : 'None'}</span><span class="num">${fmtDay(x.finish)}</span><span class="num">${x.late ? `${x.late} days` : 'on time'}</span><span class="num">${x.p2days} / ${x.p2orig} days</span></div>`).join('')}
-    </div>
-    <p class="hint">At ${mins(T)} a study day (the share each needs), without making it up on other days. R1 and then BTR only start once WOR is done, so every late day comes out of them. The last column is how many days would be left for both before R2.</p>
-    <ul class="conseq">
-      ${scen[1] ? `<li><b>One skipped day a week</b> pushes WOR to ${fmtDay(scen[1].finish)}${scen[1].late ? ` and takes ${scen[1].late} days from R1 and BTR` : ''}. To skip it and still finish on time, the other days need ${mins(scen[1].catchUp)} each.</li>` : ''}
-      ${scen[2] ? `<li><b>Two a week</b> means ${scen[2].late ? `finishing ${scen[2].late} days late` : 'finishing just in time'}, leaving ${scen[2].p2days} of ${scen[2].p2orig} days for R1 and BTR.</li>` : ''}
-      <li><b>Revisions compound.</b> Every video you watch adds four revisions. When days are skipped, they pile up, recall falls, and each revision takes longer: the time you save by skipping comes back with interest.</li>
-      <li><b>The last weeks get squeezed.</b> R3 and R4 have to finish before ${fmtDay(st.exam)}. Late starts mean shorter gaps and less time for grand tests, which toppers credit most.</li>
-    </ul>
-  </section>
-
   ${sectionH('Your backlog now')}
   <section class="card">
     <div class="stats" style="margin:0">
@@ -163,6 +146,34 @@ export function view() {
       <div class="btns" style="margin-top:10px"><button class="btn primary" data-act="plan-week">Plan this week</button><button class="btn" data-act="revisions" data-v="r1">Open revisions</button></div>
     </div>` : ''}
   </section>
+
+  ${sectionH('If you skip today')}
+  <section class="card skip">
+    <p class="small" style="margin:0 0 12px">Today needs <b>${mins(m.goal)}</b>${due.length ? `: ${mins(T)} of new videos and ${due.length} revision${due.length > 1 ? 's' : ''} (${mins(m.dueMins)})` : ' of new videos'}. Skipping it means:</p>
+    <ul class="conseq">
+      <li><b>Every remaining study day gets heavier.</b> Your new-video target goes from ${mins(perDayNow)} to <b>${mins(perDaySkip)}</b> a day for the next ${Math.max(0, left - 1)} study days, until ${fmtDay(st.target)}.</li>
+      ${due.length ? `<li><b>${due.length} revision${due.length > 1 ? 's' : ''} land on tomorrow</b> on top of tomorrow's own, and every later revision of ${due.length > 1 ? 'those videos' : 'that video'} slides a day too.</li>
+      <li><b>Memory drops while they wait.</b> Estimated recall for today's revisions: about ${pct(dueRecallNow)} if done today, ${pct(dueRecallSkip)} tomorrow, ${pct(dueRecallWeek)} if they wait a week. The lower it gets, the longer the revision takes.</li>` : ''}
+      <li><b>Your ${m.streak}-day streak resets</b>${m.streak >= 3 ? `. Your best so far is ${best} days` : ''}.</li>
+      ${!isRest(t) ? `<li><b>Missing one day is fine; missing two in a row is how a habit breaks.</b> If today can't be a full day, ${mins(Math.min(30, m.goal))} still counts and keeps the streak.</li>` : ''}
+    </ul>
+  </section>
+
+  ${sectionH('If it becomes a habit', 'skipping study days each week')}
+  <section class="card">
+    <p class="small" style="margin:0 0 10px">${myRate != null ? `Your pattern: <b>${histMissed} of ${histDays}</b> study days with nothing logged ${histFrom === st.start ? 'since you started' : 'in the last 4 weeks'}, about <b>${myRate} day${myRate === 1 ? '' : 's'} a week</b>.` : `Not enough history yet to see your pattern (${histDays} study day${histDays === 1 ? '' : 's'} so far); these are examples.`}</p>
+    <div class="sc-table">
+      <div class="sc-row sc-head"><span>Skip</span><span>WOR done</span><span>Late by</span><span>R2 starts</span></div>
+      ${scen.map(x => `<div class="sc-row${x.mine ? ' mine' : ''}${x.s ? (x.late > 14 ? ' bad' : x.late ? ' warn' : '') : ' good'}"><span>${x.s ? `${x.s} day${x.s === 1 ? '' : 's'}/week` : 'None'}${x.mine ? '<em>your pattern</em>' : ''}</span><span class="num">${fmtDay(x.finish)}</span><span class="num">${x.late ? `${x.late} days` : 'on time'}</span><span class="num">${fmtDay(x.r2)}</span></div>`).join('')}
+    </div>
+    <p class="hint">Each study day at its share (${mins(m.perDay)}), with the skipped days not made up. R1 (${r1S.days} study days) and BTR (${btrS.days}) follow at your roadmap lengths, so every late day pushes R2 back too.</p>
+    <ul class="conseq">
+      ${(() => { const x = scen.find(y => y.mine) || scen.find(y => y.s); return x ? `<li><b>${x.mine ? 'At your current pattern' : `Skipping ${x.s} day${x.s === 1 ? '' : 's'} a week`}</b>, WOR ends ${fmtDay(x.finish)}${x.late ? `, ${x.late} days late` : ''}, and R2 starts ${fmtDay(x.r2)}. To keep skipping that often and still finish on time, the other days need <b>${mins(x.catchUp)}</b> each.</li>` : ''; })()}
+      <li><b>Revisions compound.</b> Every video you watch adds four revisions. When days are skipped, they pile up, recall falls, and each revision takes longer: the time you save by skipping comes back with interest.</li>
+      <li><b>The last weeks get squeezed.</b> Late starts mean shorter gaps between rounds and less time for grand tests before ${fmtDay(st.exam)}.</li>
+    </ul>
+  </section>
+
 
   ${(() => {
     const w = weekData(m, overdueMins);

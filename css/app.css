@@ -1391,3 +1391,5 @@ button.wd { font: inherit; color: inherit; background: none; border: 0; padding:
 .road-bar { margin-top: 40px; }
 .road-ex:nth-of-type(even) { top: -36px; }
 .road-ex span { background: var(--surface); padding: 0 3px; border-radius: 3px; }
+.sc-row.mine { box-shadow: inset 3px 0 0 var(--accent); background: var(--accent-soft); }
+.sc-row em { display: block; font-style: normal; font-size: 11px; color: var(--accent); font-weight: 600; }
