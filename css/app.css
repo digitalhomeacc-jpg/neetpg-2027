@@ -1393,3 +1393,7 @@ button.wd { font: inherit; color: inherit; background: none; border: 0; padding:
 .road-ex span { background: var(--surface); padding: 0 3px; border-radius: 3px; }
 .sc-row.mine { box-shadow: inset 3px 0 0 var(--accent); background: var(--accent-soft); }
 .sc-row em { display: block; font-style: normal; font-size: 11px; color: var(--accent); font-weight: 600; }
+.duty-row.past .row .t { font-size: 17px; font-weight: 600; }
+.du-shifts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.du-shift { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); }
+.du-sum .an-grid { grid-template-columns: repeat(2, 1fr); }

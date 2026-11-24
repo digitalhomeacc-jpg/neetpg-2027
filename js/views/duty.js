@@ -2,7 +2,7 @@
 // you'll have against what that day needs (new videos + revisions due). It only informs:
 // your targets and plan stay as they are. Move lectures yourself in the planner.
 import { S, VIDS, PASSES, shiftsOf, metrics, today, addDays, isRest, revisionsOn, revisionsDue, freeMinutes, dutyOn, dutyHours, shiftMins, passMins, iso, save, h, mins, hrs, fmtDow, fmtDay } from '../core.js';
-import { sectionH, openSheet, closeSheet, toast } from '../ui.js';
+import { sectionH, more, openSheet, closeSheet, toast } from '../ui.js';
 
 /* ---------- where the day went: sleep, duty, study, everything else ---------- */
 const minOfDay = (isoTime, d) => { const t = new Date(isoTime); return iso(t) === d ? t.getHours() * 60 + t.getMinutes() : null; };
@@ -40,13 +40,18 @@ export function bar(L) {
 const oneShift = x => `${x.from}–${x.to}${shiftMins(x) + +x.from.slice(0, 2) * 60 + +x.from.slice(3) > 1440 ? ' (next day)' : ''}`;
 const dutyLabel = x => x == null ? '' : typeof x === 'number' ? (x ? `${x}h` : 'Off') : shiftsOf(x).map(oneShift).join(', ');
 function pastRow(L, t) {
-  const x = S.duty[L.d], ess = (S.settings.essentials ?? 3) * 60 * (L.upTo / 1440);
+  const x = S.duty[L.d], ess = Math.round((S.settings.essentials ?? 3) * 60 * (L.upTo / 1440));
+  const shifts = x == null ? [] : typeof x === 'number' ? [x ? `${x}h (no times)` : 'Off duty'] : shiftsOf(x).map(oneShift);
+  const fig = (cls, v, k) => `<span class="dv-f ${cls}"><i></i><b class="num">${v}</b> ${k}</span>`;
+  const awake = L.upTo - L.sleep;
   return `<li class="duty-row past">
-    <div class="row"><div class="grow"><div class="t">${L.d === t ? `Today <span class="faint small">so far</span>` : L.d === addDays(t, -1) ? `Yesterday <span class="faint small">${fmtDay(L.d)}</span>` : fmtDow(L.d)}</div></div>
-      <button class="chip" data-act="du-edit" data-d="${L.d}">${x != null ? `Duty ${h(dutyLabel(x))}` : 'Add duty'}</button></div>
+    <div class="row"><div class="grow t">${L.d === t ? 'Today <span class="faint small">so far</span>' : L.d === addDays(t, -1) ? `Yesterday <span class="faint small">${fmtDay(L.d)}</span>` : fmtDow(L.d)}</div>
+      <button class="btn small-btn" data-act="du-edit" data-d="${L.d}">${x != null ? 'Edit duty' : '+ Duty'}</button></div>
+    ${shifts.length ? `<div class="du-shifts">${shifts.map(z => `<span class="du-shift num">${h(z)}</span>`).join('')}</div>` : ''}
     ${bar(L)}
-    <div class="tl-key num"><span class="k-sleep">${L.sleepKnown ? `Slept ${mins(L.sleep)}` : '<span class="faint">Sleep not in yet</span>'}</span><span class="k-duty">Duty ${mins(L.duty)}</span><span class="k-study">Studied ${mins(L.study)}</span>${L.sleepKnown ? `<span class="k-other">Other ${mins(L.other)}</span>` : ''}</div>
-    ${L.sleepKnown || L.dutyEntered ? `<p class="small muted" style="margin:6px 0 0">Free (not asleep, not on duty): <b>${mins(L.free)}</b>. You studied <b>${mins(L.study)}</b> of it; <b>${mins(L.other)}</b> went elsewhere${L.other > ess + 30 ? `, ${mins(L.other - ess)} more than your ${mins(ess)} for meals, travel and rest` : ''}.</p>` : ''}
+    <div class="dv-figs">${L.sleepKnown ? fig('sleep', mins(L.sleep), 'slept') + fig('awake', mins(awake), 'awake') : '<span class="faint small">Sleep not in yet</span>'}
+      ${fig('duty', mins(L.duty), 'duty')}${fig('study', mins(L.study), 'studied')}${L.sleepKnown ? fig('other', mins(L.other), 'other') : ''}</div>
+    ${L.sleepKnown ? `<p class="small muted" style="margin:6px 0 0">Of ${mins(awake)} awake: ${mins(L.duty)} duty, ${mins(L.study)} studied, <b>${mins(L.other)}</b> elsewhere${L.other > ess + 30 ? ` (${mins(L.other - ess)} more than the ${mins(ess)} you allow for meals, travel and rest)` : ''}.</p>` : ''}
   </li>`;
 }
 
@@ -100,18 +105,6 @@ export function view() {
     title: 'Duty & free time',
     meta: 'Where your time goes',
     html: `
-  ${sectionH('Last 7 days', 'sleep · duty · study · other')}
-  <section class="card">
-    <div class="stats" style="margin:0 0 4px">
-      <div class="stat"><div class="v num">${known.length ? mins(known.reduce((a, L) => a + L.sleep, 0) / known.length) : '—'}</div><div class="k">sleep a day${known.length && known.length < 7 ? ` (${known.length} day${known.length > 1 ? 's' : ''} known)` : ''}</div></div>
-      <div class="stat"><div class="v num">${hrs(sum('duty'))}</div><div class="k">duty</div></div>
-      <div class="stat good"><div class="v num">${hrs(sum('study'))}</div><div class="k">studied</div></div>
-      <div class="stat warn"><div class="v num">${known.length ? hrs(known.reduce((a, L) => a + L.other, 0)) : '—'}</div><div class="k">other: awake, off duty, not studying${known.length && known.length < 7 ? ` (days with sleep known)` : ''}</div></div>
-    </div>
-    <p class="hint">Sleep comes from Apple Health (Settings → Apple Health) or your morning check-in; duty from what you enter; study from the lectures, revisions and focus sessions you log. "Other" is everything else: meals, travel, rest, phone.</p>
-  </section>
-  <ul class="card flush list duty-list">${past.map(L => pastRow(L, t)).join('')}</ul>
-
   ${sectionH('Next two weeks', 'free time vs what each day needs')}
   <section class="card">
     <p class="small" style="margin:0 0 10px">Enter each day's hospital duty. Free time = <b>${st.awake ?? 16}h awake</b> − duty − <b>${st.essentials ?? 3}h</b> for meals, travel and rest.</p>
@@ -138,7 +131,22 @@ export function view() {
         ${r.duty != null ? `<button class="chip" data-act="duty-clear" data-d="${r.d}">Clear</button>` : ''}</div>
     </li>`;
   }).join('')}</ul>
-  <div class="btns" style="margin-top:4px"><button class="btn primary" data-act="plan-week">Plan the week</button></div>`,
+  <div class="btns" style="margin-top:4px"><button class="btn primary" data-act="plan-week">Plan the week</button></div>
+
+  ${more('duty-past', 'Last 7 days: sleep, duty, study, other', `
+  <section class="card du-sum">
+    <div class="an-grid" style="margin:0">
+      <div><span>Sleep a night</span><b class="num">${known.length ? mins(known.reduce((a, L) => a + L.sleep, 0) / known.length) : '—'}</b>${known.length && known.length < 7 ? `<em>${known.length} of 7 nights known</em>` : ''}</div>
+      <div><span>Duty</span><b class="num">${hrs(sum('duty'))}</b></div>
+      <div><span>Studied</span><b class="num">${hrs(sum('study'))}</b></div>
+      <div><span>Other</span><b class="num">${known.length ? hrs(known.reduce((a, L) => a + L.other, 0)) : '—'}</b><em>awake, off duty, not studying</em></div>
+    </div>
+    <p class="hint" style="margin-top:10px">Sleep comes from Apple Health (Settings → Apple Health) or your morning check-in; duty from what you enter; study from the lectures, revisions and focus sessions you log. "Other" is everything else: meals, travel, rest, phone.</p>
+  </section>
+  <ul class="card flush list duty-list">${past.map(L => pastRow(L, t)).join('')}</ul>
+
+  `)}
+`,
   };
 }
 
